@@ -61,9 +61,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.addEventListener('error', function(e) {
-                if (e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1)) {
-                  if (!sessionStorage.getItem('chunk_reload_lock')) {
-                    sessionStorage.setItem('chunk_reload_lock', 'true');
+                if (e && e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1)) {
+                  try {
+                    if (!sessionStorage.getItem('chunk_reload_lock')) {
+                      sessionStorage.setItem('chunk_reload_lock', 'true');
+                      window.location.reload();
+                    }
+                  } catch (err) {
                     window.location.reload();
                   }
                 }

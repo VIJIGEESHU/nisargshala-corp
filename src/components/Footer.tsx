@@ -106,7 +106,7 @@ export default function Footer() {
         {/* BOTTOM COPYRIGHT BAR */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-sand-300 gap-4">
           <div>
-            © {new Date().getFullYear()} <strong className="text-white font-bold">Nisargshala</strong>. All Rights Reserved.
+            © 2026 <strong className="text-white font-bold">Nisargshala</strong>. All Rights Reserved.
           </div>
           <div className="flex items-center space-x-6 text-[11px]">
             <a href="https://nisargshala.in/privacy-policy" target="_blank" className="hover:text-white flex items-center gap-1">

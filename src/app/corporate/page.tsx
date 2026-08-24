@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { formatSafeDate } from '@/lib/dateUtils';
 import {
   Building2,
   ShoppingBag,
@@ -37,6 +38,10 @@ export default function CorporateHRDashboard() {
     try {
       // 1. Verify session
       const authRes = await fetch('/api/auth/session');
+      if (!authRes.ok) {
+        router.push('/login');
+        return;
+      }
       const authData = await authRes.json();
 
       if (!authData.authenticated) {
@@ -62,7 +67,9 @@ export default function CorporateHRDashboard() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
     router.push('/login');
     router.refresh();
   };
@@ -84,7 +91,6 @@ export default function CorporateHRDashboard() {
   const totalVoucherValue = vouchers.reduce((acc, curr) => acc + (curr.voucher_value || 0), 0);
   const activeVouchersCount = vouchers.filter((v) => v.status === 'ACTIVE').length;
   const redeemedVouchersCount = vouchers.filter((v) => v.status === 'REDEEMED').length;
-  const expiredVouchersCount = vouchers.filter((v) => v.status === 'EXPIRED').length;
 
   return (
     <div className="min-h-screen flex flex-col bg-sand-50">
@@ -216,7 +222,7 @@ export default function CorporateHRDashboard() {
                     {orders.map((ord) => (
                       <tr key={ord.id} className="hover:bg-sand-50">
                         <td className="px-6 py-4 font-mono font-bold text-forest-950">{ord.order_number}</td>
-                        <td className="px-6 py-4">{new Date(ord.created_at).toISOString().slice(0, 10)}</td>
+                        <td className="px-6 py-4">{formatSafeDate(ord.created_at)}</td>
                         <td className="px-6 py-4">₹{ord.subtotal_amount?.toLocaleString('en-IN')}</td>
                         <td className="px-6 py-4">₹{ord.gst_amount?.toLocaleString('en-IN')}</td>
                         <td className="px-6 py-4 font-bold text-amber-700">₹{ord.total_amount?.toLocaleString('en-IN')}</td>
@@ -350,7 +356,7 @@ export default function CorporateHRDashboard() {
                             <span className="text-gray-400 italic">Unassigned</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">{new Date(vch.expiry_date).toISOString().slice(0, 10)}</td>
+                        <td className="px-6 py-4">{formatSafeDate(vch.expiry_date)}</td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 rounded-full font-semibold ${
                             vch.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'

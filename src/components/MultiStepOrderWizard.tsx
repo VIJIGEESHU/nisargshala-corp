@@ -51,11 +51,18 @@ export default function MultiStepOrderWizard() {
   // UTR submission
   const [utrForm, setUtrForm] = useState({
     utr_reference: '',
-    payment_date: new Date().toISOString().slice(0, 10),
+    payment_date: '',
     notes: '',
   });
   const [utrLoading, setUtrLoading] = useState(false);
   const [utrSuccess, setUtrSuccess] = useState(false);
+
+  useEffect(() => {
+    setUtrForm((prev) => ({
+      ...prev,
+      payment_date: new Date().toISOString().slice(0, 10),
+    }));
+  }, []);
 
   const totals = calculateOrderTotal(quantities);
 

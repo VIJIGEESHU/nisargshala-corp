@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { formatSafeDate } from '@/lib/dateUtils';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -45,6 +46,10 @@ export default function AdminDashboardPage() {
     try {
       // Check admin session
       const authRes = await fetch('/api/auth/session');
+      if (!authRes.ok) {
+        router.push('/admin/login');
+        return;
+      }
       const authData = await authRes.json();
 
       if (!authData.authenticated || (authData.userType !== 'ADMIN' && authData.user?.role !== 'SUPER_ADMIN' && authData.user?.role !== 'ADMIN')) {
@@ -358,7 +363,7 @@ export default function AdminDashboardPage() {
                         <td className="px-6 py-4 font-mono font-bold text-amber-700 tracking-wider">{vch.redemption_code}</td>
                         <td className="px-6 py-4 font-semibold">{vch.product_code}</td>
                         <td className="px-6 py-4 font-bold">₹{vch.voucher_value.toLocaleString('en-IN')}</td>
-                        <td className="px-6 py-4">{new Date(vch.expiry_date).toISOString().slice(0, 10)}</td>
+                        <td className="px-6 py-4">{formatSafeDate(vch.expiry_date)}</td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 rounded-full font-semibold ${
                             vch.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' :
