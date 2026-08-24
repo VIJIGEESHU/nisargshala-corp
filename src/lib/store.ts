@@ -80,6 +80,14 @@ export interface DBVoucher {
   updated_at: string;
 }
 
+export interface DBBankSettings {
+  account_holder: string;
+  bank_name: string;
+  account_number: string;
+  ifsc_code: string;
+  validity_months: number;
+}
+
 export interface DatabaseSchema {
   companies: DBCompany[];
   users: DBCorporateUser[];
@@ -88,6 +96,29 @@ export interface DatabaseSchema {
   vouchers: DBVoucher[];
   payment_records: any[];
   audit_logs: any[];
+  settings?: DBBankSettings;
+}
+
+export function getBankSettingsInDB(): DBBankSettings {
+  const db = readDB();
+  return db.settings || {
+    account_holder: 'Nisargshala',
+    bank_name: 'HDFC Bank',
+    account_number: '50200012345678',
+    ifsc_code: 'HDFC0001234',
+    validity_months: 12,
+  };
+}
+
+export function updateBankSettingsInDB(settings: Partial<DBBankSettings>): DBBankSettings {
+  const db = readDB();
+  const current = getBankSettingsInDB();
+  db.settings = {
+    ...current,
+    ...settings,
+  };
+  writeDB(db);
+  return db.settings;
 }
 
 // Initial Admin Password Hash for "Hemant2026"
@@ -133,6 +164,13 @@ function getInitialDB(): DatabaseSchema {
     vouchers: [],
     payment_records: [],
     audit_logs: [],
+    settings: {
+      account_holder: 'Nisargshala',
+      bank_name: 'HDFC Bank',
+      account_number: '50200012345678',
+      ifsc_code: 'HDFC0001234',
+      validity_months: 12,
+    },
   };
 }
 

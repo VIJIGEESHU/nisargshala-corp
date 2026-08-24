@@ -37,9 +37,59 @@ export default function AdminDashboardPage() {
   // Search/Filter state
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Bank & Validity Settings State
+  const [bankSettings, setBankSettings] = useState({
+    account_holder: 'Nisargshala',
+    bank_name: 'HDFC Bank',
+    account_number: '50200012345678',
+    ifsc_code: 'HDFC0001234',
+    validity_months: 12,
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsMsg, setSettingsMsg] = useState('');
+
   useEffect(() => {
     checkAdminAuthAndFetch();
+    fetchBankSettings();
   }, []);
+
+  const fetchBankSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          setBankSettings(data.settings);
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching bank settings:', e);
+    }
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsLoading(true);
+    setSettingsMsg('');
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bankSettings),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to save bank settings.');
+      }
+
+      setSettingsMsg('Bank payment details & validity settings saved successfully!');
+    } catch (err: any) {
+      alert(err.message || 'Failed to save settings.');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
   const checkAdminAuthAndFetch = async () => {
     setLoading(true);
@@ -421,29 +471,85 @@ export default function AdminDashboardPage() {
         {/* TAB 4: SETTINGS */}
         {activeTab === 'settings' && (
           <div className="bg-white rounded-2xl border border-forest-200 shadow-sm p-8 max-w-2xl">
-            <h3 className="font-serif text-lg font-bold text-forest-950 mb-6">Bank Payment & Validity Settings</h3>
-            <form className="space-y-4 text-xs">
-              <div>
-                <label className="block text-forest-800 font-semibold mb-1">Account Holder Name</label>
-                <input type="text" defaultValue="Nisargshala" className="w-full px-3 py-2 bg-sand-50 border rounded-lg" />
+            <h3 className="font-serif text-lg font-bold text-forest-950 mb-2">Bank Payment & Validity Settings</h3>
+            <p className="text-xs text-forest-600 mb-6">
+              Update the official Nisargshala bank account details displayed to corporate clients for RTGS/NEFT payment transfers.
+            </p>
+
+            {settingsMsg && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>{settingsMsg}</span>
               </div>
+            )}
+
+            <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">Bank Name</label>
-                <input type="text" defaultValue="HDFC Bank" className="w-full px-3 py-2 bg-sand-50 border rounded-lg" />
+                <label className="block text-forest-800 font-semibold mb-1">Account Holder Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={bankSettings.account_holder}
+                  onChange={(e) => setBankSettings({ ...bankSettings, account_holder: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
               </div>
+
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">Account Number</label>
-                <input type="text" defaultValue="50200012345678" className="w-full px-3 py-2 bg-sand-50 border rounded-lg font-mono" />
+                <label className="block text-forest-800 font-semibold mb-1">Bank Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={bankSettings.bank_name}
+                  onChange={(e) => setBankSettings({ ...bankSettings, bank_name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
               </div>
+
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">IFSC Code</label>
-                <input type="text" defaultValue="HDFC0001234" className="w-full px-3 py-2 bg-sand-50 border rounded-lg font-mono uppercase" />
+                <label className="block text-forest-800 font-semibold mb-1">Account Number *</label>
+                <input
+                  type="text"
+                  required
+                  value={bankSettings.account_number}
+                  onChange={(e) => setBankSettings({ ...bankSettings, account_number: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl font-mono text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
               </div>
+
+              <div>
+                <label className="block text-forest-800 font-semibold mb-1">IFSC Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={bankSettings.ifsc_code}
+                  onChange={(e) => setBankSettings({ ...bankSettings, ifsc_code: e.target.value.toUpperCase() })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl font-mono uppercase text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
               <div>
                 <label className="block text-forest-800 font-semibold mb-1">Default Voucher Validity (Months)</label>
-                <input type="number" defaultValue={12} className="w-full px-3 py-2 bg-sand-50 border rounded-lg" />
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  max={60}
+                  value={bankSettings.validity_months}
+                  onChange={(e) => setBankSettings({ ...bankSettings, validity_months: Number(e.target.value) || 12 })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
               </div>
-              <button type="button" className="bg-forest-800 text-white px-6 py-2.5 rounded-lg font-semibold">Save Settings</button>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={settingsLoading}
+                  className="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3 rounded-xl font-semibold text-xs shadow-lg transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  {settingsLoading ? 'Saving Bank Settings...' : 'Save Settings'}
+                </button>
+              </div>
             </form>
           </div>
         )}

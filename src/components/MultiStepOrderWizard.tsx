@@ -57,11 +57,27 @@ export default function MultiStepOrderWizard() {
   const [utrLoading, setUtrLoading] = useState(false);
   const [utrSuccess, setUtrSuccess] = useState(false);
 
+  const [bankInfo, setBankInfo] = useState({
+    account_holder: 'Nisargshala',
+    bank_name: 'HDFC Bank',
+    account_number: '50200012345678',
+    ifsc_code: 'HDFC0001234',
+  });
+
   useEffect(() => {
     setUtrForm((prev) => ({
       ...prev,
       payment_date: new Date().toISOString().slice(0, 10),
     }));
+
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.settings) {
+          setBankInfo(data.settings);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const totals = calculateOrderTotal(quantities);
@@ -531,19 +547,19 @@ export default function MultiStepOrderWizard() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-forest-900 font-medium">
                   <div>
                     <span className="text-[10px] text-forest-500 uppercase block">Account Name</span>
-                    <strong>Nisargshala</strong>
+                    <strong>{bankInfo.account_holder}</strong>
                   </div>
                   <div>
                     <span className="text-[10px] text-forest-500 uppercase block">Bank Name</span>
-                    <strong>HDFC Bank</strong>
+                    <strong>{bankInfo.bank_name}</strong>
                   </div>
                   <div>
                     <span className="text-[10px] text-forest-500 uppercase block">Account Number</span>
-                    <strong className="font-mono text-sm">50200012345678</strong>
+                    <strong className="font-mono text-sm">{bankInfo.account_number}</strong>
                   </div>
                   <div>
                     <span className="text-[10px] text-forest-500 uppercase block">IFSC Code</span>
-                    <strong className="font-mono text-sm">HDFC0001234</strong>
+                    <strong className="font-mono text-sm">{bankInfo.ifsc_code}</strong>
                   </div>
                 </div>
               </div>
