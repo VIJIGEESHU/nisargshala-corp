@@ -99,26 +99,60 @@ export interface DatabaseSchema {
   settings?: DBBankSettings;
 }
 
-export function getBankSettingsInDB(): DBBankSettings {
+let memoryBankSettings: DBBankSettings | null = null;
+
+export async function getBankSettingsInDB(): Promise<DBBankSettings> {
+  if (memoryBankSettings) return memoryBankSettings;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data } = await supabaseAdmin.from('settings').select('*').eq('key', 'bank_settings').maybeSingle();
+      if (data && data.value) {
+        memoryBankSettings = data.value as DBBankSettings;
+        return memoryBankSettings;
+      }
+    } catch (e) {}
+  }
+
   const db = readDB();
-  return db.settings || {
+  memoryBankSettings = db.settings || {
     account_holder: 'Nisargshala',
     bank_name: 'HDFC Bank',
     account_number: '50200012345678',
     ifsc_code: 'HDFC0001234',
     validity_months: 12,
   };
+  return memoryBankSettings;
 }
 
-export function updateBankSettingsInDB(settings: Partial<DBBankSettings>): DBBankSettings {
-  const db = readDB();
-  const current = getBankSettingsInDB();
-  db.settings = {
+export async function updateBankSettingsInDB(settings: Partial<DBBankSettings>): Promise<DBBankSettings> {
+  const current = await getBankSettingsInDB();
+  const updated: DBBankSettings = {
     ...current,
     ...settings,
   };
-  writeDB(db);
-  return db.settings;
+
+  memoryBankSettings = updated;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('settings').upsert({
+        key: 'bank_settings',
+        value: updated,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (e) {}
+  }
+
+  try {
+    const db = readDB();
+    db.settings = updated;
+    writeDB(db);
+  } catch (e) {}
+
+  return updated;
 }
 
 // Initial Admin Password Hash for "Hemant2026"

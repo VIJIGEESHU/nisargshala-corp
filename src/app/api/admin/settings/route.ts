@@ -3,7 +3,7 @@ import { getBankSettingsInDB, updateBankSettingsInDB } from '@/lib/store';
 
 export async function GET() {
   try {
-    const settings = getBankSettingsInDB();
+    const settings = await getBankSettingsInDB();
     return NextResponse.json({ success: true, settings });
   } catch (err: any) {
     console.error('Error fetching settings:', err);
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updated = updateBankSettingsInDB({
+    const updated = await updateBankSettingsInDB({
       account_holder: String(account_holder).trim(),
       bank_name: String(bank_name).trim(),
       account_number: String(account_number).trim(),
