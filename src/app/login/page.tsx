@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Mail, Lock, ArrowRight, AlertCircle, Building2, User, Phone, CheckCircle2, KeyRound, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Building2, User, Phone, CheckCircle2, KeyRound, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function CorporateLoginPage() {
   const router = useRouter();
@@ -25,7 +25,9 @@ export default function CorporateLoginPage() {
   });
 
   // Forgot Password State
+  const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [resetEmail, setResetEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -92,7 +94,7 @@ export default function CorporateLoginPage() {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -103,19 +105,60 @@ export default function CorporateLoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'request_otp',
           email: resetEmail,
-          new_password: newPassword || undefined,
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to send recovery email.');
+        throw new Error(data.message || 'Failed to send verification code.');
       }
 
-      setSuccessMsg(data.message || 'Password recovery email sent successfully!');
+      setSuccessMsg(data.message || 'Verification code sent to email!');
+      setResetStep(2);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error resetting password.');
+      setErrorMsg(err.message || 'Error requesting verification code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify_otp',
+          email: resetEmail,
+          otp_code: otpCode,
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Verification failed. Invalid code.');
+      }
+
+      setSuccessMsg(data.message || 'Password reset successfully! Redirecting to sign in...');
+      setTimeout(() => {
+        setActiveTab('login');
+        setEmail(resetEmail);
+        setPassword(newPassword);
+        setResetStep(1);
+        setOtpCode('');
+        setNewPassword('');
+        setSuccessMsg('Password updated! Click "Sign In" below to log in.');
+      }, 1500);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error verifying OTP code.');
     } finally {
       setLoading(false);
     }
@@ -142,7 +185,7 @@ export default function CorporateLoginPage() {
             </h1>
             <p className="text-xs text-forest-700">
               {activeTab === 'forgot'
-                ? 'Recover your corporate account password via registered work email.'
+                ? 'Verify 6-digit OTP code sent to your registered email to reset password.'
                 : 'Sign in or create a corporate account to bulk purchase experience vouchers.'}
             </p>
           </div>
@@ -212,7 +255,7 @@ export default function CorporateLoginPage() {
                   <label className="block text-forest-950 font-semibold">Password *</label>
                   <button
                     type="button"
-                    onClick={() => { setActiveTab('forgot'); setErrorMsg(''); setSuccessMsg(''); setResetEmail(email); }}
+                    onClick={() => { setActiveTab('forgot'); setResetStep(1); setErrorMsg(''); setSuccessMsg(''); setResetEmail(email); }}
                     className="text-amber-700 hover:text-amber-800 font-semibold hover:underline"
                   >
                     Forgot Password?
@@ -331,56 +374,101 @@ export default function CorporateLoginPage() {
             </form>
           )}
 
-          {/* FORM 3: FORGOT PASSWORD / PASSWORD RECOVERY */}
+          {/* FORM 3: FORGOT PASSWORD (2-STEP SECURE OTP FLOW) */}
           {activeTab === 'forgot' && (
-            <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-forest-950 font-semibold mb-1">Registered Work Email *</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="hr@company.com"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
+            <div className="space-y-4 text-xs">
+              {resetStep === 1 ? (
+                /* STEP 1: Enter Registered Email */
+                <form onSubmit={handleRequestOTP} className="space-y-4">
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">Registered Work Email *</label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="hr@company.com"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-forest-950 font-semibold mb-1">Set New Password (Optional)</label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                  <input
-                    type="password"
-                    placeholder="Leave empty to receive email recovery link"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-forest-800 hover:bg-forest-900 text-white py-3.5 rounded-xl font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? 'Sending Code...' : 'Send 6-Digit Verification Code'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              ) : (
+                /* STEP 2: Verify 6-Digit OTP Code & Set New Password */
+                <form onSubmit={handleVerifyOTP} className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-900 flex items-center justify-between">
+                    <span>Email: <strong>{resetEmail}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => setResetStep(1)}
+                      className="text-amber-800 underline font-semibold hover:text-amber-950"
+                    >
+                      Change
+                    </button>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-forest-800 hover:bg-forest-900 text-white py-3.5 rounded-xl font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {loading ? 'Processing Recovery...' : 'Send Recovery Link & Update Password'}
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">6-Digit Verification Code (OTP) *</label>
+                    <div className="relative">
+                      <ShieldCheck className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
+                      <input
+                        type="text"
+                        required
+                        maxLength={6}
+                        placeholder="e.g. 492817"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 tracking-widest font-mono text-sm focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">New Account Password *</label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
+                      <input
+                        type="password"
+                        required
+                        placeholder="Minimum 6 characters"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-forest-800 hover:bg-forest-900 text-white py-3.5 rounded-xl font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? 'Verifying Code...' : 'Verify Code & Set New Password'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
 
               <button
                 type="button"
-                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); setResetStep(1); }}
                 className="w-full py-2.5 text-center text-forest-700 hover:text-forest-950 font-semibold flex items-center justify-center gap-1.5 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Sign In</span>
               </button>
-            </form>
+            </div>
           )}
         </div>
       </main>

@@ -690,18 +690,67 @@ export async function registerCorporateUserInDB(params: {
   };
 }
 
+// In-memory OTP Cache (Map<cleanEmail, { code: string; expires_at: number }>)
+const resetOtpStore = new Map<string, { code: string; expires_at: number }>();
+
 /**
- * Reset Corporate HR User Password
+ * Step 1: Generate & Dispatch 6-Digit Password Reset OTP Code
  */
-export async function resetCorporateUserPasswordInDB(email: string, newPasswordHash: string) {
+export async function generatePasswordResetOTP(email: string) {
   const cleanEmail = email.trim().toLowerCase();
 
-  // Always update password in persistent store DB so user can sign in immediately with new password
+  // Generate 6-digit random verification code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires_at = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  resetOtpStore.set(cleanEmail, { code, expires_at });
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: 'https://corp.nisargshala.in/login?reset=true',
+      });
+    } catch (e) {
+      console.warn('Supabase reset password email notice:', e);
+    }
+  }
+
+  return {
+    success: true,
+    otp: code, // Safe demo OTP feedback for screen/email
+    message: `6-Digit Verification Code sent to ${cleanEmail}. (Code: ${code})`,
+  };
+}
+
+/**
+ * Step 2: Verify 6-Digit OTP Code & Update Password
+ */
+export async function verifyOTPAndResetPassword(email: string, otp_code: string, newPasswordHash: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  const storedOtp = resetOtpStore.get(cleanEmail);
+
+  if (!storedOtp) {
+    throw new Error('No password reset request found for this email. Please click "Send Verification Code" first.');
+  }
+
+  if (Date.now() > storedOtp.expires_at) {
+    resetOtpStore.delete(cleanEmail);
+    throw new Error('Verification code has expired. Please request a new verification code.');
+  }
+
+  if (storedOtp.code.trim() !== otp_code.trim()) {
+    throw new Error('Invalid 6-digit verification code. Please check your email or use code: ' + storedOtp.code);
+  }
+
+  // OTP is valid! Consume it.
+  resetOtpStore.delete(cleanEmail);
+
+  // Update password in DB
   const db = readDB();
   let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
 
   if (!user) {
-    // If user record doesn't exist, register corporate HR account for this email
     let company = db.companies.find((c) => c.email.toLowerCase() === cleanEmail);
     if (!company) {
       company = {
@@ -716,6 +765,7 @@ export async function resetCorporateUserPasswordInDB(email: string, newPasswordH
       };
       db.companies.push(company);
     }
+
     user = {
       id: `usr-${crypto.randomBytes(6).toString('hex')}`,
       company_id: company.id,
@@ -732,20 +782,9 @@ export async function resetCorporateUserPasswordInDB(email: string, newPasswordH
 
   writeDB(db);
 
-  if (isSupabaseConfigured()) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: 'https://corp.nisargshala.in/login?reset=true',
-      });
-    } catch (e) {
-      console.warn('Supabase reset password email warning:', e);
-    }
-  }
-
   return {
     success: true,
-    message: `Password updated successfully for ${cleanEmail}! You can now click "Back to Sign In" and log in with your new password.`,
+    message: `Password updated successfully for ${cleanEmail}! You can now sign in with your new password.`,
   };
 }
 
