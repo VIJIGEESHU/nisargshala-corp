@@ -117,10 +117,10 @@ export async function getBankSettingsInDB(): Promise<DBBankSettings> {
 
   const db = readDB();
   memoryBankSettings = db.settings || {
-    account_holder: 'Nisargshala',
+    account_holder: 'NISARGSHALA',
     bank_name: 'HDFC Bank',
-    account_number: '50200012345678',
-    ifsc_code: 'HDFC0001234',
+    account_number: '50200097103825',
+    ifsc_code: 'HDFC0002493',
     validity_months: 12,
   };
   return memoryBankSettings;
@@ -199,10 +199,10 @@ function getInitialDB(): DatabaseSchema {
     payment_records: [],
     audit_logs: [],
     settings: {
-      account_holder: 'Nisargshala',
+      account_holder: 'NISARGSHALA',
       bank_name: 'HDFC Bank',
-      account_number: '50200012345678',
-      ifsc_code: 'HDFC0001234',
+      account_number: '50200097103825',
+      ifsc_code: 'HDFC0002493',
       validity_months: 12,
     },
   };

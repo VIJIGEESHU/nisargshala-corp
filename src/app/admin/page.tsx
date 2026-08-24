@@ -39,10 +39,10 @@ export default function AdminDashboardPage() {
 
   // Bank & Validity Settings State
   const [bankSettings, setBankSettings] = useState({
-    account_holder: 'Nisargshala',
+    account_holder: 'NISARGSHALA',
     bank_name: 'HDFC Bank',
-    account_number: '50200012345678',
-    ifsc_code: 'HDFC0001234',
+    account_number: '50200097103825',
+    ifsc_code: 'HDFC0002493',
     validity_months: 12,
   });
   const [settingsLoading, setSettingsLoading] = useState(false);

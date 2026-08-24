@@ -58,10 +58,10 @@ export default function MultiStepOrderWizard() {
   const [utrSuccess, setUtrSuccess] = useState(false);
 
   const [bankInfo, setBankInfo] = useState({
-    account_holder: 'Nisargshala',
+    account_holder: 'NISARGSHALA',
     bank_name: 'HDFC Bank',
-    account_number: '50200012345678',
-    ifsc_code: 'HDFC0001234',
+    account_number: '50200097103825',
+    ifsc_code: 'HDFC0002493',
   });
 
   useEffect(() => {

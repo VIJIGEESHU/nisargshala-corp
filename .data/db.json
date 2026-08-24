@@ -308,5 +308,12 @@
     }
   ],
   "payment_records": [],
-  "audit_logs": []
+  "audit_logs": [],
+  "settings": {
+    "account_holder": "NISARGSHALA",
+    "bank_name": "HDFC Bank",
+    "account_number": "50200097103825",
+    "ifsc_code": "HDFC0002493",
+    "validity_months": 12
+  }
 }
