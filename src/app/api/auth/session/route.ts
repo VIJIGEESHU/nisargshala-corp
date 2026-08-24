@@ -24,6 +24,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ authenticated: false });
   }
 
+  if (userType === 'ADMIN') {
+    return NextResponse.json({
+      authenticated: true,
+      userType: 'ADMIN',
+      user: {
+        id: session.userId || 'usr-admin-hemant',
+        email: session.email || 'admin@nisargshala.in',
+        role: 'SUPER_ADMIN',
+        company: {
+          id: 'comp-nisargshala-ops',
+          company_name: 'Nisargshala Operations',
+        },
+      },
+    });
+  }
+
   const db = readDB();
   const company = db.companies.find((c) => c.id === session.companyId);
 
@@ -34,7 +50,7 @@ export async function GET(req: NextRequest) {
       id: session.userId,
       email: session.email,
       role: session.role,
-      company: company || { id: session.companyId, company_name: session.companyName },
+      company: company || { id: session.companyId, company_name: session.companyName || 'Corporate Partner' },
     },
   });
 }
