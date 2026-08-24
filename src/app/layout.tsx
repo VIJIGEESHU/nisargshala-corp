@@ -18,6 +18,15 @@ export const metadata: Metadata = {
   title: 'Nisargshala Corporate Gift Voucher System',
   description: 'Reward performance with experiences people will remember. Official Nisargshala Corporate Experience Gift Voucher Issuance Platform.',
   metadataBase: new URL('https://corp.nisargshala.in/'),
+  icons: {
+    icon: [
+      { url: '/images/nisargshala-logo.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: '/images/nisargshala-logo.png',
+    apple: '/images/nisargshala-logo.png',
+  },
   alternates: {
     canonical: 'https://corp.nisargshala.in/',
   },
@@ -27,6 +36,14 @@ export const metadata: Metadata = {
     url: 'https://corp.nisargshala.in/',
     siteName: 'Nisargshala Corporate Vouchers',
     type: 'website',
+    images: [
+      {
+        url: '/images/nisargshala-logo.png',
+        width: 800,
+        height: 800,
+        alt: 'Nisargshala Logo',
+      },
+    ],
   },
 };
 
