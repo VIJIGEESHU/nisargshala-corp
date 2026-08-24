@@ -66,9 +66,9 @@ export default function VoucherCardPreview({
                   </div>
                   <div>
                     <span className="font-serif font-extrabold text-lg tracking-wider text-forest-950 block leading-tight">
-                      NISARGSHALA
+                      Nisargshala
                     </span>
-                    <span className="text-[9px] font-bold text-forest-700 uppercase tracking-widest block">
+                    <span className="text-[9px] font-bold text-forest-700 block">
                       Experience Gift Voucher
                     </span>
                   </div>
