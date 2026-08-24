@@ -61,17 +61,20 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.addEventListener('error', function(e) {
-                if (e && e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1)) {
+                var target = e.target || e.srcElement;
+                var isCssError = target && target.tagName === 'LINK' && target.rel === 'stylesheet';
+                var isChunkError = e && e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1);
+                if (isCssError || isChunkError) {
                   try {
-                    if (!sessionStorage.getItem('chunk_reload_lock')) {
-                      sessionStorage.setItem('chunk_reload_lock', 'true');
+                    if (!sessionStorage.getItem('asset_reload_lock')) {
+                      sessionStorage.setItem('asset_reload_lock', 'true');
                       window.location.reload();
                     }
                   } catch (err) {
                     window.location.reload();
                   }
                 }
-              });
+              }, true);
             `,
           }}
         />
