@@ -20,12 +20,11 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://corp.nisargshala.in/'),
   icons: {
     icon: [
-      { url: '/images/nisargshala-logo.png', type: 'image/png' },
-      { url: '/icon.png', type: 'image/png' },
-      { url: '/favicon.ico' },
+      { url: '/images/nisargshala-logo.png?v=2', type: 'image/png' },
+      { url: '/icon.png?v=2', type: 'image/png' },
     ],
-    shortcut: '/images/nisargshala-logo.png',
-    apple: '/images/nisargshala-logo.png',
+    shortcut: '/images/nisargshala-logo.png?v=2',
+    apple: '/images/nisargshala-logo.png?v=2',
   },
   alternates: {
     canonical: 'https://corp.nisargshala.in/',
@@ -54,6 +53,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+      <head>
+        <link rel="icon" href="/images/nisargshala-logo.png?v=2" type="image/png" sizes="any" />
+        <link rel="shortcut icon" href="/images/nisargshala-logo.png?v=2" type="image/png" />
+        <link rel="apple-touch-icon" href="/images/nisargshala-logo.png?v=2" />
+      </head>
       <body className="bg-sand-50 text-forest-900 antialiased selection:bg-amber-100 selection:text-amber-700">
         {children}
       </body>
