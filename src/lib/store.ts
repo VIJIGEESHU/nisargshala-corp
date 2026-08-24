@@ -690,3 +690,40 @@ export async function registerCorporateUserInDB(params: {
   };
 }
 
+/**
+ * Reset Corporate HR User Password
+ */
+export async function resetCorporateUserPasswordInDB(email: string, newPasswordHash: string) {
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+      const user = users?.users?.find((u: any) => u.email?.toLowerCase() === cleanEmail);
+
+      if (user) {
+        await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: 'https://corp.nisargshala.in/login?reset=true',
+        });
+        return { success: true, message: `Password recovery instructions sent to ${cleanEmail}.` };
+      }
+    } catch (e) {
+      console.warn('Supabase reset password warning (falling back to local store):', e);
+    }
+  }
+
+  // Local JSON DB
+  const db = readDB();
+  const user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  if (user) {
+    user.password_hash = newPasswordHash;
+    writeDB(db);
+    return { success: true, message: 'Password updated successfully! You can now sign in with your new password.' };
+  }
+
+  return { success: true, message: `If an account exists for ${cleanEmail}, a recovery email with password reset instructions has been sent.` };
+}
+
+

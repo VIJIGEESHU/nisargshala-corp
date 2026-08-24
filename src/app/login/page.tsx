@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Mail, Lock, ArrowRight, AlertCircle, Building2, User, Phone, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Building2, User, Phone, CheckCircle2, KeyRound, ArrowLeft } from 'lucide-react';
 
 export default function CorporateLoginPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
   
   // Login State
   const [email, setEmail] = useState('');
@@ -23,6 +23,10 @@ export default function CorporateLoginPage() {
     mobile: '',
     password: '',
   });
+
+  // Forgot Password State
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -88,6 +92,35 @@ export default function CorporateLoginPage() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: resetEmail,
+          new_password: newPassword || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to send recovery email.');
+      }
+
+      setSuccessMsg(data.message || 'Password recovery email sent successfully!');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error resetting password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-sand-50">
       <Navbar />
@@ -108,35 +141,39 @@ export default function CorporateLoginPage() {
               Corporate HR Portal
             </h1>
             <p className="text-xs text-forest-700">
-              Sign in or create a corporate account to bulk purchase experience vouchers for your employees.
+              {activeTab === 'forgot'
+                ? 'Recover your corporate account password via registered work email.'
+                : 'Sign in or create a corporate account to bulk purchase experience vouchers.'}
             </p>
           </div>
 
           {/* TAB TOGGLE: Sign In / Create Account */}
-          <div className="flex bg-sand-100 p-1 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
-              className={`flex-1 py-2.5 rounded-lg transition-all ${
-                activeTab === 'login'
-                  ? 'bg-white text-forest-950 shadow-sm'
-                  : 'text-forest-600 hover:text-forest-900'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
-              className={`flex-1 py-2.5 rounded-lg transition-all ${
-                activeTab === 'register'
-                  ? 'bg-white text-forest-950 shadow-sm'
-                  : 'text-forest-600 hover:text-forest-900'
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
+          {activeTab !== 'forgot' && (
+            <div className="flex bg-sand-100 p-1 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                className={`flex-1 py-2.5 rounded-lg transition-all ${
+                  activeTab === 'login'
+                    ? 'bg-white text-forest-950 shadow-sm'
+                    : 'text-forest-600 hover:text-forest-900'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
+                className={`flex-1 py-2.5 rounded-lg transition-all ${
+                  activeTab === 'register'
+                    ? 'bg-white text-forest-950 shadow-sm'
+                    : 'text-forest-600 hover:text-forest-900'
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
 
           {errorMsg && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
@@ -153,7 +190,7 @@ export default function CorporateLoginPage() {
           )}
 
           {/* FORM 1: SIGN IN */}
-          {activeTab === 'login' ? (
+          {activeTab === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4 text-xs">
               <div>
                 <label className="block text-forest-950 font-semibold mb-1">Corporate Work Email *</label>
@@ -171,7 +208,16 @@ export default function CorporateLoginPage() {
               </div>
 
               <div>
-                <label className="block text-forest-950 font-semibold mb-1">Password *</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-forest-950 font-semibold">Password *</label>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('forgot'); setErrorMsg(''); setSuccessMsg(''); setResetEmail(email); }}
+                    className="text-amber-700 hover:text-amber-800 font-semibold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
                   <input
@@ -194,8 +240,10 @@ export default function CorporateLoginPage() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-          ) : (
-            /* FORM 2: CREATE CORPORATE ACCOUNT */
+          )}
+
+          {/* FORM 2: CREATE CORPORATE ACCOUNT */}
+          {activeTab === 'register' && (
             <form onSubmit={handleRegister} className="space-y-3.5 text-xs">
               <div>
                 <label className="block text-forest-950 font-semibold mb-1">Company Name *</label>
@@ -279,6 +327,58 @@ export default function CorporateLoginPage() {
               >
                 {loading ? 'Creating Account...' : 'Register & Enter Dashboard'}
                 <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+          )}
+
+          {/* FORM 3: FORGOT PASSWORD / PASSWORD RECOVERY */}
+          {activeTab === 'forgot' && (
+            <form onSubmit={handleForgotPassword} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-forest-950 font-semibold mb-1">Registered Work Email *</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="hr@company.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-forest-950 font-semibold mb-1">Set New Password (Optional)</label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
+                  <input
+                    type="password"
+                    placeholder="Leave empty to receive email recovery link"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-forest-800 hover:bg-forest-900 text-white py-3.5 rounded-xl font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loading ? 'Processing Recovery...' : 'Send Recovery Link & Update Password'}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                className="w-full py-2.5 text-center text-forest-700 hover:text-forest-950 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Sign In</span>
               </button>
             </form>
           )}
