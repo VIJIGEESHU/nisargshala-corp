@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDB } from '@/lib/store';
+import { readDB, confirmPaymentAndGenerateVouchersInDB } from '@/lib/store';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { generateVoucherHtml, generateBulkOrderVouchersZip, generateRedemptionQRCode } from '@/lib/pdfGenerator';
 import { LOCKED_VOUCHER_PRODUCTS } from '@/lib/pricing';
@@ -14,40 +14,64 @@ export async function GET(req: NextRequest) {
     let vouchers: any[] = [];
     let companyName = 'Nisargshala Corporate Client';
 
+    // 1. Fetch from Supabase
     if (isSupabaseConfigured()) {
-      const supabaseAdmin = getSupabaseAdmin();
+      try {
+        const supabaseAdmin = getSupabaseAdmin();
 
-      if (voucherId) {
-        const { data: vch } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('id', voucherId).single();
-        if (vch) {
-          vouchers = [vch];
-          companyName = vch.company?.company_name || companyName;
+        if (voucherId) {
+          const { data: vch } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('id', voucherId).single();
+          if (vch) vouchers.push(vch);
+        } else if (orderId) {
+          const { data: vchs } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('order_id', orderId);
+          if (vchs && vchs.length > 0) vouchers.push(...vchs);
+        } else if (companyId) {
+          const { data: vchs } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('company_id', companyId);
+          if (vchs && vchs.length > 0) vouchers.push(...vchs);
         }
-      } else if (orderId) {
-        const { data: vchs } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('order_id', orderId);
-        vouchers = vchs || [];
-        if (vouchers.length > 0) companyName = vouchers[0].company?.company_name || companyName;
-      } else if (companyId) {
-        const { data: vchs } = await supabaseAdmin.from('vouchers').select('*, company:companies(*)').eq('company_id', companyId);
-        vouchers = vchs || [];
-        if (vouchers.length > 0) companyName = vouchers[0].company?.company_name || companyName;
+      } catch (e) {
+        console.warn('Supabase voucher download fetch warning:', e);
       }
-    } else {
-      const db = readDB();
+    }
 
-      if (voucherId) {
-        const vch = db.vouchers.find((v) => v.id === voucherId);
-        if (vch) vouchers = [vch];
-      } else if (orderId) {
-        vouchers = db.vouchers.filter((v) => v.order_id === orderId);
-      } else if (companyId) {
-        vouchers = db.vouchers.filter((v) => v.company_id === companyId);
-      }
+    // 2. Fetch from Local Store DB
+    const db = readDB();
+    if (voucherId) {
+      const vch = db.vouchers.find((v) => v.id === voucherId || v.human_ref === voucherId || v.redemption_code === voucherId);
+      if (vch) vouchers.push(vch);
+    } else if (orderId) {
+      const localVchs = db.vouchers.filter((v) => v.order_id === orderId || v.order_id.includes(orderId));
+      vouchers.push(...localVchs);
+    } else if (companyId) {
+      const localVchs = db.vouchers.filter((v) => v.company_id === companyId);
+      vouchers.push(...localVchs);
+    }
 
-      if (vouchers.length > 0) {
-        const comp = db.companies.find((c) => c.id === vouchers[0].company_id);
-        if (comp) companyName = comp.company_name;
+    // Deduplicate vouchers by redemption_code / human_ref / id
+    const voucherMap = new Map<string, any>();
+    vouchers.forEach((v) => {
+      const key = v.id || v.redemption_code || v.human_ref;
+      if (!voucherMap.has(key)) voucherMap.set(key, v);
+    });
+    vouchers = Array.from(voucherMap.values());
+
+    // 3. Fallback: If no vouchers found for orderId, generate/fulfill on demand
+    if (vouchers.length === 0 && orderId) {
+      try {
+        const fulfillRes = await confirmPaymentAndGenerateVouchersInDB(orderId);
+        if (fulfillRes && fulfillRes.vouchers && fulfillRes.vouchers.length > 0) {
+          vouchers = fulfillRes.vouchers;
+        }
+      } catch (e) {
+        console.warn('On-demand voucher generation warning:', e);
       }
+    }
+
+    if (vouchers.length > 0) {
+      const compId = vouchers[0].company_id;
+      const comp = db.companies.find((c) => c.id === compId);
+      if (comp) companyName = comp.company_name;
+      else if (vouchers[0].company?.company_name) companyName = vouchers[0].company.company_name;
     }
 
     if (vouchers.length === 0) {
