@@ -57,27 +57,6 @@ export default function RootLayout({
         <link rel="icon" href="/images/nisargshala-logo.png?v=2" type="image/png" sizes="any" />
         <link rel="shortcut icon" href="/images/nisargshala-logo.png?v=2" type="image/png" />
         <link rel="apple-touch-icon" href="/images/nisargshala-logo.png?v=2" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.addEventListener('error', function(e) {
-                var target = e.target || e.srcElement;
-                var isCssError = target && target.tagName === 'LINK' && target.rel === 'stylesheet';
-                var isChunkError = e && e.message && (e.message.indexOf('ChunkLoadError') !== -1 || e.message.indexOf('Loading chunk') !== -1);
-                if (isCssError || isChunkError) {
-                  try {
-                    if (!sessionStorage.getItem('asset_reload_lock')) {
-                      sessionStorage.setItem('asset_reload_lock', 'true');
-                      window.location.reload();
-                    }
-                  } catch (err) {
-                    window.location.reload();
-                  }
-                }
-              }, true);
-            `,
-          }}
-        />
       </head>
       <body className="bg-sand-50 text-forest-900 antialiased selection:bg-amber-100 selection:text-amber-700">
         {children}
