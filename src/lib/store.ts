@@ -329,77 +329,95 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
   expiryDate.setMonth(expiryDate.getMonth() + 12);
 
   if (isSupabaseConfigured()) {
-    const supabaseAdmin = getSupabaseAdmin();
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: order, error } = await supabaseAdmin
-      .from('orders')
-      .select('*, company:companies(*), items:order_items(*)')
-      .eq('id', orderId)
-      .single();
+      let { data: order, error } = await supabaseAdmin
+        .from('orders')
+        .select('*, company:companies(*), items:order_items(*)')
+        .eq('id', orderId)
+        .single();
 
-    if (error || !order) throw new Error('Order not found in Supabase DB.');
-    if (order.payment_status === 'PAID') throw new Error('Order is already PAID.');
-
-    const { count } = await supabaseAdmin.from('vouchers').select('*', { count: 'exact', head: true });
-    let sequenceCounter = (count || 0) + 1;
-
-    const vouchersToInsert: any[] = [];
-    const existingCodes = new Set<string>();
-
-    for (const item of order.items) {
-      const productDef = LOCKED_VOUCHER_PRODUCTS[item.product_code];
-      const eligibleExperiences = productDef ? productDef.eligibleExperiences : [];
-
-      // CRITICAL: Generate item.quantity SEPARATE VOUCHER RECORDS!
-      for (let i = 0; i < item.quantity; i++) {
-        let code = generateSecureRedemptionCode();
-        while (existingCodes.has(code)) {
-          code = generateSecureRedemptionCode();
-        }
-        existingCodes.add(code);
-
-        const humanRef = generateHumanReference(sequenceCounter++);
-
-        vouchersToInsert.push({
-          human_ref: humanRef,
-          redemption_code: code,
-          order_id: order.id,
-          company_id: order.company_id,
-          product_code: item.product_code,
-          voucher_value: item.unit_price,
-          eligible_experience_codes: eligibleExperiences,
-          status: 'ACTIVE',
-          issue_date: now.toISOString(),
-          expiry_date: expiryDate.toISOString(),
-        });
+      if (!order) {
+        // Try looking up by order_number
+        const { data: ordByNum } = await supabaseAdmin
+          .from('orders')
+          .select('*, company:companies(*), items:order_items(*)')
+          .eq('order_number', orderId)
+          .single();
+        order = ordByNum;
       }
+
+      if (order) {
+        if (order.payment_status === 'PAID') throw new Error('Order is already PAID.');
+
+        const { count } = await supabaseAdmin.from('vouchers').select('*', { count: 'exact', head: true });
+        let sequenceCounter = (count || 0) + 1;
+
+        const vouchersToInsert: any[] = [];
+        const existingCodes = new Set<string>();
+
+        for (const item of order.items || []) {
+          const productDef = LOCKED_VOUCHER_PRODUCTS[item.product_code];
+          const eligibleExperiences = productDef ? productDef.eligibleExperiences : [];
+
+          // CRITICAL: Generate item.quantity SEPARATE VOUCHER RECORDS!
+          for (let i = 0; i < item.quantity; i++) {
+            let code = generateSecureRedemptionCode();
+            while (existingCodes.has(code)) {
+              code = generateSecureRedemptionCode();
+            }
+            existingCodes.add(code);
+
+            const humanRef = generateHumanReference(sequenceCounter++);
+
+            vouchersToInsert.push({
+              human_ref: humanRef,
+              redemption_code: code,
+              order_id: order.id,
+              company_id: order.company_id,
+              product_code: item.product_code,
+              voucher_value: item.unit_price,
+              eligible_experience_codes: eligibleExperiences,
+              status: 'ACTIVE',
+              issue_date: now.toISOString(),
+              expiry_date: expiryDate.toISOString(),
+            });
+          }
+        }
+
+        const { data: insertedVouchers, error: insertErr } = await supabaseAdmin
+          .from('vouchers')
+          .insert(vouchersToInsert)
+          .select();
+
+        if (insertErr) throw insertErr;
+
+        // Update order status
+        await supabaseAdmin
+          .from('orders')
+          .update({
+            payment_status: 'PAID',
+            order_status: 'COMPLETED',
+            confirmed_by: adminId || null,
+            confirmed_at: now.toISOString(),
+            updated_at: now.toISOString(),
+          })
+          .eq('id', order.id);
+
+        return { vouchersCount: vouchersToInsert.length, vouchers: insertedVouchers };
+      }
+    } catch (err: any) {
+      if (err.message && err.message.includes('already PAID')) {
+        throw err;
+      }
+      console.warn('Supabase confirm payment warning (falling back to local store):', err.message || err);
     }
-
-    const { data: insertedVouchers, error: insertErr } = await supabaseAdmin
-      .from('vouchers')
-      .insert(vouchersToInsert)
-      .select();
-
-    if (insertErr) throw insertErr;
-
-    // Update order status
-    await supabaseAdmin
-      .from('orders')
-      .update({
-        payment_status: 'PAID',
-        order_status: 'COMPLETED',
-        confirmed_by: adminId || null,
-        confirmed_at: now.toISOString(),
-        updated_at: now.toISOString(),
-      })
-      .eq('id', order.id);
-
-    return { vouchersCount: vouchersToInsert.length, vouchers: insertedVouchers };
   }
 
-  // Local Persistent JSON DB File
+  // Local Persistent JSON DB Fallback
   const db = readDB();
-  const order = db.orders.find((o) => o.id === orderId);
+  const order = db.orders.find((o) => o.id === orderId || o.order_number === orderId);
 
   if (!order) throw new Error('Order not found.');
   if (order.payment_status === 'PAID') throw new Error('Order is already PAID.');
