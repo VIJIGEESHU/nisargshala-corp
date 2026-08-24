@@ -191,69 +191,78 @@ export async function createCorporateOrderInDB(params: {
   const now = new Date().toISOString();
 
   if (isSupabaseConfigured()) {
-    const supabaseAdmin = getSupabaseAdmin();
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. Fetch or create company
-    let companyId: string;
-    const { data: existingComp } = await supabaseAdmin
-      .from('companies')
-      .select('id')
-      .eq('email', params.email.trim().toLowerCase())
-      .single();
-
-    if (existingComp) {
-      companyId = existingComp.id;
-    } else {
-      const { data: newComp, error: compErr } = await supabaseAdmin
+      // 1. Fetch or create company
+      let companyId: string;
+      const { data: existingComp, error: findCompErr } = await supabaseAdmin
         .from('companies')
+        .select('id')
+        .eq('email', params.email.trim().toLowerCase())
+        .single();
+
+      if (findCompErr && findCompErr.code === 'PGRST205') {
+        throw findCompErr; // Trigger fallback to local persistent store
+      }
+
+      if (existingComp) {
+        companyId = existingComp.id;
+      } else {
+        const { data: newComp, error: compErr } = await supabaseAdmin
+          .from('companies')
+          .insert({
+            company_name: params.company_name.trim(),
+            contact_person: params.contact_person.trim(),
+            designation: params.designation?.trim() || null,
+            email: params.email.trim().toLowerCase(),
+            mobile: params.mobile.trim(),
+            billing_address: params.billing_address.trim(),
+            gst_number: params.gst_number?.trim().toUpperCase() || null,
+            status: 'ACTIVE',
+          })
+          .select()
+          .single();
+
+        if (compErr || !newComp) throw compErr || new Error('Failed creating company in database.');
+        companyId = newComp.id;
+      }
+
+      // 2. Create Order
+      const { data: order, error: orderErr } = await supabaseAdmin
+        .from('orders')
         .insert({
-          company_name: params.company_name.trim(),
-          contact_person: params.contact_person.trim(),
-          designation: params.designation?.trim() || null,
-          email: params.email.trim().toLowerCase(),
-          mobile: params.mobile.trim(),
-          billing_address: params.billing_address.trim(),
-          gst_number: params.gst_number?.trim().toUpperCase() || null,
-          status: 'ACTIVE',
+          order_number: orderNumber,
+          company_id: companyId,
+          subtotal_amount: totals.subtotal,
+          gst_amount: totals.gst,
+          total_amount: totals.total,
+          payment_status: 'PENDING_PAYMENT',
+          order_status: 'SUBMITTED',
+          payment_method: 'RTGS_NEFT',
+          notes: params.notes || null,
         })
         .select()
         .single();
 
-      if (compErr || !newComp) throw compErr || new Error('Failed creating company in database.');
-      companyId = newComp.id;
+      if (orderErr || !order) throw orderErr || new Error('Failed creating order in database.');
+
+      // 3. Create Order Items
+      const itemsToInsert = totals.breakdown.map((item) => ({
+        order_id: order.id,
+        product_code: item.code,
+        quantity: item.count,
+        unit_price: item.unitPrice,
+        total_price: item.total,
+      }));
+
+      await supabaseAdmin.from('order_items').insert(itemsToInsert);
+
+      return { order, orderNumber, totals };
+    } catch (err: any) {
+      console.warn('Supabase DB operation warning (falling back to persistent local store):', err.message || err);
+      // Fallback to local persistent JSON DB below
     }
-
-    // 2. Create Order
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        company_id: companyId,
-        subtotal_amount: totals.subtotal,
-        gst_amount: totals.gst,
-        total_amount: totals.total,
-        payment_status: 'PENDING_PAYMENT',
-        order_status: 'SUBMITTED',
-        payment_method: 'RTGS_NEFT',
-        notes: params.notes || null,
-      })
-      .select()
-      .single();
-
-    if (orderErr || !order) throw orderErr || new Error('Failed creating order in database.');
-
-    // 3. Create Order Items
-    const itemsToInsert = totals.breakdown.map((item) => ({
-      order_id: order.id,
-      product_code: item.code,
-      quantity: item.count,
-      unit_price: item.unitPrice,
-      total_price: item.total,
-    }));
-
-    await supabaseAdmin.from('order_items').insert(itemsToInsert);
-
-    return { order, orderNumber, totals };
   }
 
   // Local Persistent JSON DB File
