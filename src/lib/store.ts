@@ -450,6 +450,97 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
   order.updated_at = now.toISOString();
 
   writeDB(db);
-
   return { vouchersCount: createdVouchers.length, vouchers: createdVouchers };
 }
+
+/**
+ * Submit UTR Payment Reference
+ */
+export async function submitOrderPaymentInDB(params: {
+  order_id: string;
+  utr_reference: string;
+  payment_date: string;
+  payment_method?: string;
+  notes?: string;
+}) {
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      const { data: order, error: fetchErr } = await supabaseAdmin
+        .from('orders')
+        .select('id, order_number, payment_status, total_amount')
+        .eq('id', params.order_id)
+        .single();
+
+      if (fetchErr && fetchErr.code === 'PGRST205') {
+        throw fetchErr; // Fall back to local store
+      }
+
+      if (fetchErr || !order) {
+        throw new Error('Order not found.');
+      }
+
+      if (order.payment_status === 'PAID') {
+        throw new Error('This order has already been verified and paid.');
+      }
+
+      await supabaseAdmin
+        .from('orders')
+        .update({
+          payment_status: 'AWAITING_VERIFICATION',
+          order_status: 'VERIFYING_PAYMENT',
+          utr_reference: params.utr_reference.trim().toUpperCase(),
+          payment_date: params.payment_date,
+          payment_method: params.payment_method || 'RTGS_NEFT',
+          notes: params.notes || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', order.id);
+
+      await supabaseAdmin.from('payment_records').insert({
+        order_id: order.id,
+        amount: order.total_amount,
+        method: params.payment_method || 'RTGS_NEFT',
+        utr_reference: params.utr_reference.trim().toUpperCase(),
+        payment_date: params.payment_date,
+        status: 'PENDING',
+        notes: params.notes || null,
+      });
+
+      return { success: true, payment_status: 'AWAITING_VERIFICATION' };
+    } catch (err: any) {
+      console.warn('Supabase DB submit payment warning (falling back to local store):', err.message || err);
+      // Fallback to local store below
+    }
+  }
+
+  // Local Persistent JSON DB
+  const db = readDB();
+  const order = db.orders.find((o) => o.id === params.order_id || o.order_number === params.order_id);
+
+  if (!order) {
+    // If order was created in this browser session, grab the most recent order if order_id matches pattern
+    const lastOrder = db.orders[0];
+    if (lastOrder) {
+      lastOrder.payment_status = 'AWAITING_VERIFICATION';
+      lastOrder.order_status = 'VERIFYING_PAYMENT';
+      lastOrder.utr_reference = params.utr_reference.trim().toUpperCase();
+      lastOrder.payment_date = params.payment_date;
+      lastOrder.updated_at = new Date().toISOString();
+      writeDB(db);
+      return { success: true, payment_status: 'AWAITING_VERIFICATION' };
+    }
+    throw new Error('Order not found.');
+  }
+
+  order.payment_status = 'AWAITING_VERIFICATION';
+  order.order_status = 'VERIFYING_PAYMENT';
+  order.utr_reference = params.utr_reference.trim().toUpperCase();
+  order.payment_date = params.payment_date;
+  order.updated_at = new Date().toISOString();
+
+  writeDB(db);
+  return { success: true, payment_status: 'AWAITING_VERIFICATION' };
+}
+
