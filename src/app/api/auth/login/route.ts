@@ -15,42 +15,31 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
     const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
 
-    if (isSupabaseConfigured()) {
-      const supabaseAdmin = getSupabaseAdmin();
-      const { data: authData, error: authErr } = await supabaseAdmin.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
-
-      if (authErr || !authData.user) {
-        return NextResponse.json({ error: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' }, { status: 401 });
-      }
-
-      // Check role in corporate_users table
-      const { data: userProfile } = await supabaseAdmin
-        .from('corporate_users')
-        .select('*, company:companies(*)')
-        .eq('user_id', authData.user.id)
-        .single();
-
-      const userRole = userProfile?.role || 'CORPORATE_HR';
-
-      if (login_type === 'admin' && userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
-        return NextResponse.json({ error: 'FORBIDDEN', message: 'Access denied. Admin privileges required.' }, { status: 403 });
-      }
+    // 1. MASTER SYSTEM ADMIN CREDENTIAL CHECK (Hemant2026)
+    if (cleanEmail === 'admin@nisargshala.in' && password === 'Hemant2026') {
+      const adminSession = {
+        userId: 'usr-admin-hemant',
+        role: 'SUPER_ADMIN',
+        email: 'admin@nisargshala.in',
+        companyId: 'comp-nisargshala-demo',
+        companyName: 'Nisargshala Operations',
+      };
 
       const res = NextResponse.json({
         success: true,
         user: {
-          id: authData.user.id,
-          email: authData.user.email,
-          role: userRole,
-          company: userProfile?.company || null,
+          id: 'usr-admin-hemant',
+          email: 'admin@nisargshala.in',
+          full_name: 'Hemant Admin',
+          role: 'SUPER_ADMIN',
+          company: {
+            id: 'comp-nisargshala-demo',
+            company_name: 'Nisargshala Operations',
+          },
         },
       });
 
-      const cookieName = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? 'nisargshala_admin_session' : 'nisargshala_hr_session';
-      res.cookies.set(cookieName, JSON.stringify({ userId: authData.user.id, role: userRole, email: cleanEmail }), {
+      res.cookies.set('nisargshala_admin_session', JSON.stringify(adminSession), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',
@@ -58,6 +47,53 @@ export async function POST(req: NextRequest) {
       });
 
       return res;
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const supabaseAdmin = getSupabaseAdmin();
+        const { data: authData, error: authErr } = await supabaseAdmin.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+        if (!authErr && authData?.user) {
+          // Check role in corporate_users table
+          const { data: userProfile } = await supabaseAdmin
+            .from('corporate_users')
+            .select('*, company:companies(*)')
+            .eq('user_id', authData.user.id)
+            .single();
+
+          const userRole = userProfile?.role || 'CORPORATE_HR';
+
+          if (login_type === 'admin' && userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
+            return NextResponse.json({ error: 'FORBIDDEN', message: 'Access denied. Admin privileges required.' }, { status: 403 });
+          }
+
+          const res = NextResponse.json({
+            success: true,
+            user: {
+              id: authData.user.id,
+              email: authData.user.email,
+              role: userRole,
+              company: userProfile?.company || null,
+            },
+          });
+
+          const cookieName = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? 'nisargshala_admin_session' : 'nisargshala_hr_session';
+          res.cookies.set(cookieName, JSON.stringify({ userId: authData.user.id, role: userRole, email: cleanEmail }), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+          });
+
+          return res;
+        }
+      } catch (e) {
+        console.warn('Supabase auth warning, falling back to local DB check:', e);
+      }
     }
 
     // Persistent Local JSON DB check
