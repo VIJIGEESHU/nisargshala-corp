@@ -54,9 +54,9 @@ export default function Navbar() {
             </div>
             <div>
               <span className="font-serif font-bold text-xl tracking-wider text-forest-950 block leading-none">
-                NISARGSHALA
+                Nisargshala
               </span>
-              <span className="text-[10px] font-semibold tracking-widest text-forest-700 uppercase block mt-0.5">
+              <span className="text-[10px] font-semibold tracking-wide text-forest-700 block mt-0.5">
                 Corporate Vouchers
               </span>
             </div>
