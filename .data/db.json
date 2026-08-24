@@ -1,0 +1,312 @@
+{
+  "companies": [
+    {
+      "id": "comp-nisargshala-demo",
+      "company_name": "Acme India Pvt Ltd",
+      "contact_person": "Rahul Sharma",
+      "designation": "HR Lead",
+      "email": "hr@acme.in",
+      "mobile": "+91 98765 43210",
+      "billing_address": "Kothrud, Pune, Maharashtra 411038",
+      "status": "ACTIVE",
+      "created_at": "2026-08-24T11:24:47.034Z"
+    },
+    {
+      "id": "comp-6da178c02f9e",
+      "company_name": "Tata Consultancy Services",
+      "contact_person": "Anil Kulkarni",
+      "email": "anil@tcs.com",
+      "mobile": "9876543210",
+      "billing_address": "Hinjawadi IT Park, Pune",
+      "status": "ACTIVE",
+      "created_at": "2026-08-24T11:24:47.034Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-admin-hemant",
+      "company_id": "comp-nisargshala-demo",
+      "email": "admin@nisargshala.in",
+      "full_name": "Hemant Admin",
+      "password_hash": "294d016c486b1b766acb418b831c2147e9af40d4aa86ed29cce79d1a43692eed",
+      "role": "SUPER_ADMIN",
+      "created_at": "2026-08-24T11:24:47.034Z"
+    },
+    {
+      "id": "usr-hr-acme",
+      "company_id": "comp-nisargshala-demo",
+      "email": "hr@acme.in",
+      "full_name": "Rahul Sharma",
+      "password_hash": "04753c1d2614435a55c4348821c873dc99aae9adc9a64eedfdb7de38e93be8b8",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-24T11:24:47.034Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-0603352a7d6c",
+      "order_number": "ORD-20260824-9167",
+      "company_id": "comp-6da178c02f9e",
+      "subtotal_amount": 48000,
+      "gst_amount": 0,
+      "total_amount": 48000,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "created_at": "2026-08-24T11:24:47.034Z",
+      "updated_at": "2026-08-24T11:25:52.798Z",
+      "company": {
+        "id": "comp-6da178c02f9e",
+        "company_name": "Tata Consultancy Services",
+        "contact_person": "Anil Kulkarni",
+        "email": "anil@tcs.com",
+        "mobile": "9876543210",
+        "billing_address": "Hinjawadi IT Park, Pune",
+        "status": "ACTIVE",
+        "created_at": "2026-08-24T11:24:47.034Z"
+      },
+      "items": [
+        {
+          "id": "item-bde520c2",
+          "order_id": "ord-0603352a7d6c",
+          "product_code": "INDIVIDUAL",
+          "quantity": 12,
+          "unit_price": 4000,
+          "total_price": 48000
+        }
+      ],
+      "confirmed_by": "usr-admin-hemant",
+      "confirmed_at": "2026-08-24T11:25:52.798Z"
+    }
+  ],
+  "order_items": [
+    {
+      "id": "item-bde520c2",
+      "order_id": "ord-0603352a7d6c",
+      "product_code": "INDIVIDUAL",
+      "quantity": 12,
+      "unit_price": 4000,
+      "total_price": 48000
+    }
+  ],
+  "vouchers": [
+    {
+      "id": "vch-cf55f384004f",
+      "human_ref": "NS-CORP-2026-0012",
+      "redemption_code": "NS-YMFZ-3G65-ANHS",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-50afb295aa0a",
+      "human_ref": "NS-CORP-2026-0011",
+      "redemption_code": "NS-8A8D-XT6F-HYJ7",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-e91725dd7eb8",
+      "human_ref": "NS-CORP-2026-0010",
+      "redemption_code": "NS-FJVG-PZ66-UB2Z",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-0d98523c616a",
+      "human_ref": "NS-CORP-2026-0009",
+      "redemption_code": "NS-N8C6-F2KD-GYXD",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-a223f6fa13f9",
+      "human_ref": "NS-CORP-2026-0008",
+      "redemption_code": "NS-RQ6D-VGSD-5Y53",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-daadc5c0822a",
+      "human_ref": "NS-CORP-2026-0007",
+      "redemption_code": "NS-8R98-2FQB-UMFZ",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-852cf2aad544",
+      "human_ref": "NS-CORP-2026-0006",
+      "redemption_code": "NS-T74B-JX5S-TN6A",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-1ce9bb6631d7",
+      "human_ref": "NS-CORP-2026-0005",
+      "redemption_code": "NS-J34Y-3U69-7DC8",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-c2114fb102b8",
+      "human_ref": "NS-CORP-2026-0004",
+      "redemption_code": "NS-QMXH-7XPQ-UZP2",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-eae326975265",
+      "human_ref": "NS-CORP-2026-0003",
+      "redemption_code": "NS-R36H-AUEB-MDAF",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-08e83cd479bf",
+      "human_ref": "NS-CORP-2026-0002",
+      "redemption_code": "NS-E8MV-CAK2-DJZU",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    },
+    {
+      "id": "vch-17c157cd66cf",
+      "human_ref": "NS-CORP-2026-0001",
+      "redemption_code": "NS-2JW9-NA4V-5EZT",
+      "order_id": "ord-0603352a7d6c",
+      "company_id": "comp-6da178c02f9e",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-24T11:25:52.798Z",
+      "expiry_date": "2027-08-24T11:25:52.798Z",
+      "created_at": "2026-08-24T11:25:52.798Z",
+      "updated_at": "2026-08-24T11:25:52.798Z"
+    }
+  ],
+  "payment_records": [],
+  "audit_logs": []
+}

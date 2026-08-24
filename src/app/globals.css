@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-outfit: 'Outfit', Georgia, serif;
+}
+
+body {
+  background-color: #FDFBF7;
+  color: #1E3A2B;
+  font-family: var(--font-inter);
+  min-height: 100vh;
+}
+
+/* Glassmorphism utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(225, 237, 229, 0.6);
+}
+
+.gradient-forest {
+  background: linear-gradient(135deg, #1E3A2B 0%, #152A1F 100%);
+}
+
+.gradient-amber {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+}
