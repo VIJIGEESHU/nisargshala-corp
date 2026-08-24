@@ -571,3 +571,122 @@ export async function submitOrderPaymentInDB(params: {
   return { success: true, payment_status: 'AWAITING_VERIFICATION' };
 }
 
+/**
+ * Register New Corporate HR Account
+ */
+export async function registerCorporateUserInDB(params: {
+  company_name: string;
+  contact_person: string;
+  designation?: string;
+  email: string;
+  mobile: string;
+  billing_address?: string;
+  gst_number?: string;
+  password_hash: string;
+}) {
+  const now = new Date().toISOString();
+  const cleanEmail = params.email.trim().toLowerCase();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      let companyId: string;
+      const { data: existingComp } = await supabaseAdmin
+        .from('companies')
+        .select('id')
+        .eq('email', cleanEmail)
+        .single();
+
+      if (existingComp) {
+        companyId = existingComp.id;
+      } else {
+        const { data: newComp, error: compErr } = await supabaseAdmin
+          .from('companies')
+          .insert({
+            company_name: params.company_name.trim(),
+            contact_person: params.contact_person.trim(),
+            designation: params.designation?.trim() || 'HR Manager',
+            email: cleanEmail,
+            mobile: params.mobile.trim(),
+            billing_address: params.billing_address?.trim() || 'Head Office',
+            gst_number: params.gst_number?.trim().toUpperCase() || null,
+            status: 'ACTIVE',
+          })
+          .select()
+          .single();
+
+        if (!compErr && newComp) {
+          companyId = newComp.id;
+        } else {
+          companyId = `comp-${crypto.randomBytes(6).toString('hex')}`;
+        }
+      }
+
+      const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
+      await supabaseAdmin.from('corporate_users').insert({
+        user_id: userId,
+        company_id: companyId,
+        full_name: params.contact_person.trim(),
+        role: 'CORPORATE_HR',
+      });
+
+      return {
+        id: userId,
+        company_id: companyId,
+        email: cleanEmail,
+        full_name: params.contact_person.trim(),
+        company_name: params.company_name.trim(),
+      };
+    } catch (err: any) {
+      console.warn('Supabase register error (falling back to local store):', err);
+    }
+  }
+
+  // Local JSON DB
+  const db = readDB();
+  let company = db.companies.find((c) => c.email.toLowerCase() === cleanEmail);
+  if (!company) {
+    company = {
+      id: `comp-${crypto.randomBytes(6).toString('hex')}`,
+      company_name: params.company_name.trim(),
+      contact_person: params.contact_person.trim(),
+      designation: params.designation?.trim() || 'HR Manager',
+      email: cleanEmail,
+      mobile: params.mobile.trim(),
+      billing_address: params.billing_address?.trim() || 'Head Office',
+      gst_number: params.gst_number?.trim().toUpperCase(),
+      status: 'ACTIVE',
+      created_at: now,
+    };
+    db.companies.push(company);
+  }
+
+  let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+  if (user) {
+    throw new Error('An account with this email address already exists. Please sign in.');
+  }
+
+  const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
+  user = {
+    id: userId,
+    company_id: company.id,
+    email: cleanEmail,
+    full_name: params.contact_person.trim(),
+    password_hash: params.password_hash,
+    role: 'CORPORATE_HR',
+    created_at: now,
+  };
+
+  db.users.push(user);
+  writeDB(db);
+
+  return {
+    id: user.id,
+    company_id: company.id,
+    email: cleanEmail,
+    full_name: user.full_name,
+    company_name: company.company_name,
+  };
+}
+
