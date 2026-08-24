@@ -690,36 +690,50 @@ export async function registerCorporateUserInDB(params: {
   };
 }
 
-// In-memory OTP Cache (Map<cleanEmail, { code: string; expires_at: number }>)
-const resetOtpStore = new Map<string, { code: string; expires_at: number }>();
+import { sendOTPEmail } from './email';
+
+interface OTPRecord {
+  hash: string;
+  expires_at: number;
+  attempts: number;
+  last_requested_at: number;
+}
+
+const resetOtpStore = new Map<string, OTPRecord>();
 
 /**
- * Step 1: Generate & Dispatch 6-Digit Password Reset OTP Code
+ * Step 1: Generate & Dispatch 6-Digit Password Reset OTP Code via Real Email
  */
 export async function generatePasswordResetOTP(email: string) {
   const cleanEmail = email.trim().toLowerCase();
+  const now = Date.now();
 
-  // Generate 6-digit random verification code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires_at = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  resetOtpStore.set(cleanEmail, { code, expires_at });
-
-  if (isSupabaseConfigured()) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: 'https://corp.nisargshala.in/login?reset=true',
-      });
-    } catch (e) {
-      console.warn('Supabase reset password email notice:', e);
-    }
+  const existing = resetOtpStore.get(cleanEmail);
+  if (existing && now - existing.last_requested_at < 60000) {
+    const secondsLeft = Math.ceil((60000 - (now - existing.last_requested_at)) / 1000);
+    throw new Error(`Please wait ${secondsLeft} seconds before requesting a new verification code.`);
   }
+
+  // Cryptographically secure 6-digit random code
+  const rawCode = crypto.randomInt(100000, 999999).toString();
+  const codeHash = crypto.createHash('sha256').update(rawCode).digest('hex');
+  const expires_at = now + 10 * 60 * 1000; // 10 minutes
+
+  // Send real email via server email abstraction (Nodemailer SMTP / Resend)
+  // If email sending fails or service is unconfigured, sendOTPEmail throws an Error.
+  await sendOTPEmail({ to: cleanEmail, otp: rawCode });
+
+  // Only store hash if email send succeeded!
+  resetOtpStore.set(cleanEmail, {
+    hash: codeHash,
+    expires_at,
+    attempts: 0,
+    last_requested_at: now,
+  });
 
   return {
     success: true,
-    otp: code, // Safe demo OTP feedback for screen/email
-    message: `6-Digit Verification Code sent to ${cleanEmail}. (Code: ${code})`,
+    message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your inbox.`,
   };
 }
 
@@ -731,19 +745,31 @@ export async function verifyOTPAndResetPassword(email: string, otp_code: string,
   const storedOtp = resetOtpStore.get(cleanEmail);
 
   if (!storedOtp) {
-    throw new Error('No password reset request found for this email. Please click "Send Verification Code" first.');
+    throw new Error('No active password reset request found for this email. Please request a verification code first.');
   }
 
   if (Date.now() > storedOtp.expires_at) {
     resetOtpStore.delete(cleanEmail);
-    throw new Error('Verification code has expired. Please request a new verification code.');
+    throw new Error('Verification code has expired. Please request a new code.');
   }
 
-  if (storedOtp.code.trim() !== otp_code.trim()) {
-    throw new Error('Invalid 6-digit verification code. Please check your email or use code: ' + storedOtp.code);
+  if (storedOtp.attempts >= 5) {
+    resetOtpStore.delete(cleanEmail);
+    throw new Error('Too many failed verification attempts. Please request a new code.');
   }
 
-  // OTP is valid! Consume it.
+  const inputHash = crypto.createHash('sha256').update(otp_code.trim()).digest('hex');
+  if (storedOtp.hash !== inputHash) {
+    storedOtp.attempts += 1;
+    const remaining = 5 - storedOtp.attempts;
+    if (remaining <= 0) {
+      resetOtpStore.delete(cleanEmail);
+      throw new Error('Invalid verification code. Maximum attempts exceeded. Please request a new code.');
+    }
+    throw new Error(`Invalid 6-digit verification code. ${remaining} attempt(s) remaining.`);
+  }
+
+  // OTP is valid! Invalidate immediately.
   resetOtpStore.delete(cleanEmail);
 
   // Update password in DB
