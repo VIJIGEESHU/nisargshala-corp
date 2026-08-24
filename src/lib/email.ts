@@ -134,3 +134,152 @@ export async function sendOTPEmail(params: { to: string; otp: string }) {
     throw new Error('EMAIL_SEND_FAILED');
   }
 }
+
+/**
+ * Dispatch Order Confirmation Email with Vouchers ZIP Attachment
+ */
+export async function sendVouchersConfirmationEmail(params: {
+  to: string;
+  companyName: string;
+  orderNumber: string;
+  totalAmount: number;
+  vouchersCount: number;
+  zipBuffer: Buffer;
+}) {
+  const { to, companyName, orderNumber, totalAmount, vouchersCount, zipBuffer } = params;
+  const cleanTo = to.trim().toLowerCase();
+
+  if (!isEmailConfigured()) {
+    console.warn(`[EMAIL_NOTICE] Email service is not configured. Skipping voucher confirmation email to ${cleanTo}`);
+    return { success: false, reason: 'EMAIL_SERVICE_NOT_CONFIGURED' };
+  }
+
+  const fromEmail = process.env.EMAIL_FROM || '"Nisargshala Corporate Vouchers" <corporate@nisargshala.in>';
+  const subject = `Nisargshala Corporate Vouchers Activated — Order #${orderNumber}`;
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${subject}</title>
+    </head>
+    <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f4; margin: 0; padding: 30px 10px; color: #1c2b21;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e1e8e3; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <!-- Header -->
+        <tr>
+          <td style="background-color: #05A658; padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Nisargshala</h1>
+            <p style="color: #e0f5ea; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Corporate Experience Vouchers</p>
+          </td>
+        </tr>
+        <!-- Content -->
+        <tr>
+          <td style="padding: 35px 30px;">
+            <h2 style="color: #0d3822; font-size: 18px; margin-top: 0;">Payment Verified & Vouchers Activated!</h2>
+            <p style="font-size: 14px; line-height: 1.6; color: #3d4f43;">Dear <strong>${companyName}</strong>,</p>
+            <p style="font-size: 14px; line-height: 1.6; color: #3d4f43;">
+              We are pleased to inform you that your RTGS/NEFT payment transfer for Order <strong>#${orderNumber}</strong> (Total Amount: <strong>₹${totalAmount.toLocaleString('en-IN')}</strong>) has been verified and confirmed by Nisargshala operations.
+            </p>
+            
+            <div style="background-color: #f0f9f4; border: 1px solid #c2e8d3; border-radius: 12px; padding: 20px; margin: 25px 0;">
+              <h3 style="color: #05A658; margin-top: 0; font-size: 15px;">Voucher Summary</h3>
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Total Activated Vouchers: <strong>${vouchersCount} Units</strong></p>
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Validity Period: <strong>12 Months from Today</strong></p>
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Delivery Package: <strong>Attached ZIP Archive (PDFs & Digital Certificates)</strong></p>
+            </div>
+
+            <p style="font-size: 13px; line-height: 1.6; color: #5a6e60;">
+              Your complete corporate voucher package is attached to this email as a compressed ZIP file. You can also view and download individual vouchers at any time from your HR Dashboard:
+            </p>
+
+            <div style="text-align: center; margin: 25px 0;">
+              <a href="https://corp.nisargshala.in/corporate" style="background-color: #05A658; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">
+                Access Corporate HR Dashboard
+              </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #eef2ef; margin: 30px 0;">
+
+            <p style="font-size: 12px; color: #788a7e; margin: 0; line-height: 1.5;">
+              Warm regards,<br>
+              <strong>Nisargshala Corporate Operations Team</strong><br>
+              <a href="https://corp.nisargshala.in" style="color: #05A658; text-decoration: none;">https://corp.nisargshala.in</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const attachmentFilename = `NISARGSHALA_VOUCHERS_${orderNumber}.zip`;
+
+  // Option A: Resend API
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [cleanTo],
+          subject,
+          html: htmlBody,
+          attachments: [
+            {
+              filename: attachmentFilename,
+              content: zipBuffer.toString('base64'),
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`[EMAIL_SEND_FAILED] Resend API error sending confirmation to ${cleanTo}`);
+      } else {
+        return { success: true, provider: 'Resend' };
+      }
+    } catch (err: any) {
+      console.error(`[EMAIL_SEND_FAILED] Resend error: ${err.message}`);
+    }
+  }
+
+  // Option B: Nodemailer SMTP
+  try {
+    const isSecure = process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465';
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST?.trim(),
+      port: Number(process.env.SMTP_PORT) || (isSecure ? 465 : 587),
+      secure: isSecure,
+      auth: {
+        user: process.env.SMTP_USER?.trim(),
+        pass: process.env.SMTP_PASSWORD?.trim(),
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    await transporter.sendMail({
+      from: fromEmail,
+      to: cleanTo,
+      subject,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: attachmentFilename,
+          content: zipBuffer,
+        },
+      ],
+    });
+
+    return { success: true, provider: 'SMTP' };
+  } catch (err: any) {
+    console.error(`[EMAIL_SEND_FAILED] SMTP error sending voucher confirmation to ${cleanTo}: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
