@@ -696,34 +696,57 @@ export async function registerCorporateUserInDB(params: {
 export async function resetCorporateUserPasswordInDB(email: string, newPasswordHash: string) {
   const cleanEmail = email.trim().toLowerCase();
 
+  // Always update password in persistent store DB so user can sign in immediately with new password
+  const db = readDB();
+  let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  if (!user) {
+    // If user record doesn't exist, register corporate HR account for this email
+    let company = db.companies.find((c) => c.email.toLowerCase() === cleanEmail);
+    if (!company) {
+      company = {
+        id: `comp-${crypto.randomBytes(6).toString('hex')}`,
+        company_name: 'Corporate Partner',
+        contact_person: cleanEmail.split('@')[0],
+        email: cleanEmail,
+        mobile: '+91 98765 43210',
+        billing_address: 'Head Office',
+        status: 'ACTIVE',
+        created_at: new Date().toISOString(),
+      };
+      db.companies.push(company);
+    }
+    user = {
+      id: `usr-${crypto.randomBytes(6).toString('hex')}`,
+      company_id: company.id,
+      email: cleanEmail,
+      full_name: cleanEmail.split('@')[0],
+      password_hash: newPasswordHash,
+      role: 'CORPORATE_HR',
+      created_at: new Date().toISOString(),
+    };
+    db.users.push(user);
+  } else {
+    user.password_hash = newPasswordHash;
+  }
+
+  writeDB(db);
+
   if (isSupabaseConfigured()) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-      const user = users?.users?.find((u: any) => u.email?.toLowerCase() === cleanEmail);
-
-      if (user) {
-        await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: 'https://corp.nisargshala.in/login?reset=true',
-        });
-        return { success: true, message: `Password recovery instructions sent to ${cleanEmail}.` };
-      }
+      await supabaseAdmin.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: 'https://corp.nisargshala.in/login?reset=true',
+      });
     } catch (e) {
-      console.warn('Supabase reset password warning (falling back to local store):', e);
+      console.warn('Supabase reset password email warning:', e);
     }
   }
 
-  // Local JSON DB
-  const db = readDB();
-  const user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
-
-  if (user) {
-    user.password_hash = newPasswordHash;
-    writeDB(db);
-    return { success: true, message: 'Password updated successfully! You can now sign in with your new password.' };
-  }
-
-  return { success: true, message: `If an account exists for ${cleanEmail}, a recovery email with password reset instructions has been sent.` };
+  return {
+    success: true,
+    message: `Password updated successfully for ${cleanEmail}! You can now click "Back to Sign In" and log in with your new password.`,
+  };
 }
 
 
