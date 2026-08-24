@@ -160,7 +160,7 @@ export function readDB(): DatabaseSchema {
     const initial = getInitialDB();
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2));
-    } catch (e) {}
+    } catch (e) { }
     return initial;
   }
 }
