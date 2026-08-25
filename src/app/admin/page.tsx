@@ -44,9 +44,33 @@ export default function AdminDashboardPage() {
     account_number: '50200097103825',
     ifsc_code: 'HDFC0002493',
     validity_months: 12,
+    gst_rate: 18,
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState('');
+
+  // Experience Price Edit State
+  const [editingExpCode, setEditingExpCode] = useState<string | null>(null);
+  const [editingExpPrice, setEditingExpPrice] = useState<number>(0);
+
+  const handleSaveExpPrice = async (code: string) => {
+    try {
+      const res = await fetch('/api/admin/experiences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, current_price: editingExpPrice }),
+      });
+      const data = await res.json();
+      if (res.ok && data.experiences) {
+        setExperiences(data.experiences);
+        setEditingExpCode(null);
+      } else {
+        alert(data.message || 'Failed to update experience price.');
+      }
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   useEffect(() => {
     checkAdminAuthAndFetch();
@@ -457,10 +481,41 @@ export default function AdminDashboardPage() {
                     <div className="text-[11px] text-forest-500 font-mono">Code: {exp.code}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-base text-amber-700">₹{exp.current_price.toLocaleString('en-IN')}</div>
-                    <button className="text-[11px] text-forest-600 hover:text-forest-900 underline flex items-center gap-1 mt-1">
-                      <Edit className="w-3 h-3" /> Edit Price
-                    </button>
+                    {editingExpCode === exp.code ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={editingExpPrice}
+                          onChange={(e) => setEditingExpPrice(Number(e.target.value))}
+                          className="w-24 px-2 py-1 bg-white border border-forest-300 rounded font-bold text-amber-700"
+                        />
+                        <button
+                          onClick={() => handleSaveExpPrice(exp.code)}
+                          className="bg-forest-800 text-white px-2.5 py-1 rounded text-[10px] font-bold"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingExpCode(null)}
+                          className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-[10px]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="font-bold text-base text-amber-700">₹{exp.current_price?.toLocaleString('en-IN')}</div>
+                        <button
+                          onClick={() => {
+                            setEditingExpCode(exp.code);
+                            setEditingExpPrice(exp.current_price);
+                          }}
+                          className="text-[11px] text-forest-600 hover:text-forest-900 underline flex items-center gap-1 mt-1 cursor-pointer"
+                        >
+                          <Edit className="w-3 h-3" /> Edit Price
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -537,6 +592,19 @@ export default function AdminDashboardPage() {
                   max={60}
                   value={bankSettings.validity_months}
                   onChange={(e) => setBankSettings({ ...bankSettings, validity_months: Number(e.target.value) || 12 })}
+                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-forest-800 font-semibold mb-1">GST Rate (%) *</label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  max={28}
+                  value={bankSettings.gst_rate ?? 18}
+                  onChange={(e) => setBankSettings({ ...bankSettings, gst_rate: Number(e.target.value) })}
                   className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
                 />
               </div>

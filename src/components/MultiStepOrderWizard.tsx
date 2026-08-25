@@ -100,8 +100,8 @@ export default function MultiStepOrderWizard() {
 
   const handleProceedToStep3 = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!companyForm.company_name || !companyForm.contact_person || !companyForm.email || !companyForm.mobile || !companyForm.billing_address) {
-      setErrorMsg('Please complete all required company details (*).');
+    if (!companyForm.company_name || !companyForm.contact_person || !companyForm.email || !companyForm.mobile || !companyForm.billing_address || !companyForm.gst_number?.trim()) {
+      setErrorMsg('Please complete all required company details including GST Number (*).');
       return;
     }
     setErrorMsg('');
@@ -308,7 +308,7 @@ export default function MultiStepOrderWizard() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Acme Technologies India"
+                        placeholder="Enter company full legal name"
                         value={companyForm.company_name}
                         onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
                         className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
@@ -323,7 +323,7 @@ export default function MultiStepOrderWizard() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Rahul Sharma"
+                        placeholder="Enter contact person name"
                         value={companyForm.contact_person}
                         onChange={(e) => setCompanyForm({ ...companyForm, contact_person: e.target.value })}
                         className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
@@ -335,7 +335,7 @@ export default function MultiStepOrderWizard() {
                     <label className="block text-forest-900 font-semibold mb-1.5">Designation</label>
                     <input
                       type="text"
-                      placeholder="e.g. HR Director / Admin Manager"
+                      placeholder="e.g. HR Director / Procurement Manager"
                       value={companyForm.designation}
                       onChange={(e) => setCompanyForm({ ...companyForm, designation: e.target.value })}
                       className="w-full px-3.5 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
@@ -349,7 +349,7 @@ export default function MultiStepOrderWizard() {
                       <input
                         type="email"
                         required
-                        placeholder="hr@acme.com"
+                        placeholder="corporate.email@company.com"
                         value={companyForm.email}
                         onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
                         className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
@@ -364,7 +364,7 @@ export default function MultiStepOrderWizard() {
                       <input
                         type="tel"
                         required
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 90000 00000"
                         value={companyForm.mobile}
                         onChange={(e) => setCompanyForm({ ...companyForm, mobile: e.target.value })}
                         className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
@@ -373,9 +373,10 @@ export default function MultiStepOrderWizard() {
                   </div>
 
                   <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">GST Number (Optional)</label>
+                    <label className="block text-forest-900 font-semibold mb-1.5">GST Number *</label>
                     <input
                       type="text"
+                      required
                       placeholder="27AAAAA0000A1Z5"
                       value={companyForm.gst_number}
                       onChange={(e) => setCompanyForm({ ...companyForm, gst_number: e.target.value })}
@@ -585,7 +586,7 @@ export default function MultiStepOrderWizard() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. HDFCR520260824001234"
+                        placeholder="Enter 16-22 digit RTGS/NEFT UTR reference"
                         value={utrForm.utr_reference}
                         onChange={(e) => setUtrForm({ ...utrForm, utr_reference: e.target.value })}
                         className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl font-mono uppercase text-forest-900 focus:ring-2 focus:ring-amber-500"

@@ -25,12 +25,12 @@ export const LOCKED_VOUCHER_PRODUCTS: Record<string, VoucherProduct> = {
     title: 'Individual Experience Voucher',
     subtitle: 'Overnight Camping + Adventure',
     faceValue: 4000,
-    regularValueText: 'Regular Retail Value: ₹3,400',
+    regularValueText: 'Includes Camping Stay & Adventure Experience',
     eligibleExperiences: ['CAMPING_OVERNIGHT', 'ADVENTURE'],
     description: 'Designed for 1 individual employee for an overnight tent camping stay and full adventure module.',
     optionsDescription: [
-      'Overnight Tent Camping Stay (₹1,800 value)',
-      'Adventure Experience Module (₹1,600 value)'
+      'Overnight Tent Camping Stay',
+      'Adventure Experience Module'
     ],
     terms: [
       'Valid for 12 months from payment confirmation date',
@@ -44,19 +44,19 @@ export const LOCKED_VOUCHER_PRODUCTS: Record<string, VoucherProduct> = {
     title: 'Family Experience Voucher',
     subtitle: 'Family Camping + Adventure OR Kutuhal',
     faceValue: 12000,
-    regularValueText: 'Regular Experience Value: up to ₹14,800',
+    regularValueText: 'Includes Overnight Family Camping & Kutuhal Experience',
     eligibleExperiences: ['FAMILY_CAMPING', 'FAMILY_ADVENTURE', 'KUTUHAL_ADULT', 'KUTUHAL_CHILD'],
     description: 'Designed for a family of 2 Adults + 1 Child. Usable for either Overnight Family Camping OR Kutuhal Family Experience.',
     optionsDescription: [
-      'OPTION A: Overnight Family Camping + Adventure (2 Adults + 1 Child, ₹9,600 value)',
-      'OPTION B: Kutuhal Family Experience (2 Adults + 1 Child < 7 yrs, ₹14,800 retail price — employee pays difference ₹2,800)'
+      'OPTION A: Overnight Family Camping + Adventure (2 Adults + 1 Child)',
+      'OPTION B: Kutuhal Family Experience (2 Adults + 1 Child < 7 yrs)'
     ],
     terms: [
       'Valid for 12 months from payment confirmation date',
       'Redeemable exclusively on nisargshala.in',
       'Cannot be split across multiple bookings',
-      'Employee pays price difference if retail experience price exceeds ₹12,000',
-      'No cash refund if selected experience costs less than ₹12,000'
+      'Employee pays price difference if retail experience price exceeds voucher face value',
+      'No cash refund if selected experience costs less than voucher face value'
     ]
   },
   KIDS: {
@@ -64,12 +64,12 @@ export const LOCKED_VOUCHER_PRODUCTS: Record<string, VoucherProduct> = {
     title: 'Kids Experience Voucher',
     subtitle: 'Huppya OR Sahas Outdoor Camp',
     faceValue: 7000,
-    regularValueText: 'Camp Value: up to ₹6,400',
+    regularValueText: 'Includes Huppya OR Sahas Outdoor Camp',
     eligibleExperiences: ['HUPPYA', 'SAHAS'],
     description: 'Designed for 1 child for Nisargshala specialized outdoor experience camps.',
     optionsDescription: [
-      'OPTION A: Huppya Outdoor Camp (₹5,600 retail price)',
-      'OPTION B: Sahas Adventure Camp (₹6,400 retail price)'
+      'OPTION A: Huppya Outdoor Camp',
+      'OPTION B: Sahas Adventure Camp'
     ],
     terms: [
       'Valid for 12 months from payment confirmation date',

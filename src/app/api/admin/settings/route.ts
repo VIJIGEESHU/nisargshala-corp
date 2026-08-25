@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { account_holder, bank_name, account_number, ifsc_code, validity_months } = body;
+    const { account_holder, bank_name, account_number, ifsc_code, validity_months, gst_rate } = body;
 
     if (!account_holder || !bank_name || !account_number || !ifsc_code) {
       return NextResponse.json(
@@ -29,11 +29,12 @@ export async function POST(req: NextRequest) {
       account_number: String(account_number).trim(),
       ifsc_code: String(ifsc_code).trim().toUpperCase(),
       validity_months: Number(validity_months) || 12,
+      gst_rate: gst_rate !== undefined ? Number(gst_rate) : 18,
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Bank payment and voucher validity settings updated successfully!',
+      message: 'Bank payment, tax, and voucher validity settings updated successfully!',
       settings: updated,
     });
   } catch (err: any) {

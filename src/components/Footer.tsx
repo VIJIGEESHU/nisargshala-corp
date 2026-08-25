@@ -87,16 +87,16 @@ export default function Footer() {
 
             {/* Social Media Icons in Green Boxes */}
             <div className="flex items-center space-x-2 pt-2">
-              <a href="https://facebook.com" target="_blank" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors">
+              <a href="https://facebook.com/nisargshala" target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors" aria-label="Facebook">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="https://instagram.com" target="_blank" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors">
+              <a href="https://instagram.com/nisargshala" target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors" aria-label="Instagram">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="https://linkedin.com" target="_blank" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors">
+              <a href="https://linkedin.com/company/nisargshala" target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors" aria-label="LinkedIn">
                 <Linkedin className="w-4 h-4" />
               </a>
-              <a href="https://youtube.com" target="_blank" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors">
+              <a href="https://youtube.com/@nisargshala" target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1A4730] hover:bg-forest-600 rounded text-white transition-colors" aria-label="YouTube">
                 <Youtube className="w-4 h-4" />
               </a>
             </div>

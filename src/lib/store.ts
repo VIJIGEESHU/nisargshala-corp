@@ -80,12 +80,19 @@ export interface DBVoucher {
   updated_at: string;
 }
 
+export interface DBExperience {
+  code: string;
+  title: string;
+  current_price: number;
+}
+
 export interface DBBankSettings {
   account_holder: string;
   bank_name: string;
   account_number: string;
   ifsc_code: string;
   validity_months: number;
+  gst_rate: number;
 }
 
 export interface DatabaseSchema {
@@ -97,9 +104,20 @@ export interface DatabaseSchema {
   payment_records: any[];
   audit_logs: any[];
   settings?: DBBankSettings;
+  experiences?: DBExperience[];
 }
 
 let memoryBankSettings: DBBankSettings | null = null;
+let memoryExperiences: DBExperience[] | null = null;
+
+const DEFAULT_EXPERIENCES: DBExperience[] = [
+  { code: 'CAMP_OVERNIGHT', title: 'Overnight Camping Stay', current_price: 1800 },
+  { code: 'ADVENTURE_MOD', title: 'Adventure Module', current_price: 1600 },
+  { code: 'FAMILY_CAMPING', title: 'Family Camping Package', current_price: 14800 },
+  { code: 'KUTUHAL_FAMILY', title: 'Kutuhal Family Retreat', current_price: 14800 },
+  { code: 'HUPPYA_KIDS', title: 'Huppya Outdoor Camp', current_price: 5600 },
+  { code: 'SAHAS_KIDS', title: 'Sahas Adventure Camp', current_price: 6400 },
+];
 
 export async function getBankSettingsInDB(): Promise<DBBankSettings> {
   if (memoryBankSettings) return memoryBankSettings;
@@ -109,7 +127,7 @@ export async function getBankSettingsInDB(): Promise<DBBankSettings> {
       const supabaseAdmin = getSupabaseAdmin();
       const { data } = await supabaseAdmin.from('settings').select('*').eq('key', 'bank_settings').maybeSingle();
       if (data && data.value) {
-        memoryBankSettings = data.value as DBBankSettings;
+        memoryBankSettings = { gst_rate: 18, ...data.value } as DBBankSettings;
         return memoryBankSettings;
       }
     } catch (e) {}
@@ -122,7 +140,11 @@ export async function getBankSettingsInDB(): Promise<DBBankSettings> {
     account_number: '50200097103825',
     ifsc_code: 'HDFC0002493',
     validity_months: 12,
+    gst_rate: 18,
   };
+  if (memoryBankSettings.gst_rate === undefined) {
+    memoryBankSettings.gst_rate = 18;
+  }
   return memoryBankSettings;
 }
 
@@ -155,41 +177,64 @@ export async function updateBankSettingsInDB(settings: Partial<DBBankSettings>):
   return updated;
 }
 
+export async function getExperiencesInDB(): Promise<DBExperience[]> {
+  if (memoryExperiences) return memoryExperiences;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data } = await supabaseAdmin.from('settings').select('*').eq('key', 'experiences').maybeSingle();
+      if (data && data.value && Array.isArray(data.value)) {
+        memoryExperiences = data.value as DBExperience[];
+        return memoryExperiences;
+      }
+    } catch (e) {}
+  }
+
+  const db = readDB();
+  memoryExperiences = db.experiences && db.experiences.length > 0 ? db.experiences : DEFAULT_EXPERIENCES;
+  return memoryExperiences;
+}
+
+export async function updateExperiencePriceInDB(code: string, newPrice: number): Promise<DBExperience[]> {
+  const exps = await getExperiencesInDB();
+  const updated = exps.map((e) => (e.code === code ? { ...e, current_price: newPrice } : e));
+  memoryExperiences = updated;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('settings').upsert({
+        key: 'experiences',
+        value: updated,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (e) {}
+  }
+
+  try {
+    const db = readDB();
+    db.experiences = updated;
+    writeDB(db);
+  } catch (e) {}
+
+  return updated;
+}
+
 // Initial Admin Password Hash for "Hemant2026"
 const INITIAL_ADMIN_HASH = crypto.createHash('sha256').update('Hemant2026').digest('hex');
 
 function getInitialDB(): DatabaseSchema {
   return {
-    companies: [
-      {
-        id: 'comp-nisargshala-demo',
-        company_name: 'Acme India Pvt Ltd',
-        contact_person: 'Rahul Sharma',
-        designation: 'HR Lead',
-        email: 'hr@acme.in',
-        mobile: '+91 98765 43210',
-        billing_address: 'Kothrud, Pune, Maharashtra 411038',
-        status: 'ACTIVE',
-        created_at: new Date().toISOString(),
-      },
-    ],
+    companies: [],
     users: [
       {
         id: 'usr-admin-hemant',
-        company_id: 'comp-nisargshala-demo',
+        company_id: '',
         email: 'admin@nisargshala.in',
-        full_name: 'Hemant Admin',
+        full_name: 'Nisargshala Administrator',
         password_hash: INITIAL_ADMIN_HASH,
         role: 'SUPER_ADMIN',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: 'usr-hr-acme',
-        company_id: 'comp-nisargshala-demo',
-        email: 'hr@acme.in',
-        full_name: 'Rahul Sharma',
-        password_hash: crypto.createHash('sha256').update('Acme2026').digest('hex'),
-        role: 'CORPORATE_HR',
         created_at: new Date().toISOString(),
       },
     ],
@@ -204,6 +249,7 @@ function getInitialDB(): DatabaseSchema {
       account_number: '50200097103825',
       ifsc_code: 'HDFC0002493',
       validity_months: 12,
+      gst_rate: 18,
     },
   };
 }
@@ -624,7 +670,7 @@ export async function submitOrderPaymentInDB(params: {
   const fallbackOrder: DBOrder = {
     id: params.order_id,
     order_number: 'ORD-20260824-LIVE',
-    company_id: 'comp-nisargshala-demo',
+    company_id: 'comp-direct-order',
     subtotal_amount: 4000,
     gst_amount: 720,
     total_amount: 4720,
@@ -856,7 +902,7 @@ export async function verifyOTPAndResetPassword(email: string, otp_code: string,
         company_name: 'Corporate Partner',
         contact_person: cleanEmail.split('@')[0],
         email: cleanEmail,
-        mobile: '+91 98765 43210',
+        mobile: '+91 90000 00000',
         billing_address: 'Head Office',
         status: 'ACTIVE',
         created_at: new Date().toISOString(),

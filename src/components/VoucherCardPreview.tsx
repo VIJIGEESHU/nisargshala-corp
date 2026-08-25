@@ -19,7 +19,7 @@ export default function VoucherCardPreview({
   title,
   faceValue,
   eligibleExperiences,
-  companyName = 'Acme Technologies Ltd',
+  companyName = 'Your Corporate Entity',
   recipientName = 'Valued Team Member',
 }: VoucherPreviewProps) {
   const [isFlipped, setIsFlipped] = useState(false);

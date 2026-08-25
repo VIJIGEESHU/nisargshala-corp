@@ -295,7 +295,7 @@ export default function CorporateLoginPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Infosys Ltd / Acme Corp"
+                    placeholder="Enter company legal name"
                     value={regForm.company_name}
                     onChange={(e) => setRegForm({ ...regForm, company_name: e.target.value })}
                     className="w-full pl-9 pr-3 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
@@ -310,7 +310,7 @@ export default function CorporateLoginPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder="Enter contact person name"
                     value={regForm.contact_person}
                     onChange={(e) => setRegForm({ ...regForm, contact_person: e.target.value })}
                     className="w-full pl-9 pr-3 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
@@ -340,7 +340,7 @@ export default function CorporateLoginPage() {
                   <input
                     type="tel"
                     required
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 90000 00000"
                     value={regForm.mobile}
                     onChange={(e) => setRegForm({ ...regForm, mobile: e.target.value })}
                     className="w-full pl-9 pr-3 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"

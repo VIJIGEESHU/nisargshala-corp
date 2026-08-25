@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDB } from '@/lib/store';
+import { readDB, getExperiencesInDB } from '@/lib/store';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
@@ -9,14 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Admin authentication required.' }, { status: 401 });
   }
 
-  const defaultExperiences = [
-    { code: 'CAMP_OVERNIGHT', title: 'Overnight Camping Stay', current_price: 1800 },
-    { code: 'ADVENTURE_MOD', title: 'Adventure Module', current_price: 1600 },
-    { code: 'FAMILY_CAMPING', title: 'Family Camping Package', current_price: 14800 },
-    { code: 'KUTUHAL_FAMILY', title: 'Kutuhal Family Retreat', current_price: 14800 },
-    { code: 'HUPPYA_KIDS', title: 'Huppya Outdoor Camp', current_price: 5600 },
-    { code: 'SAHAS_KIDS', title: 'Sahas Adventure Camp', current_price: 6400 },
-  ];
+  const defaultExperiences = await getExperiencesInDB();
 
   try {
     let supabaseOrders: any[] = [];
