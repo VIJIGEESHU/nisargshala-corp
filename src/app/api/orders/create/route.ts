@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       ipAddress: ip,
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       message: 'Corporate order submitted successfully! Please complete payment via RTGS/NEFT.',
       order: {
@@ -68,6 +68,23 @@ export async function POST(req: NextRequest) {
         payment_status: order.payment_status,
       },
     });
+
+    const hrSession = {
+      userId: `usr-${order.company_id}`,
+      role: 'CORPORATE_HR',
+      email: email.trim().toLowerCase(),
+      companyId: order.company_id,
+      companyName: company_name.trim(),
+    };
+
+    res.cookies.set('nisargshala_hr_session', JSON.stringify(hrSession), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30 days session
+    });
+
+    return res;
   } catch (err: any) {
     console.error('Order creation API error:', err);
     return NextResponse.json({ error: 'SERVER_ERROR', message: err.message || 'Server error creating corporate order.' }, { status: 500 });

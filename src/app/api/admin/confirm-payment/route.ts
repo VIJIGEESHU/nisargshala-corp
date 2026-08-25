@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Format vouchers & generate ZIP package
     let emailSent = false;
+    let emailNotice = '';
     if (vouchers && vouchers.length > 0 && recipientEmail) {
       try {
         const formattedVouchers = vouchers.map((v: any) => {
@@ -95,18 +96,28 @@ export async function POST(req: NextRequest) {
 
         const zipBuffer = await generateBulkOrderVouchersZip(formattedVouchers);
 
-        const emailRes = await sendVouchersConfirmationEmail({
-          to: recipientEmail,
-          companyName,
-          orderNumber,
-          totalAmount,
-          vouchersCount,
-          zipBuffer,
-        });
+        try {
+          const emailRes = await sendVouchersConfirmationEmail({
+            to: recipientEmail,
+            companyName,
+            orderNumber,
+            totalAmount,
+            vouchersCount,
+            zipBuffer,
+          });
 
-        emailSent = Boolean(emailRes.success);
-      } catch (emailErr) {
-        console.error('Failed to generate or send voucher confirmation email:', emailErr);
+          emailSent = Boolean(emailRes.success);
+          if (!emailSent && emailRes.reason === 'EMAIL_SERVICE_NOT_CONFIGURED') {
+            emailNotice = ' (Note: Email service not configured in environment variables.)';
+          } else if (!emailSent) {
+            emailNotice = ` (Note: Email delivery failed: ${emailRes.error || 'Unknown error'})`;
+          }
+        } catch (emailErr) {
+          console.error('Failed sending voucher confirmation email:', emailErr);
+          emailNotice = ' (Note: Email dispatch error occurred)';
+        }
+      } catch (zipErr) {
+        console.error('Failed to generate voucher PDF zip:', zipErr);
       }
     }
 
@@ -121,9 +132,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Payment verified & confirmed! ${vouchersCount} vouchers activated ${emailSent ? 'and emailed to client with attached PDF ZIP package.' : '.'}`,
+      message: `Payment verified & confirmed! ${vouchersCount} vouchers activated ${emailSent ? 'and emailed to client with attached PDF ZIP package.' : emailNotice}`,
       vouchers_count: vouchersCount,
       email_sent: emailSent,
+      email_notice: emailNotice,
       vouchers,
     });
   } catch (err: any) {

@@ -16,17 +16,41 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'INVALID_SESSION', message: 'Invalid session cookie.' }, { status: 401 });
   }
 
-  const companyId = session.companyId;
+  const sessionEmail = session.email?.trim().toLowerCase();
+  let companyId = session.companyId;
 
   if (isSupabaseConfigured()) {
     const supabaseAdmin = getSupabaseAdmin();
-    // ISOLATION: Filter strictly by company_id!
-    const { data: orders } = await supabaseAdmin.from('orders').select('*, items:order_items(*)').eq('company_id', companyId).order('created_at', { ascending: false });
-    const { data: vouchers } = await supabaseAdmin.from('vouchers').select('*').eq('company_id', companyId).order('created_at', { ascending: false });
-    const { data: company } = await supabaseAdmin.from('companies').select('*').eq('id', companyId).single();
+    let company: any = null;
+
+    if (companyId) {
+      const { data: c } = await supabaseAdmin.from('companies').select('*').eq('id', companyId).maybeSingle();
+      if (c) company = c;
+    }
+
+    if (!company && sessionEmail) {
+      const { data: c } = await supabaseAdmin.from('companies').select('*').eq('email', sessionEmail).maybeSingle();
+      if (c) {
+        company = c;
+        companyId = c.id;
+      }
+    }
+
+    const targetId = company ? company.id : companyId;
+    const { data: orders } = await supabaseAdmin
+      .from('orders')
+      .select('*, items:order_items(*)')
+      .or(`company_id.eq.${targetId || 'none'}`)
+      .order('created_at', { ascending: false });
+
+    const { data: vouchers } = await supabaseAdmin
+      .from('vouchers')
+      .select('*')
+      .or(`company_id.eq.${targetId || 'none'}`)
+      .order('created_at', { ascending: false });
 
     return NextResponse.json({
-      company,
+      company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
       orders: orders || [],
       vouchers: vouchers || [],
     });
@@ -34,13 +58,23 @@ export async function GET(req: NextRequest) {
 
   // Local Persistent JSON DB
   const db = readDB();
-  const company = db.companies.find((c) => c.id === companyId || c.email.toLowerCase() === session.email?.toLowerCase());
-  
+  const company = db.companies.find(
+    (c) => (companyId && c.id === companyId) || (sessionEmail && c.email.toLowerCase() === sessionEmail)
+  );
+
   const targetCompanyId = company ? company.id : companyId;
 
-  // STRICT COMPANY DATA ISOLATION FILTERING
-  const companyOrders = db.orders.filter((o) => o.company_id === targetCompanyId);
-  const companyVouchers = db.vouchers.filter((v) => v.company_id === targetCompanyId);
+  // Company Data Isolation Filtering
+  const companyOrders = db.orders.filter(
+    (o) =>
+      (targetCompanyId && o.company_id === targetCompanyId) ||
+      (company && o.company_id === company.id) ||
+      (sessionEmail && o.company?.email?.toLowerCase() === sessionEmail)
+  );
+
+  const companyVouchers = db.vouchers.filter(
+    (v) => (targetCompanyId && v.company_id === targetCompanyId) || (company && v.company_id === company.id)
+  );
 
   return NextResponse.json({
     company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
