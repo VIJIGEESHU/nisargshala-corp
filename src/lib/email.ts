@@ -149,8 +149,10 @@ export async function sendVouchersConfirmationEmail(params: {
   const { to, companyName, orderNumber, totalAmount, vouchersCount, zipBuffer } = params;
   const cleanTo = to.trim().toLowerCase();
 
+  console.log(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_ATTEMPTED | Recipient: ${cleanTo} | Vouchers: ${vouchersCount}`);
+
   if (!isEmailConfigured()) {
-    console.warn(`[EMAIL_NOTICE] Email service is not configured. Skipping voucher confirmation email to ${cleanTo}`);
+    console.warn(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_SKIPPED | Email service not configured in environment variables | Recipient: ${cleanTo}`);
     return { success: false, reason: 'EMAIL_SERVICE_NOT_CONFIGURED' };
   }
 
@@ -239,12 +241,13 @@ export async function sendVouchersConfirmationEmail(params: {
       });
 
       if (!response.ok) {
-        console.error(`[EMAIL_SEND_FAILED] Resend API error sending confirmation to ${cleanTo}`);
+        console.error(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_FAILED | Resend API error sending confirmation to ${cleanTo}`);
       } else {
+        console.log(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_SENT | Provider: Resend | Recipient: ${cleanTo}`);
         return { success: true, provider: 'Resend' };
       }
     } catch (err: any) {
-      console.error(`[EMAIL_SEND_FAILED] Resend error: ${err.message}`);
+      console.error(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_FAILED | Resend error: ${err.message}`);
     }
   }
 
@@ -277,9 +280,10 @@ export async function sendVouchersConfirmationEmail(params: {
       ],
     });
 
+    console.log(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_SENT | Provider: SMTP | Recipient: ${cleanTo}`);
     return { success: true, provider: 'SMTP' };
   } catch (err: any) {
-    console.error(`[EMAIL_SEND_FAILED] SMTP error sending voucher confirmation to ${cleanTo}: ${err.message}`);
+    console.error(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_FAILED | SMTP error sending voucher confirmation to ${cleanTo}: ${err.message}`);
     return { success: false, error: err.message };
   }
 }

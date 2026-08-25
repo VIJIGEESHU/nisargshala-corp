@@ -36,18 +36,27 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    let orders: any[] = [];
+    let vouchers: any[] = [];
     const targetId = company ? company.id : companyId;
-    const { data: orders } = await supabaseAdmin
-      .from('orders')
-      .select('*, items:order_items(*)')
-      .or(`company_id.eq.${targetId || 'none'}`)
-      .order('created_at', { ascending: false });
 
-    const { data: vouchers } = await supabaseAdmin
-      .from('vouchers')
-      .select('*')
-      .or(`company_id.eq.${targetId || 'none'}`)
-      .order('created_at', { ascending: false });
+    if (targetId) {
+      const { data: ords } = await supabaseAdmin
+        .from('orders')
+        .select('*, items:order_items(*)')
+        .eq('company_id', targetId)
+        .order('created_at', { ascending: false });
+
+      if (ords) orders = ords;
+
+      const { data: vchs } = await supabaseAdmin
+        .from('vouchers')
+        .select('*')
+        .eq('company_id', targetId)
+        .order('created_at', { ascending: false });
+
+      if (vchs) vouchers = vchs;
+    }
 
     return NextResponse.json({
       company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },

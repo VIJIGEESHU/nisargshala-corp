@@ -71,18 +71,42 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'FORBIDDEN', message: 'Access denied. Admin privileges required.' }, { status: 403 });
           }
 
+          let compId = userProfile?.company_id || userProfile?.company?.id;
+          let compName = userProfile?.company?.company_name;
+
+          if (!compId) {
+            const { data: compByEmail } = await supabaseAdmin
+              .from('companies')
+              .select('id, company_name')
+              .eq('email', cleanEmail)
+              .maybeSingle();
+
+            if (compByEmail) {
+              compId = compByEmail.id;
+              compName = compByEmail.company_name;
+            }
+          }
+
           const res = NextResponse.json({
             success: true,
             user: {
               id: authData.user.id,
               email: authData.user.email,
               role: userRole,
-              company: userProfile?.company || null,
+              company: userProfile?.company || (compId ? { id: compId, company_name: compName } : null),
             },
           });
 
           const cookieName = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? 'nisargshala_admin_session' : 'nisargshala_hr_session';
-          res.cookies.set(cookieName, JSON.stringify({ userId: authData.user.id, role: userRole, email: cleanEmail }), {
+          const sessionPayload = {
+            userId: authData.user.id,
+            role: userRole,
+            email: cleanEmail,
+            companyId: compId,
+            companyName: compName,
+          };
+
+          res.cookies.set(cookieName, JSON.stringify(sessionPayload), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             path: '/',
