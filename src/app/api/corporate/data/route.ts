@@ -20,49 +20,85 @@ export async function GET(req: NextRequest) {
   let companyId = session.companyId;
 
   if (isSupabaseConfigured()) {
-    const supabaseAdmin = getSupabaseAdmin();
-    let company: any = null;
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      let company: any = null;
 
-    if (companyId) {
-      const { data: c } = await supabaseAdmin.from('companies').select('*').eq('id', companyId).maybeSingle();
-      if (c) company = c;
-    }
+      // 1. Direct Lookup by companyId from session
+      if (companyId) {
+        const { data: c, error: compErr } = await supabaseAdmin
+          .from('companies')
+          .select('*')
+          .eq('id', companyId)
+          .maybeSingle();
 
-    if (!company && sessionEmail) {
-      const { data: c } = await supabaseAdmin.from('companies').select('*').eq('email', sessionEmail).maybeSingle();
-      if (c) {
-        company = c;
-        companyId = c.id;
+        if (compErr) {
+          console.error(`[CORPORATE_DATA_ERROR] Company fetch by ID (${companyId}) error:`, compErr);
+          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching company profile by ID.', details: compErr.message }, { status: 500 });
+        }
+        if (c) company = c;
       }
+
+      // 2. Documented Fallback: Lookup by email if companyId is absent or not matched
+      if (!company && sessionEmail) {
+        const { data: c, error: emailErr } = await supabaseAdmin
+          .from('companies')
+          .select('*')
+          .eq('email', sessionEmail)
+          .maybeSingle();
+
+        if (emailErr) {
+          console.error(`[CORPORATE_DATA_ERROR] Company fetch by email (${sessionEmail}) error:`, emailErr);
+          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching company profile by email.', details: emailErr.message }, { status: 500 });
+        }
+
+        if (c) {
+          company = c;
+          companyId = c.id;
+        }
+      }
+
+      const targetId = company ? company.id : companyId;
+      let orders: any[] = [];
+      let vouchers: any[] = [];
+
+      if (targetId) {
+        // Fetch Orders for target company ID
+        const { data: ords, error: ordErr } = await supabaseAdmin
+          .from('orders')
+          .select('*, items:order_items(*)')
+          .eq('company_id', targetId)
+          .order('created_at', { ascending: false });
+
+        if (ordErr) {
+          console.error(`[CORPORATE_DATA_ERROR] Orders fetch error for company ${targetId}:`, ordErr);
+          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching corporate orders.', details: ordErr.message }, { status: 500 });
+        }
+        if (ords) orders = ords;
+
+        // Fetch Vouchers for target company ID
+        const { data: vchs, error: vchErr } = await supabaseAdmin
+          .from('vouchers')
+          .select('*')
+          .eq('company_id', targetId)
+          .order('created_at', { ascending: false });
+
+        if (vchErr) {
+          console.error(`[CORPORATE_DATA_ERROR] Vouchers fetch error for company ${targetId}:`, vchErr);
+          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching corporate vouchers.', details: vchErr.message }, { status: 500 });
+        }
+        if (vchs) vouchers = vchs;
+      }
+
+      return NextResponse.json({
+        company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
+        orders,
+        vouchers,
+      });
+    } catch (err: any) {
+      console.error('[CORPORATE_DATA_ERROR] Server error fetching corporate data:', err);
+      return NextResponse.json({ error: 'SERVER_ERROR', message: err.message || 'Server error fetching corporate data.' }, { status: 500 });
     }
-
-    let orders: any[] = [];
-    let vouchers: any[] = [];
-    const targetId = company ? company.id : companyId;
-
-    if (targetId) {
-      const { data: ords } = await supabaseAdmin
-        .from('orders')
-        .select('*, items:order_items(*)')
-        .eq('company_id', targetId)
-        .order('created_at', { ascending: false });
-
-      if (ords) orders = ords;
-
-      const { data: vchs } = await supabaseAdmin
-        .from('vouchers')
-        .select('*')
-        .eq('company_id', targetId)
-        .order('created_at', { ascending: false });
-
-      if (vchs) vouchers = vchs;
-    }
-
-    return NextResponse.json({
-      company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
-      orders: orders || [],
-      vouchers: vouchers || [],
-    });
   }
 
   // Local Persistent JSON DB
