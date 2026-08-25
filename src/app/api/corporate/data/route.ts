@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDB } from '@/lib/store';
-import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseConfigured, isValidUUID } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   // 1. Authenticate Corporate HR session
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       const supabaseAdmin = getSupabaseAdmin();
       let company: any = null;
 
-      // 1. Direct Lookup by companyId from session
-      if (companyId) {
+      // 1. Direct Lookup by companyId from session IF it is a valid UUID
+      if (companyId && isValidUUID(companyId)) {
         const { data: c, error: compErr } = await supabaseAdmin
           .from('companies')
           .select('*')
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         if (c) company = c;
       }
 
-      // 2. Documented Fallback: Lookup by email if companyId is absent or not matched
+      // 2. Documented Fallback: Lookup by email if companyId is absent, non-UUID, or not matched by ID
       if (!company && sessionEmail) {
         const { data: c, error: emailErr } = await supabaseAdmin
           .from('companies')
@@ -54,16 +54,24 @@ export async function GET(req: NextRequest) {
 
         if (c) {
           company = c;
-          companyId = c.id;
+          companyId = c.id; // Resolved real UUID
         }
       }
 
-      const targetId = company ? company.id : companyId;
+      // 3. Controlled Application Error if non-UUID companyId was provided and fallback email could not resolve a company
+      if (!company && companyId && !isValidUUID(companyId) && !sessionEmail) {
+        return NextResponse.json({
+          error: 'INVALID_COMPANY_UUID',
+          message: `The company identifier '${companyId}' is not a valid UUID format and no fallback email was available to resolve the company.`,
+        }, { status: 400 });
+      }
+
+      const targetId = company ? company.id : (isValidUUID(companyId) ? companyId : null);
       let orders: any[] = [];
       let vouchers: any[] = [];
 
-      if (targetId) {
-        // Fetch Orders for target company ID
+      if (targetId && isValidUUID(targetId)) {
+        // Fetch Orders for target company UUID
         const { data: ords, error: ordErr } = await supabaseAdmin
           .from('orders')
           .select('*, items:order_items(*)')
@@ -76,7 +84,7 @@ export async function GET(req: NextRequest) {
         }
         if (ords) orders = ords;
 
-        // Fetch Vouchers for target company ID
+        // Fetch Vouchers for target company UUID
         const { data: vchs, error: vchErr } = await supabaseAdmin
           .from('vouchers')
           .select('*')

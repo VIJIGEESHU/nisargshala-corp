@@ -63,3 +63,11 @@ export function isSupabaseConfigured(): boolean {
     !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
   );
 }
+
+/**
+ * Validate if a string is a valid PostgreSQL UUID format (8-4-4-4-12 hex digits)
+ */
+export function isValidUUID(str: any): boolean {
+  if (typeof str !== 'string' || !str.trim()) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+}
