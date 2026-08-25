@@ -41,20 +41,21 @@ export async function GET(req: NextRequest) {
 
       // 2. Documented Fallback: Lookup by email if companyId is absent, non-UUID, or not matched by ID
       if (!company && sessionEmail) {
-        const { data: c, error: emailErr } = await supabaseAdmin
+        const { data: comps, error: emailErr } = await supabaseAdmin
           .from('companies')
           .select('*')
           .eq('email', sessionEmail)
-          .maybeSingle();
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (emailErr) {
           console.error(`[CORPORATE_DATA_ERROR] Company fetch by email (${sessionEmail}) error:`, emailErr);
           return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching company profile by email.', details: emailErr.message }, { status: 500 });
         }
 
-        if (c) {
-          company = c;
-          companyId = c.id; // Resolved real UUID
+        if (comps && comps.length > 0) {
+          company = comps[0];
+          companyId = company.id; // Resolved real UUID
         }
       }
 

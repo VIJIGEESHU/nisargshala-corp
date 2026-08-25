@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { getSupabaseAdmin, isSupabaseConfigured } from './supabase';
+import { getSupabaseAdmin, isSupabaseConfigured, isValidUUID } from './supabase';
 import { generateSecureRedemptionCode, generateHumanReference, generateOrderNumber } from './voucherCode';
 import { LOCKED_VOUCHER_PRODUCTS, calculateOrderTotal } from './pricing';
 
@@ -314,18 +314,19 @@ export async function createCorporateOrderInDB(params: {
 
       // 1. Fetch or create company
       let companyId: string;
-      const { data: existingComp, error: findCompErr } = await supabaseAdmin
+      const { data: existingComps, error: findCompErr } = await supabaseAdmin
         .from('companies')
         .select('id')
         .eq('email', params.email.trim().toLowerCase())
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (findCompErr && findCompErr.code === 'PGRST205') {
         throw findCompErr; // Trigger fallback to local persistent store
       }
 
-      if (existingComp) {
-        companyId = existingComp.id;
+      if (existingComps && existingComps.length > 0) {
+        companyId = existingComps[0].id;
       } else {
         const { data: newComp, error: compErr } = await supabaseAdmin
           .from('companies')
@@ -710,14 +711,15 @@ export async function registerCorporateUserInDB(params: {
       const supabaseAdmin = getSupabaseAdmin();
 
       let companyId: string;
-      const { data: existingComp } = await supabaseAdmin
+      const { data: existingComps } = await supabaseAdmin
         .from('companies')
         .select('id')
         .eq('email', cleanEmail)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (existingComp) {
-        companyId = existingComp.id;
+      if (existingComps && existingComps.length > 0) {
+        companyId = existingComps[0].id;
       } else {
         const { data: newComp, error: compErr } = await supabaseAdmin
           .from('companies')
@@ -734,20 +736,21 @@ export async function registerCorporateUserInDB(params: {
           .select()
           .single();
 
-        if (!compErr && newComp) {
-          companyId = newComp.id;
-        } else {
-          companyId = `comp-${crypto.randomBytes(6).toString('hex')}`;
+        if (compErr || !newComp) {
+          throw compErr || new Error('Failed creating company record in Supabase.');
         }
+        companyId = newComp.id;
       }
 
       const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
-      await supabaseAdmin.from('corporate_users').insert({
-        user_id: userId,
-        company_id: companyId,
-        full_name: params.contact_person.trim(),
-        role: 'CORPORATE_HR',
-      });
+      if (isValidUUID(companyId)) {
+        await supabaseAdmin.from('corporate_users').insert({
+          user_id: userId,
+          company_id: companyId,
+          full_name: params.contact_person.trim(),
+          role: 'CORPORATE_HR',
+        }).catch(() => null);
+      }
 
       return {
         id: userId,

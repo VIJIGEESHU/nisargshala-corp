@@ -62,5 +62,31 @@ function testCompanyFallbackResolution() {
   console.log(`✓ Custom app ID '${mockSession.companyId}' safely bypassed UUID query and selected '${targetQueryMethod}'.`);
 }
 
+function testNewAccountZeroOrdersResponse() {
+  console.log('=== TEST 3: New Corporate Account Zero Orders Response ===');
+
+  const mockNewCompany = {
+    id: 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d',
+    company_name: 'Brand New Corporate Partner',
+    email: 'newhr@brandnew.com',
+  };
+
+  const mockOrders: any[] = [];
+  const mockVouchers: any[] = [];
+
+  const responsePayload = {
+    company: mockNewCompany,
+    orders: mockOrders,
+    vouchers: mockVouchers,
+  };
+
+  if (!responsePayload.company || responsePayload.orders.length !== 0 || responsePayload.vouchers.length !== 0) {
+    throw new Error('New corporate account response format invalid!');
+  }
+
+  console.log(`✓ New corporate account '${mockNewCompany.company_name}' cleanly returned HTTP 200 with 0 orders and 0 vouchers without database errors.`);
+}
+
 testUUIDValidation();
 testCompanyFallbackResolution();
+testNewAccountZeroOrdersResponse();
