@@ -27,6 +27,7 @@ export default function CorporateHRDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'vouchers'>('orders');
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function CorporateHRDashboard() {
 
   const fetchHRData = async () => {
     setLoading(true);
+    setError(null);
     try {
       // 1. Verify session
       const authRes = await fetch('/api/auth/session');
@@ -58,9 +60,14 @@ export default function CorporateHRDashboard() {
         setCompany(payload.company);
         setOrders(payload.orders || []);
         setVouchers(payload.vouchers || []);
+        setError(null);
+      } else {
+        const errPayload = await dataRes.json().catch(() => null);
+        setError(errPayload?.message || 'Database error loading corporate records. Please click retry or contact Nisargshala support.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching HR data:', err);
+      setError('Network connection error. Failed to reach corporate portal servers.');
     } finally {
       setLoading(false);
     }
@@ -129,6 +136,20 @@ export default function CorporateHRDashboard() {
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-8 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="font-bold">⚠️ Connection / Database Error:</span> {error}
+            </div>
+            <button
+              onClick={fetchHRData}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+            >
+              Retry Connection
+            </button>
+          </div>
+        )}
 
         {/* METRICS METRIC CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
