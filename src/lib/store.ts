@@ -744,12 +744,14 @@ export async function registerCorporateUserInDB(params: {
 
       const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
       if (isValidUUID(companyId)) {
-        await supabaseAdmin.from('corporate_users').insert({
-          user_id: userId,
-          company_id: companyId,
-          full_name: params.contact_person.trim(),
-          role: 'CORPORATE_HR',
-        }).catch(() => null);
+        try {
+          await supabaseAdmin.from('corporate_users').insert({
+            user_id: userId,
+            company_id: companyId,
+            full_name: params.contact_person.trim(),
+            role: 'CORPORATE_HR',
+          });
+        } catch (e) {}
       }
 
       return {
