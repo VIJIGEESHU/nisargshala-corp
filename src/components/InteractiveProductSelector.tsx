@@ -21,7 +21,7 @@ export default function InteractiveProductSelector({
   const productsData = {
     INDIVIDUAL: {
       ...LOCKED_VOUCHER_PRODUCTS.INDIVIDUAL,
-      image: '/images/hero_nature_camping.jpg',
+      image: '/images/individual_experience.jpg',
       tagline: 'Ideal for Individual Employees & Star Performers',
       audience: '1 Adult Employee',
       bgGradient: 'from-forest-900/90 via-forest-900/80 to-transparent',
