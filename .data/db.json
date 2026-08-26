@@ -127,6 +127,40 @@
       "billing_address": "Zero Address",
       "status": "ACTIVE",
       "created_at": "2026-08-26T17:26:16.041Z"
+    },
+    {
+      "id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "company_name": "Acme Technologies Pvt Ltd",
+      "contact_person": "Hemant Vavale (Updated)",
+      "designation": "Senior HR Director",
+      "email": "hr.test.1787765822602@acmetech.com",
+      "mobile": "+91 98200 12345",
+      "billing_address": "Suite 500, Cyber City, Magarpatta, Pune 411028",
+      "gst_number": "27AAAAA9999Z1Z0",
+      "status": "ACTIVE",
+      "created_at": "2026-08-26T17:37:02.603Z"
+    },
+    {
+      "id": "2bdfd3c8-238c-48c2-93a5-340ee98f6586",
+      "company_name": "Zero Order Corp",
+      "contact_person": "Zero HR",
+      "designation": "HR Manager",
+      "email": "hr.zero.1787765822629@zeroorder.com",
+      "mobile": "+91 99999 00000",
+      "billing_address": "Zero Address",
+      "status": "ACTIVE",
+      "created_at": "2026-08-26T17:37:02.629Z"
+    },
+    {
+      "id": "6f868991-26ba-461b-8e8b-235bc3117865",
+      "company_name": "Sec Test Corp",
+      "contact_person": "Sec HR",
+      "designation": "HR Manager",
+      "email": "hr.sec.1787765822631@sectest.com",
+      "mobile": "+91 98888 77777",
+      "billing_address": "Sec Address",
+      "status": "ACTIVE",
+      "created_at": "2026-08-26T17:37:02.631Z"
     }
   ],
   "users": [
@@ -237,9 +271,92 @@
       "password_hash": "dummyhash123",
       "role": "CORPORATE_HR",
       "created_at": "2026-08-26T17:26:16.041Z"
+    },
+    {
+      "id": "3f1706d7-31e7-4582-aa45-c2aaee35d958",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "email": "hr.test.1787765822602@acmetech.com",
+      "full_name": "Hemant Vavale (Updated)",
+      "password_hash": "dummyhash123",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-26T17:37:02.603Z"
+    },
+    {
+      "id": "b5a631fa-bb13-4ece-94db-4805719378c7",
+      "company_id": "2bdfd3c8-238c-48c2-93a5-340ee98f6586",
+      "email": "hr.zero.1787765822629@zeroorder.com",
+      "full_name": "Zero HR",
+      "password_hash": "dummyhash123",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-26T17:37:02.629Z"
+    },
+    {
+      "id": "ba17932a-760c-4af9-ac8c-dcdd0515d89d",
+      "company_id": "6f868991-26ba-461b-8e8b-235bc3117865",
+      "email": "hr.sec.1787765822631@sectest.com",
+      "full_name": "Sec HR",
+      "password_hash": "dummyhash123",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-26T17:37:02.631Z"
     }
   ],
   "orders": [
+    {
+      "id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "order_number": "ORD-20260826-1675",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "subtotal_amount": 51000,
+      "gst_amount": 9180,
+      "total_amount": 60180,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "notes": "Automated test purchase",
+      "created_at": "2026-08-26T17:37:02.608Z",
+      "updated_at": "2026-08-26T17:37:02.611Z",
+      "company": {
+        "id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+        "company_name": "Acme Technologies Pvt Ltd",
+        "contact_person": "Hemant Vavale",
+        "designation": "VP of Human Resources",
+        "email": "hr.test.1787765822602@acmetech.com",
+        "mobile": "+91 98200 12345",
+        "billing_address": "Plot 42, Tech Park, MIDC, Pune 411057",
+        "gst_number": "27AAAAA1234A1Z5",
+        "status": "ACTIVE",
+        "created_at": "2026-08-26T17:37:02.603Z"
+      },
+      "items": [
+        {
+          "id": "2ebc0084-f0a6-487d-a170-9f95386ba3cc",
+          "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+          "product_code": "INDIVIDUAL",
+          "quantity": 5,
+          "unit_price": 4000,
+          "total_price": 20000
+        },
+        {
+          "id": "be6edf9d-6a6a-454c-b456-505135d605da",
+          "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+          "product_code": "FAMILY",
+          "quantity": 2,
+          "unit_price": 12000,
+          "total_price": 24000
+        },
+        {
+          "id": "a61fb0c5-8cb5-4659-9be2-46c374543c0c",
+          "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+          "product_code": "KIDS",
+          "quantity": 1,
+          "unit_price": 7000,
+          "total_price": 7000
+        }
+      ],
+      "utr_reference": "UTR-TEST-1787765822609",
+      "payment_date": "2026-08-26",
+      "confirmed_by": "admin-tester",
+      "confirmed_at": "2026-08-26T17:37:02.611Z"
+    },
     {
       "id": "479f3641-9dc0-4846-8dae-3f4a04dc7ef8",
       "order_number": "ORD-20260826-2522",
@@ -799,9 +916,181 @@
       "quantity": 1,
       "unit_price": 7000,
       "total_price": 7000
+    },
+    {
+      "id": "2ebc0084-f0a6-487d-a170-9f95386ba3cc",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "product_code": "INDIVIDUAL",
+      "quantity": 5,
+      "unit_price": 4000,
+      "total_price": 20000
+    },
+    {
+      "id": "be6edf9d-6a6a-454c-b456-505135d605da",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "product_code": "FAMILY",
+      "quantity": 2,
+      "unit_price": 12000,
+      "total_price": 24000
+    },
+    {
+      "id": "a61fb0c5-8cb5-4659-9be2-46c374543c0c",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "product_code": "KIDS",
+      "quantity": 1,
+      "unit_price": 7000,
+      "total_price": 7000
     }
   ],
   "vouchers": [
+    {
+      "id": "469ee9aa-1c6e-4f4b-9708-99bb8b0559b2",
+      "human_ref": "NS-CORP-2026-0056",
+      "redemption_code": "NS-UXF8-6FPJ-PD8H",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "KIDS",
+      "voucher_value": 7000,
+      "eligible_experience_codes": [
+        "HUPPYA",
+        "SAHAS"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "f3f0d95d-9296-463c-a042-e7e2108adbc5",
+      "human_ref": "NS-CORP-2026-0055",
+      "redemption_code": "NS-Y2QF-4R2Q-JTY3",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "843486ab-7851-494a-9053-864bfccc47d5",
+      "human_ref": "NS-CORP-2026-0054",
+      "redemption_code": "NS-Z8JK-7RE6-XXVY",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "4be45634-a177-4e10-b1b0-233f3a885546",
+      "human_ref": "NS-CORP-2026-0053",
+      "redemption_code": "NS-C4DA-7UUW-WY4B",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "21580e5e-e551-4275-bb41-e7b2c74e83aa",
+      "human_ref": "NS-CORP-2026-0052",
+      "redemption_code": "NS-5RHY-QR85-5D7D",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "7e084b95-ecf8-4aa9-807d-2c179fcfdce3",
+      "human_ref": "NS-CORP-2026-0051",
+      "redemption_code": "NS-V6AZ-343M-JYN9",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "f354021a-b64b-41c4-ac60-636d47091788",
+      "human_ref": "NS-CORP-2026-0050",
+      "redemption_code": "NS-K23X-HX9C-NSXF",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
+    {
+      "id": "52ee10bb-9969-454a-8256-864176b86f51",
+      "human_ref": "NS-CORP-2026-0049",
+      "redemption_code": "NS-R2ZG-WAQ5-JT7A",
+      "order_id": "481c2c03-1b79-4f76-baf2-822e2b03da96",
+      "company_id": "92f0cf23-4072-434f-82aa-db4a9da8d708",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-26T17:37:02.611Z",
+      "expiry_date": "2027-08-26T17:37:02.611Z",
+      "created_at": "2026-08-26T17:37:02.611Z",
+      "updated_at": "2026-08-26T17:37:02.611Z"
+    },
     {
       "id": "1e3c5149-3089-424b-97a2-c49ffdad0fc4",
       "human_ref": "NS-CORP-2026-0048",

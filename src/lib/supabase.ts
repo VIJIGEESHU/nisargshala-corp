@@ -1,8 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-anon-key';
-const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY || 'placeholder-service-role-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder-url.supabase.co';
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  'placeholder-anon-key';
+
+/**
+ * Server-only helper to resolve the Supabase Service Role Key across standard env var names:
+ * 1. SUPABASE_SERVICE_ROLE_KEY (Vercel / Supabase integration default)
+ * 2. SUPABASE_SECRET_KEY (Supabase newer naming convention)
+ * 3. SUPABASE_SERVICE_KEY
+ * 4. SUPABASE_KEY
+ */
+function getResolvedServiceRoleKey(): string {
+  if (typeof window !== 'undefined') return '';
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_KEY ||
+    ''
+  );
+}
 
 // Safe storage wrapper for Supabase Auth to prevent iOS Safari SecurityError in Private Browsing mode
 const safeStorage = {
@@ -43,9 +64,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Admin Supabase client (server-side only with service role key)
 export const getSupabaseAdmin = () => {
   if (typeof window !== 'undefined') {
-    throw new Error('SUPABASE_SECRET_KEY client cannot be initialized in the browser.');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY client cannot be initialized in the browser.');
   }
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+
+  const serviceRoleKey = getResolvedServiceRoleKey();
+  if (!serviceRoleKey || serviceRoleKey.includes('placeholder')) {
+    console.warn('[SUPABASE_CONFIG_WARNING] Server-side SUPABASE_SERVICE_ROLE_KEY is missing or invalid. Falling back to anon key (may trigger permission errors if RLS is enabled).');
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -54,14 +81,16 @@ export const getSupabaseAdmin = () => {
 };
 
 /**
- * Check if real Supabase environment variables are configured.
+ * Check if real Supabase environment variables (URL + Service Role Key) are configured.
  */
 export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceKey = getResolvedServiceRoleKey();
+
+  const isUrlValid = Boolean(url && !url.includes('placeholder') && !url.includes('dummy'));
+  const isKeyValid = Boolean(serviceKey && !serviceKey.includes('placeholder') && !serviceKey.includes('dummy'));
+
+  return isUrlValid && isKeyValid;
 }
 
 /**

@@ -333,3 +333,14 @@ BEGIN
   );
 END;
 $$;
+
+-- ====================================================================
+-- SERVER DATABASE PERMISSIONS & SERVICE ROLE PRIVILEGES
+-- ====================================================================
+
+-- Explicit schema & table grants for service_role and postgres roles (server-side API operations)
+GRANT USAGE ON SCHEMA public TO service_role, postgres;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role, postgres;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role, postgres;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role, postgres;
+

@@ -287,6 +287,35 @@ async function runAcceptanceTests() {
     assert(false, 'Criterion 11: Company Data Isolation & Zero-Order State', err.message);
   }
 
+  // 12. TEST SERVER-SIDE PROTECTED DATABASE QUERY SECURITY
+  try {
+    const freshUserEmail = `hr.sec.${Date.now()}@sectest.com`;
+    const secUser = await registerCorporateUserInDB({
+      company_name: 'Sec Test Corp',
+      contact_person: 'Sec HR',
+      email: freshUserEmail,
+      mobile: '+91 98888 77777',
+      billing_address: 'Sec Address',
+      password_hash: 'dummyhash123',
+    });
+
+    const secResolved = await resolveCompanyForUser(secUser.id);
+    const secData = await getCorporateDataForCompany(secResolved!.company, secUser.id);
+
+    // Verify company isolation: Sec Test Corp receives ONLY 0 orders and cannot read Acme's order
+    const hasAcmeOrder = secData.orders.some((o: any) => o.id === createdOrder.id);
+
+    assert(
+      secData.company.id === secUser.company_id &&
+      !hasAcmeOrder &&
+      secData.orders.length === 0,
+      'Criterion 12: Server-Side Protected Database Query & Multi-Tenant Data Isolation',
+      `Verified corporate/data queries protected orders securely without exposing private orders`
+    );
+  } catch (err: any) {
+    assert(false, 'Criterion 12: Server-Side Protected Database Query Security', err.message);
+  }
+
   console.log('\n================================================================');
   console.log(`   TEST RESULTS: ${passed} PASSED | ${failed} FAILED`);
   console.log('================================================================');
