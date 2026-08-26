@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDB } from '@/lib/store';
+import { readDB, resolveCompanyForUser } from '@/lib/store';
 import { getSupabaseAdmin, isSupabaseConfigured, isValidUUID } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
@@ -16,122 +16,71 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'INVALID_SESSION', message: 'Invalid session cookie.' }, { status: 401 });
   }
 
-  const sessionEmail = session.email?.trim().toLowerCase();
-  let companyId = session.companyId;
+  if (!session || !session.userId) {
+    return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Invalid user session.' }, { status: 401 });
+  }
+
+  // 2. CRITICAL AUTHORIZATION: Resolve company strictly from session.userId in DB
+  const resolved = await resolveCompanyForUser(session.userId);
+  if (!resolved || !resolved.company) {
+    return NextResponse.json({ error: 'FORBIDDEN', message: 'Company resolution failed for user.' }, { status: 403 });
+  }
+
+  const company = resolved.company;
+  const targetCompanyId = company.id;
 
   if (isSupabaseConfigured()) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      let company: any = null;
-
-      // 1. Direct Lookup by companyId from session IF it is a valid UUID
-      if (companyId && isValidUUID(companyId)) {
-        const { data: c, error: compErr } = await supabaseAdmin
-          .from('companies')
-          .select('*')
-          .eq('id', companyId)
-          .maybeSingle();
-
-        if (compErr) {
-          console.error(`[CORPORATE_DATA_ERROR] Company fetch by ID (${companyId}) error:`, compErr);
-          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching company profile by ID.', details: compErr.message }, { status: 500 });
-        }
-        if (c) company = c;
-      }
-
-      // 2. Documented Fallback: Lookup by email if companyId is absent, non-UUID, or not matched by ID
-      if (!company && sessionEmail) {
-        const { data: comps, error: emailErr } = await supabaseAdmin
-          .from('companies')
-          .select('*')
-          .eq('email', sessionEmail)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (emailErr) {
-          console.error(`[CORPORATE_DATA_ERROR] Company fetch by email (${sessionEmail}) error:`, emailErr);
-          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching company profile by email.', details: emailErr.message }, { status: 500 });
-        }
-
-        if (comps && comps.length > 0) {
-          company = comps[0];
-          companyId = company.id; // Resolved real UUID
-        }
-      }
-
-      // 3. Controlled Application Error if non-UUID companyId was provided and fallback email could not resolve a company
-      if (!company && companyId && !isValidUUID(companyId) && !sessionEmail) {
-        return NextResponse.json({
-          error: 'INVALID_COMPANY_UUID',
-          message: `The company identifier '${companyId}' is not a valid UUID format and no fallback email was available to resolve the company.`,
-        }, { status: 400 });
-      }
-
-      const targetId = company ? company.id : (isValidUUID(companyId) ? companyId : null);
       let orders: any[] = [];
       let vouchers: any[] = [];
 
-      if (targetId && isValidUUID(targetId)) {
+      if (targetCompanyId && isValidUUID(targetCompanyId)) {
         // Fetch Orders for target company UUID
         const { data: ords, error: ordErr } = await supabaseAdmin
           .from('orders')
           .select('*, items:order_items(*)')
-          .eq('company_id', targetId)
+          .eq('company_id', targetCompanyId)
           .order('created_at', { ascending: false });
 
-        if (ordErr) {
-          console.error(`[CORPORATE_DATA_ERROR] Orders fetch error for company ${targetId}:`, ordErr);
-          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching corporate orders.', details: ordErr.message }, { status: 500 });
-        }
-        if (ords) orders = ords;
+        if (!ordErr && ords) orders = ords;
 
         // Fetch Vouchers for target company UUID
         const { data: vchs, error: vchErr } = await supabaseAdmin
           .from('vouchers')
           .select('*')
-          .eq('company_id', targetId)
+          .eq('company_id', targetCompanyId)
           .order('created_at', { ascending: false });
 
-        if (vchErr) {
-          console.error(`[CORPORATE_DATA_ERROR] Vouchers fetch error for company ${targetId}:`, vchErr);
-          return NextResponse.json({ error: 'DATABASE_ERROR', message: 'Database error fetching corporate vouchers.', details: vchErr.message }, { status: 500 });
-        }
-        if (vchs) vouchers = vchs;
+        if (!vchErr && vchs) vouchers = vchs;
       }
 
       return NextResponse.json({
-        company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
+        company,
         orders,
         vouchers,
       });
     } catch (err: any) {
       console.error('[CORPORATE_DATA_ERROR] Server error fetching corporate data:', err);
-      return NextResponse.json({ error: 'SERVER_ERROR', message: err.message || 'Server error fetching corporate data.' }, { status: 500 });
     }
   }
 
-  // Local Persistent JSON DB
+  // Local Persistent JSON DB Fallback
   const db = readDB();
-  const company = db.companies.find(
-    (c) => (companyId && c.id === companyId) || (sessionEmail && c.email.toLowerCase() === sessionEmail)
-  );
 
-  const targetCompanyId = company ? company.id : companyId;
-
-  // Company Data Isolation Filtering
+  // Company Data Isolation Filtering based strictly on server-resolved company
   const companyOrders = db.orders.filter(
     (o) =>
-      (targetCompanyId && o.company_id === targetCompanyId) ||
-      (company && o.company_id === company.id) ||
-      (sessionEmail && o.company?.email?.toLowerCase() === sessionEmail)
+      o.company_id === targetCompanyId ||
+      (company.email && o.company?.email?.toLowerCase() === company.email.toLowerCase())
   );
 
   const companyVouchers = db.vouchers.filter(
-    (v) => (targetCompanyId && v.company_id === targetCompanyId) || (company && v.company_id === company.id)
+    (v) => v.company_id === targetCompanyId
   );
 
   return NextResponse.json({
-    company: company || { company_name: session.companyName || 'Corporate Client', email: session.email },
+    company,
     orders: companyOrders,
     vouchers: companyVouchers,
   });

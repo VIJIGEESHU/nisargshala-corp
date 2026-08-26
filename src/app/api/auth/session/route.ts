@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDB } from '@/lib/store';
+import { resolveCompanyForUser } from '@/lib/store';
 
 export async function GET(req: NextRequest) {
   const adminCookie = req.cookies.get('nisargshala_admin_session')?.value;
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     } catch (e) {}
   }
 
-  if (!session) {
+  if (!session || !session.userId) {
     return NextResponse.json({ authenticated: false });
   }
 
@@ -40,17 +40,23 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const db = readDB();
-  const company = db.companies.find((c) => c.id === session.companyId);
+  // Server-side Company Resolution
+  const resolved = await resolveCompanyForUser(session.userId);
+
+  if (!resolved || !resolved.company) {
+    return NextResponse.json({ authenticated: false });
+  }
 
   return NextResponse.json({
     authenticated: true,
-    userType,
+    userType: 'HR',
     user: {
       id: session.userId,
-      email: session.email,
-      role: session.role,
-      company: company || { id: session.companyId, company_name: session.companyName || 'Corporate Partner' },
+      email: session.email || resolved.company.email,
+      role: session.role || 'CORPORATE_HR',
+      company: resolved.company,
+      userProfile: resolved.user,
     },
   });
 }
+

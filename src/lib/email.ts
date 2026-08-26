@@ -145,8 +145,10 @@ export async function sendVouchersConfirmationEmail(params: {
   totalAmount: number;
   vouchersCount: number;
   zipBuffer: Buffer;
+  customerGstin?: string;
+  contactPerson?: string;
 }) {
-  const { to, companyName, orderNumber, totalAmount, vouchersCount, zipBuffer } = params;
+  const { to, companyName, orderNumber, totalAmount, vouchersCount, zipBuffer, customerGstin, contactPerson } = params;
   const cleanTo = to.trim().toLowerCase();
 
   console.log(`[ORDER ${orderNumber}] CUSTOMER_EMAIL_ATTEMPTED | Recipient: ${cleanTo} | Vouchers: ${vouchersCount}`);
@@ -179,16 +181,19 @@ export async function sendVouchersConfirmationEmail(params: {
         <tr>
           <td style="padding: 35px 30px;">
             <h2 style="color: #0d3822; font-size: 18px; margin-top: 0;">Payment Verified & Vouchers Activated!</h2>
-            <p style="font-size: 14px; line-height: 1.6; color: #3d4f43;">Dear <strong>${companyName}</strong>,</p>
+            <p style="font-size: 14px; line-height: 1.6; color: #3d4f43;">Dear <strong>${contactPerson || companyName}</strong>,</p>
             <p style="font-size: 14px; line-height: 1.6; color: #3d4f43;">
-              We are pleased to inform you that your RTGS/NEFT payment transfer for Order <strong>#${orderNumber}</strong> (Total Amount: <strong>₹${totalAmount.toLocaleString('en-IN')}</strong>) has been verified and confirmed by Nisargshala operations.
+              We are pleased to inform you that your RTGS/NEFT payment transfer for Order <strong>#${orderNumber}</strong> (Total Amount: <strong>₹${totalAmount.toLocaleString('en-IN')}</strong>) for <strong>${companyName}</strong> has been verified and confirmed by Nisargshala operations.
             </p>
             
             <div style="background-color: #f0f9f4; border: 1px solid #c2e8d3; border-radius: 12px; padding: 20px; margin: 25px 0;">
-              <h3 style="color: #05A658; margin-top: 0; font-size: 15px;">Voucher Summary</h3>
+              <h3 style="color: #05A658; margin-top: 0; font-size: 15px;">Order & Tax Breakdown</h3>
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Order Reference: <strong>${orderNumber}</strong></p>
               <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Total Activated Vouchers: <strong>${vouchersCount} Units</strong></p>
               <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Validity Period: <strong>12 Months from Today</strong></p>
-              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Delivery Package: <strong>Attached ZIP Archive (PDFs & Digital Certificates)</strong></p>
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Seller GSTIN (Nisargshala): <strong>27ARHPV2783R1ZN</strong></p>
+              ${customerGstin ? `<p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Buyer GSTIN (Customer): <strong>${customerGstin}</strong></p>` : ''}
+              <p style="margin: 5px 0; font-size: 13px; color: #2d4536;">• Delivery Package: <strong>Attached ZIP Archive (PDF Vouchers)</strong></p>
             </div>
 
             <p style="font-size: 13px; line-height: 1.6; color: #5a6e60;">

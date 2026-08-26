@@ -82,14 +82,19 @@ export const LOCKED_VOUCHER_PRODUCTS: Record<string, VoucherProduct> = {
 
 /**
  * Calculate corporate order total amount from quantities.
+ * GST Rate is configurable via business settings (defaults to system setting).
  */
-export function calculateOrderTotal(quantities: {
-  individual: number;
-  family: number;
-  kids: number;
-}): {
+export function calculateOrderTotal(
+  quantities: {
+    individual: number;
+    family: number;
+    kids: number;
+  },
+  gstRate: number = 18
+): {
   subtotal: number;
   gst: number;
+  gstRate: number;
   total: number;
   breakdown: Array<{ code: string; title: string; count: number; unitPrice: number; total: number }>;
 } {
@@ -132,9 +137,9 @@ export function calculateOrderTotal(quantities: {
     });
   }
 
-  // GST 0% for gift vouchers (vouchers are actionable claims under Indian GST laws)
-  const gst = 0;
+  const gst = Math.round(subtotal * (gstRate / 100) * 100) / 100;
   const total = subtotal + gst;
 
-  return { subtotal, gst, total, breakdown };
+  return { subtotal, gst, gstRate, total, breakdown };
 }
+

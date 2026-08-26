@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { calculateOrderTotal } from '@/lib/pricing';
 import InteractiveProductSelector from './InteractiveProductSelector';
 import StatusTimeline from './StatusTimeline';
@@ -21,27 +22,20 @@ import {
   FileCheck,
   AlertCircle,
   FileText,
-  Clock
+  Clock,
+  Lock,
+  Edit3
 } from 'lucide-react';
 
 export default function MultiStepOrderWizard() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [quantities, setQuantities] = useState({
     individual: 0,
     family: 0,
     kids: 0,
-  });
-
-  const [companyForm, setCompanyForm] = useState({
-    company_name: '',
-    contact_person: '',
-    designation: '',
-    email: '',
-    mobile: '',
-    billing_address: '',
-    gst_number: '',
-    notes: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -62,9 +56,12 @@ export default function MultiStepOrderWizard() {
     bank_name: 'HDFC Bank',
     account_number: '50200097103825',
     ifsc_code: 'HDFC0002493',
+    gst_rate: 18,
   });
 
   useEffect(() => {
+    fetchSession();
+
     setUtrForm((prev) => ({
       ...prev,
       payment_date: new Date().toISOString().slice(0, 10),
@@ -80,7 +77,24 @@ export default function MultiStepOrderWizard() {
       .catch(() => {});
   }, []);
 
-  const totals = calculateOrderTotal(quantities);
+  const fetchSession = async () => {
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        setSession(data.user);
+      } else {
+        setSession(null);
+      }
+    } catch (e) {
+      setSession(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const totals = calculateOrderTotal(quantities, bankInfo.gst_rate || 18);
 
   const handleQuantityChange = (type: 'individual' | 'family' | 'kids', delta: number) => {
     setQuantities((prev) => ({
@@ -98,10 +112,9 @@ export default function MultiStepOrderWizard() {
     setStep(2);
   };
 
-  const handleProceedToStep3 = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!companyForm.company_name || !companyForm.contact_person || !companyForm.email || !companyForm.mobile || !companyForm.billing_address || !companyForm.gst_number?.trim()) {
-      setErrorMsg('Please complete all required company details including GST Number (*).');
+  const handleProceedToStep3 = () => {
+    if (!session) {
+      setErrorMsg('Please sign in to your Corporate HR account to purchase vouchers.');
       return;
     }
     setErrorMsg('');
@@ -109,6 +122,11 @@ export default function MultiStepOrderWizard() {
   };
 
   const handleSubmitOrder = async () => {
+    if (!session) {
+      setErrorMsg('Please sign in to your Corporate HR account to purchase vouchers.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     try {
@@ -116,7 +134,6 @@ export default function MultiStepOrderWizard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...companyForm,
           quantities,
         }),
       });
@@ -166,6 +183,8 @@ export default function MultiStepOrderWizard() {
       setUtrLoading(false);
     }
   };
+
+  const company = session?.company;
 
   return (
     <div id="order-wizard" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -255,7 +274,7 @@ export default function MultiStepOrderWizard() {
                 <div>
                   <span className="text-[10px] text-forest-300 uppercase tracking-widest block font-semibold">Order Subtotal</span>
                   <span className="font-serif text-2xl font-bold text-sand-50">
-                    ₹{totals.total.toLocaleString('en-IN')}
+                    ₹{totals.subtotal.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -285,10 +304,10 @@ export default function MultiStepOrderWizard() {
               <div className="flex items-center justify-between pb-6 border-b border-forest-100 mb-8">
                 <div>
                   <h2 className="font-serif text-2xl font-bold text-forest-900">
-                    02. Company & Billing Details
+                    02. Company & Billing Information
                   </h2>
                   <p className="text-xs text-forest-600 mt-1">
-                    Provide billing address and contact information for GST invoice & voucher distribution.
+                    Your authenticated corporate profile details are automatically populated below.
                   </p>
                 </div>
                 <button
@@ -299,125 +318,95 @@ export default function MultiStepOrderWizard() {
                 </button>
               </div>
 
-              <form onSubmit={handleProceedToStep3} className="space-y-5 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">Company Name *</label>
-                    <div className="relative">
-                      <Building2 className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Enter company full legal name"
-                        value={companyForm.company_name}
-                        onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
-                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
+              {!session ? (
+                /* ANONYMOUS VISITOR REDIRECT NOTICE CARD */
+                <div className="bg-amber-50 border border-amber-300 text-amber-950 p-8 rounded-2xl text-center space-y-4">
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-700">
+                    <Lock className="w-6 h-6" />
                   </div>
-
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">Contact Person *</label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Enter contact person name"
-                        value={companyForm.contact_person}
-                        onChange={(e) => setCompanyForm({ ...companyForm, contact_person: e.target.value })}
-                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">Designation</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. HR Director / Procurement Manager"
-                      value={companyForm.designation}
-                      onChange={(e) => setCompanyForm({ ...companyForm, designation: e.target.value })}
-                      className="w-full px-3.5 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">Corporate Email *</label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                      <input
-                        type="email"
-                        required
-                        placeholder="corporate.email@company.com"
-                        value={companyForm.email}
-                        onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">Mobile Phone *</label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                      <input
-                        type="tel"
-                        required
-                        placeholder="+91 90000 00000"
-                        value={companyForm.mobile}
-                        onChange={(e) => setCompanyForm({ ...companyForm, mobile: e.target.value })}
-                        className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-forest-900 font-semibold mb-1.5">GST Number *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="27AAAAA0000A1Z5"
-                      value={companyForm.gst_number}
-                      onChange={(e) => setCompanyForm({ ...companyForm, gst_number: e.target.value })}
-                      className="w-full px-3.5 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 uppercase focus:ring-2 focus:ring-amber-500"
-                    />
+                  <h3 className="font-serif text-xl font-bold text-forest-950">
+                    Sign In Required to Complete Order
+                  </h3>
+                  <p className="text-xs text-amber-900 max-w-md mx-auto leading-relaxed font-medium">
+                    Please sign in to your Corporate HR account to purchase vouchers. You will not be asked to enter your company details twice.
+                  </p>
+                  <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+                    <Link
+                      href="/login?redirect=/#order-wizard&msg=Please sign in to your Corporate HR account to purchase vouchers."
+                      className="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3.5 rounded-xl font-semibold text-xs shadow-md transition-all inline-flex items-center justify-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Sign In to Corporate HR Account
+                    </Link>
                   </div>
                 </div>
+              ) : (
+                /* AUTHENTICATED CORPORATE PROFILE CARD */
+                <div className="space-y-6">
+                  <div className="bg-sand-50 border border-sand-300 rounded-2xl p-6 space-y-4 text-xs">
+                    <div className="flex justify-between items-center pb-3 border-b border-sand-200">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-forest-800" />
+                        <span className="font-serif text-base font-bold text-forest-950">
+                          {company?.company_name || session.email}
+                        </span>
+                      </div>
+                      <Link
+                        href="/corporate"
+                        className="text-forest-700 hover:text-forest-950 font-semibold flex items-center gap-1 text-[11px] underline"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+                      </Link>
+                    </div>
 
-                <div>
-                  <label className="block text-forest-900 font-semibold mb-1.5">Billing Address *</label>
-                  <div className="relative">
-                    <MapPin className="w-4 h-4 text-forest-400 absolute left-3 top-3.5" />
-                    <textarea
-                      required
-                      rows={2}
-                      placeholder="Registered corporate address"
-                      value={companyForm.billing_address}
-                      onChange={(e) => setCompanyForm({ ...companyForm, billing_address: e.target.value })}
-                      className="w-full pl-9 pr-3 py-3 bg-sand-50 border border-forest-200 rounded-xl text-forest-900 focus:ring-2 focus:ring-amber-500"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-forest-900 font-medium">
+                      <div>
+                        <span className="text-[10px] text-forest-500 uppercase block font-bold">HR / Authorized Contact</span>
+                        <strong className="text-sm">{company?.contact_person || session.email}</strong>
+                        {company?.designation && <span className="block text-[11px] text-forest-600">{company.designation}</span>}
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-forest-500 uppercase block font-bold">Official Work Email</span>
+                        <strong className="text-sm">{company?.email || session.email}</strong>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-forest-500 uppercase block font-bold">Contact Phone</span>
+                        <strong className="text-sm">{company?.mobile || 'Not specified'}</strong>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-forest-500 uppercase block font-bold">Customer GSTIN (Buyer)</span>
+                        <strong className="text-sm font-mono text-amber-700">{company?.gst_number || 'Not provided (Optional)'}</strong>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] text-forest-500 uppercase block font-bold">Registered Billing Address</span>
+                        <p className="text-xs text-forest-800 leading-relaxed mt-0.5">{company?.billing_address || 'Registered Head Office'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="px-6 py-3 border border-forest-200 rounded-xl text-forest-800 font-semibold hover:bg-forest-50"
+                    >
+                      Back to Products
+                    </button>
+
+                    <button
+                      onClick={handleProceedToStep3}
+                      className="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3.5 rounded-xl font-semibold text-xs shadow-lg flex items-center gap-2"
+                    >
+                      Review Order
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="pt-4 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="px-6 py-3 border border-forest-200 rounded-xl text-forest-800 font-semibold hover:bg-forest-50"
-                  >
-                    Back to Products
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3.5 rounded-xl font-semibold text-xs shadow-lg flex items-center gap-2"
-                  >
-                    Review Order
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
           </motion.div>
         )}
@@ -438,7 +427,7 @@ export default function MultiStepOrderWizard() {
                     03. Review & Confirm Corporate Order
                   </h2>
                   <p className="text-xs text-forest-600 mt-1">
-                    Please review your voucher selections and company details before submitting.
+                    Please review your voucher selections, GST calculation, and company details before submitting.
                   </p>
                 </div>
                 <button
@@ -471,23 +460,36 @@ export default function MultiStepOrderWizard() {
                   ))}
                 </div>
 
-                <div className="mt-4 pt-4 border-t-2 border-sand-300 flex justify-between items-center font-bold text-base text-forest-900">
-                  <span>Total Payable Amount</span>
-                  <span className="text-amber-600 font-serif text-2xl">
-                    ₹{totals.total.toLocaleString('en-IN')}
-                  </span>
+                {/* TAX / GST BREAKDOWN */}
+                <div className="mt-4 pt-4 border-t border-sand-300 space-y-2 text-forest-900 font-medium">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>₹{totals.subtotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-forest-600 text-[11px]">
+                    <span>Applicable GST ({totals.gstRate}%)</span>
+                    <span>₹{totals.gst.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center font-bold text-base pt-2 border-t-2 border-sand-300 text-forest-950">
+                    <span>Total Payable Amount</span>
+                    <span className="text-amber-600 font-serif text-2xl">
+                      ₹{totals.total.toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* COMPANY PREVIEW */}
-              <div className="grid grid-cols-2 gap-4 text-xs bg-forest-50 p-5 rounded-2xl border border-forest-100 text-forest-800">
+              {/* GSTIN DUAL DISPLAY BOX */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-forest-50 p-5 rounded-2xl border border-forest-100 text-forest-800">
                 <div>
-                  <span className="text-forest-500 block text-[10px] uppercase">Corporate Client</span>
-                  <strong>{companyForm.company_name}</strong>
+                  <span className="text-forest-500 block text-[10px] uppercase font-bold">Seller GSTIN (Nisargshala)</span>
+                  <strong className="font-mono text-forest-950 text-sm">27ARHPV2783R1ZN</strong>
                 </div>
                 <div>
-                  <span className="text-forest-500 block text-[10px] uppercase">Contact Person</span>
-                  <strong>{companyForm.contact_person} ({companyForm.email})</strong>
+                  <span className="text-forest-500 block text-[10px] uppercase font-bold">Buyer GSTIN (Customer)</span>
+                  <strong className="font-mono text-amber-700 text-sm">
+                    {company?.gst_number || 'Not provided'}
+                  </strong>
                 </div>
               </div>
 
@@ -505,7 +507,7 @@ export default function MultiStepOrderWizard() {
                   disabled={loading}
                   className="bg-amber-600 hover:bg-amber-700 text-white px-9 py-4 rounded-xl font-semibold text-sm shadow-xl transition-all disabled:opacity-50 flex items-center gap-2"
                 >
-                  {loading ? 'Submitting Request...' : 'Submit Request & View Payment Instructions'}
+                  {loading ? 'Submitting Order...' : 'Submit Request & View Payment Instructions'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -518,6 +520,7 @@ export default function MultiStepOrderWizard() {
             key="step4"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+
             transition={{ duration: 0.4 }}
             className="max-w-4xl mx-auto"
           >

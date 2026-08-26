@@ -390,7 +390,7 @@ export async function createCorporateOrderInDB(params: {
   let company = db.companies.find((c) => c.email.toLowerCase() === params.email.trim().toLowerCase());
   if (!company) {
     company = {
-      id: `comp-${crypto.randomBytes(6).toString('hex')}`,
+      id: crypto.randomUUID(),
       company_name: params.company_name.trim(),
       contact_person: params.contact_person.trim(),
       designation: params.designation?.trim(),
@@ -404,7 +404,7 @@ export async function createCorporateOrderInDB(params: {
     db.companies.push(company);
   }
 
-  const orderId = `ord-${crypto.randomBytes(6).toString('hex')}`;
+  const orderId = crypto.randomUUID();
   const newOrder: DBOrder = {
     id: orderId,
     order_number: orderNumber,
@@ -422,7 +422,7 @@ export async function createCorporateOrderInDB(params: {
   };
 
   const items: DBOrderItem[] = totals.breakdown.map((item) => ({
-    id: `item-${crypto.randomBytes(4).toString('hex')}`,
+    id: crypto.randomUUID(),
     order_id: orderId,
     product_code: item.code,
     quantity: item.count,
@@ -560,7 +560,7 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
       const humanRef = generateHumanReference(sequenceCounter++);
 
       const voucher: DBVoucher = {
-        id: `vch-${crypto.randomBytes(6).toString('hex')}`,
+        id: crypto.randomUUID(),
         human_ref: humanRef,
         redemption_code: code,
         order_id: order.id,
@@ -742,7 +742,7 @@ export async function registerCorporateUserInDB(params: {
         companyId = newComp.id;
       }
 
-      const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
+      const userId = crypto.randomUUID();
       if (isValidUUID(companyId)) {
         try {
           await supabaseAdmin.from('corporate_users').insert({
@@ -750,6 +750,7 @@ export async function registerCorporateUserInDB(params: {
             company_id: companyId,
             full_name: params.contact_person.trim(),
             role: 'CORPORATE_HR',
+            email: cleanEmail,
           });
         } catch (e) {}
       }
@@ -771,7 +772,7 @@ export async function registerCorporateUserInDB(params: {
   let company = db.companies.find((c) => c.email.toLowerCase() === cleanEmail);
   if (!company) {
     company = {
-      id: `comp-${crypto.randomBytes(6).toString('hex')}`,
+      id: crypto.randomUUID(),
       company_name: params.company_name.trim(),
       contact_person: params.contact_person.trim(),
       designation: params.designation?.trim() || 'HR Manager',
@@ -790,7 +791,7 @@ export async function registerCorporateUserInDB(params: {
     throw new Error('An account with this email address already exists. Please sign in.');
   }
 
-  const userId = `usr-${crypto.randomBytes(6).toString('hex')}`;
+  const userId = crypto.randomUUID();
   user = {
     id: userId,
     company_id: company.id,
@@ -936,5 +937,143 @@ export async function verifyOTPAndResetPassword(email: string, otp_code: string,
     message: `Password updated successfully for ${cleanEmail}! You can now sign in with your new password.`,
   };
 }
+
+/**
+  * CRITICAL AUTHORIZATION HELPER:
+  * Server-side company resolution from authenticated user session:
+  * session.userId -> corporate_users.user_id -> corporate_users.company_id -> companies.id
+  */
+export async function resolveCompanyForUser(userId: string) {
+  if (!userId || typeof userId !== 'string') return null;
+
+  const cleanUserId = userId.trim();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      // 1. Look up user in corporate_users by user_id or id
+      let { data: userProfile } = await supabaseAdmin
+        .from('corporate_users')
+        .select('*, company:companies(*)')
+        .eq('user_id', cleanUserId)
+        .maybeSingle();
+
+      if (!userProfile) {
+        const { data: userById } = await supabaseAdmin
+          .from('corporate_users')
+          .select('*, company:companies(*)')
+          .eq('id', cleanUserId)
+          .maybeSingle();
+        userProfile = userById;
+      }
+
+      if (userProfile && userProfile.company) {
+        return {
+          user: userProfile,
+          company: userProfile.company,
+          companyId: userProfile.company.id,
+          companyName: userProfile.company.company_name,
+        };
+      }
+
+      if (userProfile && userProfile.company_id) {
+        const { data: company } = await supabaseAdmin
+          .from('companies')
+          .select('*')
+          .eq('id', userProfile.company_id)
+          .maybeSingle();
+        if (company) {
+          return {
+            user: userProfile,
+            company,
+            companyId: company.id,
+            companyName: company.company_name,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase resolveCompanyForUser error, falling back to local DB:', e);
+    }
+  }
+
+  // Persistent Local JSON DB Fallback
+  const db = readDB();
+  const user = db.users.find((u) => u.id === cleanUserId || u.email.toLowerCase() === cleanUserId.toLowerCase());
+  if (!user) return null;
+
+  let company = db.companies.find((c) => c.id === user.company_id);
+  if (!company) {
+    company = db.companies.find((c) => c.email.toLowerCase() === user.email.toLowerCase());
+  }
+
+  if (!company) return null;
+
+  return {
+    user,
+    company,
+    companyId: company.id,
+    companyName: company.company_name,
+  };
+}
+
+/**
+ * Server-Side Corporate Profile Editing
+ * Scoped strictly to the server-resolved company_id.
+ */
+export async function updateCompanyProfileInDB(
+  companyId: string,
+  data: {
+    company_name?: string;
+    contact_person?: string;
+    designation?: string;
+    mobile?: string;
+    billing_address?: string;
+    gst_number?: string;
+  }
+) {
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      const updatePayload: any = { updated_at: new Date().toISOString() };
+      if (data.company_name) updatePayload.company_name = data.company_name.trim();
+      if (data.contact_person) updatePayload.contact_person = data.contact_person.trim();
+      if (data.designation !== undefined) updatePayload.designation = data.designation.trim();
+      if (data.mobile) updatePayload.mobile = data.mobile.trim();
+      if (data.billing_address) updatePayload.billing_address = data.billing_address.trim();
+      if (data.gst_number !== undefined) updatePayload.gst_number = data.gst_number.trim().toUpperCase() || null;
+
+      if (isValidUUID(companyId)) {
+        await supabaseAdmin.from('companies').update(updatePayload).eq('id', companyId);
+      } else {
+        await supabaseAdmin.from('companies').update(updatePayload).eq('email', data.contact_person || '');
+      }
+    } catch (e) {
+      console.warn('Supabase update company profile warning:', e);
+    }
+  }
+
+  // Local Persistent JSON DB
+  const db = readDB();
+  const company = db.companies.find((c) => c.id === companyId);
+  if (company) {
+    if (data.company_name) company.company_name = data.company_name.trim();
+    if (data.contact_person) company.contact_person = data.contact_person.trim();
+    if (data.designation !== undefined) company.designation = data.designation.trim();
+    if (data.mobile) company.mobile = data.mobile.trim();
+    if (data.billing_address) company.billing_address = data.billing_address.trim();
+    if (data.gst_number !== undefined) company.gst_number = data.gst_number.trim().toUpperCase();
+  }
+
+  const user = db.users.find((u) => u.company_id === companyId);
+  if (user) {
+    if (data.contact_person) user.full_name = data.contact_person.trim();
+  }
+
+  writeDB(db);
+  return company;
+}
+
 
 

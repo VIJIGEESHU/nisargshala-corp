@@ -245,6 +245,10 @@ export function generateVoucherHtml(data: VoucherPDFData, qrCodeDataUrl: string)
             <label>Expiry Date</label>
             <span>${data.expiryDate}</span>
           </div>
+          <div class="meta-item" style="grid-column: span 3; border-top: 1px solid #DCFCE7; pt: 8px; mt: 4px;">
+            <label>Seller GSTIN (Nisargshala)</label>
+            <span style="font-family: monospace; font-size: 12px; color: #045830;">27ARHPV2783R1ZN</span>
+          </div>
         </div>
 
         ${data.assignedEmployee ? `

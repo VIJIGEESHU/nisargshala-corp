@@ -30,6 +30,18 @@ export default function CorporateHRDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'vouchers'>('orders');
 
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    company_name: '',
+    contact_person: '',
+    designation: '',
+    mobile: '',
+    billing_address: '',
+    gst_number: '',
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileNotice, setProfileNotice] = useState('');
+
   useEffect(() => {
     fetchHRData();
   }, []);
@@ -60,6 +72,16 @@ export default function CorporateHRDashboard() {
         setCompany(payload.company);
         setOrders(payload.orders || []);
         setVouchers(payload.vouchers || []);
+        if (payload.company) {
+          setProfileForm({
+            company_name: payload.company.company_name || '',
+            contact_person: payload.company.contact_person || '',
+            designation: payload.company.designation || '',
+            mobile: payload.company.mobile || '',
+            billing_address: payload.company.billing_address || '',
+            gst_number: payload.company.gst_number || '',
+          });
+        }
         setError(null);
       } else {
         const errPayload = await dataRes.json().catch(() => null);
@@ -70,6 +92,35 @@ export default function CorporateHRDashboard() {
       setError('Network connection error. Failed to reach corporate portal servers.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileNotice('');
+    try {
+      const res = await fetch('/api/corporate/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to update company profile.');
+      }
+
+      setCompany(data.company);
+      setProfileNotice('Profile updated successfully!');
+      setTimeout(() => {
+        setEditModalOpen(false);
+        setProfileNotice('');
+      }, 1000);
+    } catch (err: any) {
+      alert(err.message || 'Error saving profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -123,6 +174,12 @@ export default function CorporateHRDashboard() {
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setEditModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all"
+            >
+              <UserCheck className="w-3.5 h-3.5" /> Edit Company Profile
+            </button>
+            <button
               onClick={fetchHRData}
               className="inline-flex items-center gap-2 bg-white border border-forest-200 text-forest-800 hover:bg-forest-50 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all"
             >
@@ -150,6 +207,48 @@ export default function CorporateHRDashboard() {
             </button>
           </div>
         )}
+
+        {/* COMPANY PROFILE CARD */}
+        <div className="bg-white rounded-2xl border border-forest-200 p-6 mb-8 shadow-sm text-xs">
+          <div className="flex justify-between items-center pb-4 border-b border-forest-100 mb-4">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-forest-800" />
+              <h2 className="font-serif text-lg font-bold text-forest-950">
+                {company?.company_name || session?.email}
+              </h2>
+            </div>
+            <button
+              onClick={() => setEditModalOpen(true)}
+              className="text-amber-700 hover:text-amber-800 font-semibold underline text-[11px]"
+            >
+              Edit Profile
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-forest-900">
+            <div>
+              <span className="text-[10px] text-forest-500 uppercase block font-bold">HR / Authorized Contact</span>
+              <strong>{company?.contact_person || session?.email}</strong>
+              {company?.designation && <span className="block text-[11px] text-forest-600">{company.designation}</span>}
+            </div>
+
+            <div>
+              <span className="text-[10px] text-forest-500 uppercase block font-bold">Corporate Email & Phone</span>
+              <strong className="block">{company?.email || session?.email}</strong>
+              <span className="text-[11px] text-forest-700">{company?.mobile || 'No phone added'}</span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-forest-500 uppercase block font-bold">Customer GSTIN (Buyer)</span>
+              <strong className="font-mono text-amber-700">{company?.gst_number || 'Not supplied'}</strong>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-forest-500 uppercase block font-bold">Nisargshala GSTIN (Seller)</span>
+              <strong className="font-mono text-forest-950">27ARHPV2783R1ZN</strong>
+            </div>
+          </div>
+        </div>
 
         {/* METRICS METRIC CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -217,13 +316,31 @@ export default function CorporateHRDashboard() {
         {/* TAB 1: ORDER HISTORY */}
         {activeTab === 'orders' && (
           <div className="bg-white rounded-2xl border border-forest-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-forest-100">
+            <div className="p-6 border-b border-forest-100 flex justify-between items-center">
               <h3 className="font-serif text-lg font-bold text-forest-950">Company Order History</h3>
+              <button
+                onClick={() => router.push('/#order-wizard')}
+                className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all"
+              >
+                + Order Corporate Vouchers
+              </button>
             </div>
 
             {orders.length === 0 ? (
-              <div className="p-12 text-center text-forest-500 italic text-xs">
-                No orders placed yet. Select experience vouchers on the homepage to place a corporate bulk order.
+              <div className="p-12 text-center text-forest-700 text-xs space-y-3">
+                <ShoppingBag className="w-12 h-12 text-forest-300 mx-auto" />
+                <div className="font-bold text-sm text-forest-900">You haven't placed any corporate voucher orders yet.</div>
+                <p className="max-w-md mx-auto text-forest-600">
+                  Select outdoor tent camping, family retreats, or kids adventure camp vouchers on the homepage to place a corporate bulk order.
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => router.push('/#order-wizard')}
+                    className="bg-forest-800 hover:bg-forest-900 text-white px-6 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all"
+                  >
+                    Order Vouchers Now
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -402,9 +519,126 @@ export default function CorporateHRDashboard() {
             )}
           </div>
         )}
+
+        {/* EDIT PROFILE MODAL */}
+        {editModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl border border-forest-200 p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in fade-in zoom-in-95">
+              <div className="flex justify-between items-center pb-4 border-b border-forest-100">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-forest-800" />
+                  <h3 className="font-serif text-xl font-bold text-forest-950">Edit Corporate Profile</h3>
+                </div>
+                <button
+                  onClick={() => setEditModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-700 font-bold text-lg"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {profileNotice && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>{profileNotice}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-forest-950 font-semibold mb-1">Company Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.company_name}
+                    onChange={(e) => setProfileForm({ ...profileForm, company_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500 font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">HR Contact Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={profileForm.contact_person}
+                      onChange={(e) => setProfileForm({ ...profileForm, contact_person: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">Designation</label>
+                    <input
+                      type="text"
+                      value={profileForm.designation}
+                      onChange={(e) => setProfileForm({ ...profileForm, designation: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">Contact Phone *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={profileForm.mobile}
+                      onChange={(e) => setProfileForm({ ...profileForm, mobile: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-forest-950 font-semibold mb-1">Customer GSTIN</label>
+                    <input
+                      type="text"
+                      placeholder="27AAAAA0000A1Z5"
+                      value={profileForm.gst_number}
+                      onChange={(e) => setProfileForm({ ...profileForm, gst_number: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 uppercase font-mono focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-forest-950 font-semibold mb-1">Billing Address *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={profileForm.billing_address}
+                    onChange={(e) => setProfileForm({ ...profileForm, billing_address: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditModalOpen(false)}
+                    className="px-5 py-2.5 border border-forest-200 rounded-xl text-forest-700 font-semibold hover:bg-forest-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={savingProfile}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all disabled:opacity-50"
+                  >
+                    {savingProfile ? 'Saving...' : 'Save Profile Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />
     </div>
   );
 }
+
