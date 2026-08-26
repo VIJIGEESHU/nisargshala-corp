@@ -25,6 +25,7 @@ export default function CorporateHRDashboard() {
   const [session, setSession] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export default function CorporateHRDashboard() {
         const payload = await dataRes.json();
         setCompany(payload.company);
         setOrders(payload.orders || []);
+        setPayments(payload.payments || []);
         setVouchers(payload.vouchers || []);
         if (payload.company) {
           setProfileForm({
@@ -298,7 +300,7 @@ export default function CorporateHRDashboard() {
                 : 'border-transparent text-forest-600 hover:text-forest-900'
             }`}
           >
-            <CreditCard className="w-4 h-4" /> Payment History
+            <CreditCard className="w-4 h-4" /> Payment History ({payments.length})
           </button>
 
           <button
@@ -402,7 +404,7 @@ export default function CorporateHRDashboard() {
               <h3 className="font-serif text-lg font-bold text-forest-950">RTGS/NEFT Payment Records</h3>
             </div>
 
-            {orders.length === 0 ? (
+            {payments.length === 0 ? (
               <div className="p-12 text-center text-forest-500 italic text-xs">
                 No payment records found.
               </div>
@@ -415,21 +417,23 @@ export default function CorporateHRDashboard() {
                       <th className="px-6 py-4">Amount</th>
                       <th className="px-6 py-4">Method</th>
                       <th className="px-6 py-4">UTR Reference Number</th>
+                      <th className="px-6 py-4">Date</th>
                       <th className="px-6 py-4">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-forest-100">
-                    {orders.map((ord) => (
-                      <tr key={ord.id} className="hover:bg-sand-50">
-                        <td className="px-6 py-4 font-mono font-bold text-forest-950">{ord.order_number}</td>
-                        <td className="px-6 py-4 font-bold text-amber-700">₹{ord.total_amount?.toLocaleString('en-IN')}</td>
-                        <td className="px-6 py-4 font-semibold">{ord.payment_method || 'RTGS / NEFT'}</td>
-                        <td className="px-6 py-4 font-mono text-forest-900">{ord.utr_reference || 'Pending UTR submission'}</td>
+                    {payments.map((pmt) => (
+                      <tr key={pmt.id} className="hover:bg-sand-50">
+                        <td className="px-6 py-4 font-mono font-bold text-forest-950">{pmt.order_number || pmt.order_id}</td>
+                        <td className="px-6 py-4 font-bold text-amber-700">₹{pmt.amount?.toLocaleString('en-IN')}</td>
+                        <td className="px-6 py-4 font-semibold">{pmt.method || 'RTGS / NEFT'}</td>
+                        <td className="px-6 py-4 font-mono text-forest-900">{pmt.utr_reference || 'Pending UTR'}</td>
+                        <td className="px-6 py-4">{formatSafeDate(pmt.payment_date || pmt.created_at)}</td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 rounded-full font-semibold ${
-                            ord.payment_status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            pmt.status === 'VERIFIED' || pmt.status === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                           }`}>
-                            {ord.payment_status === 'PAID' ? 'Verified' : 'Pending Verification'}
+                            {pmt.status === 'VERIFIED' || pmt.status === 'PAID' ? 'VERIFIED' : 'PENDING'}
                           </span>
                         </td>
                       </tr>

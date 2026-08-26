@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Persist order tied strictly to server-resolved company UUID / ID
     const { order, orderNumber, totals } = await createCorporateOrderInDB({
+      company_id: company.id,
       company_name: company.company_name,
       contact_person: company.contact_person,
       designation: company.designation || 'HR Contact',

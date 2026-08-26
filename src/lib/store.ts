@@ -294,6 +294,7 @@ export function writeDB(db: DatabaseSchema) {
  * Persist Corporate Order & Order Items
  */
 export async function createCorporateOrderInDB(params: {
+  company_id?: string;
   company_name: string;
   contact_person: string;
   designation?: string;
@@ -314,37 +315,42 @@ export async function createCorporateOrderInDB(params: {
 
       // 1. Fetch or create company
       let companyId: string;
-      const { data: existingComps, error: findCompErr } = await supabaseAdmin
-        .from('companies')
-        .select('id')
-        .eq('email', params.email.trim().toLowerCase())
-        .order('created_at', { ascending: false })
-        .limit(1);
 
-      if (findCompErr && findCompErr.code === 'PGRST205') {
-        throw findCompErr; // Trigger fallback to local persistent store
-      }
-
-      if (existingComps && existingComps.length > 0) {
-        companyId = existingComps[0].id;
+      if (params.company_id && isValidUUID(params.company_id)) {
+        companyId = params.company_id;
       } else {
-        const { data: newComp, error: compErr } = await supabaseAdmin
+        const { data: existingComps, error: findCompErr } = await supabaseAdmin
           .from('companies')
-          .insert({
-            company_name: params.company_name.trim(),
-            contact_person: params.contact_person.trim(),
-            designation: params.designation?.trim() || null,
-            email: params.email.trim().toLowerCase(),
-            mobile: params.mobile.trim(),
-            billing_address: params.billing_address.trim(),
-            gst_number: params.gst_number?.trim().toUpperCase() || null,
-            status: 'ACTIVE',
-          })
-          .select()
-          .single();
+          .select('id')
+          .eq('email', params.email.trim().toLowerCase())
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-        if (compErr || !newComp) throw compErr || new Error('Failed creating company in database.');
-        companyId = newComp.id;
+        if (findCompErr && findCompErr.code === 'PGRST205') {
+          throw findCompErr; // Trigger fallback to local persistent store
+        }
+
+        if (existingComps && existingComps.length > 0) {
+          companyId = existingComps[0].id;
+        } else {
+          const { data: newComp, error: compErr } = await supabaseAdmin
+            .from('companies')
+            .insert({
+              company_name: params.company_name.trim(),
+              contact_person: params.contact_person.trim(),
+              designation: params.designation?.trim() || null,
+              email: params.email.trim().toLowerCase(),
+              mobile: params.mobile.trim(),
+              billing_address: params.billing_address.trim(),
+              gst_number: params.gst_number?.trim().toUpperCase() || null,
+              status: 'ACTIVE',
+            })
+            .select()
+            .single();
+
+          if (compErr || !newComp) throw compErr || new Error('Failed creating company in database.');
+          companyId = newComp.id;
+        }
       }
 
       // 2. Create Order
@@ -387,10 +393,16 @@ export async function createCorporateOrderInDB(params: {
   // Local Persistent JSON DB File
   const db = readDB();
 
-  let company = db.companies.find((c) => c.email.toLowerCase() === params.email.trim().toLowerCase());
+  let company: DBCompany | undefined;
+  if (params.company_id) {
+    company = db.companies.find((c) => c.id === params.company_id);
+  }
+  if (!company) {
+    company = db.companies.find((c) => c.email.toLowerCase() === params.email.trim().toLowerCase());
+  }
   if (!company) {
     company = {
-      id: crypto.randomUUID(),
+      id: params.company_id || crypto.randomUUID(),
       company_name: params.company_name.trim(),
       contact_person: params.contact_person.trim(),
       designation: params.designation?.trim(),
@@ -1074,6 +1086,205 @@ export async function updateCompanyProfileInDB(
   writeDB(db);
   return company;
 }
+
+/**
+ * CRITICAL DATA LINKAGE QUERY:
+ * Fetches all orders, payments, and vouchers linked to a corporate company/user across UUID and legacy IDs.
+ */
+export async function getCorporateDataForCompany(company: DBCompany, userId?: string) {
+  const targetCompanyId = company.id;
+  const cleanEmail = company.email ? company.email.trim().toLowerCase() : '';
+
+  if (isSupabaseConfigured()) {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // 1. Gather all associated company IDs (canonical UUID, legacy IDs, email-matched IDs)
+    const companyIdsSet = new Set<string>();
+    if (targetCompanyId) companyIdsSet.add(targetCompanyId);
+
+    try {
+      if (cleanEmail) {
+        const { data: compsByEmail } = await supabaseAdmin
+          .from('companies')
+          .select('id')
+          .eq('email', cleanEmail);
+        if (compsByEmail) {
+          compsByEmail.forEach((c) => companyIdsSet.add(c.id));
+        }
+      }
+
+      if (userId) {
+        const { data: userComps } = await supabaseAdmin
+          .from('corporate_users')
+          .select('company_id')
+          .or(`user_id.eq.${userId},id.eq.${userId}`);
+        if (userComps) {
+          userComps.forEach((uc) => {
+            if (uc.company_id) companyIdsSet.add(uc.company_id);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase query error gathering associated company IDs:', e);
+    }
+
+    const companyIds = Array.from(companyIdsSet);
+
+    // 2. Fetch Orders for target company IDs
+    let orders: any[] = [];
+    if (companyIds.length > 0) {
+      const { data: ords, error: ordErr } = await supabaseAdmin
+        .from('orders')
+        .select('*, items:order_items(*)')
+        .in('company_id', companyIds)
+        .order('created_at', { ascending: false });
+
+      if (ordErr) {
+        console.error('[DB_ERROR] Supabase orders query error:', ordErr);
+        throw ordErr;
+      }
+      if (ords) orders = ords;
+    }
+
+    const orderIds = orders.map((o) => o.id);
+
+    // 3. Fetch Vouchers for target company IDs or orders
+    let vouchers: any[] = [];
+    if (companyIds.length > 0) {
+      let vchQuery = supabaseAdmin.from('vouchers').select('*');
+      if (orderIds.length > 0) {
+        vchQuery = vchQuery.or(`company_id.in.(${companyIds.join(',')}),order_id.in.(${orderIds.join(',')})`);
+      } else {
+        vchQuery = vchQuery.in('company_id', companyIds);
+      }
+
+      const { data: vchs, error: vchErr } = await vchQuery.order('created_at', { ascending: false });
+
+      if (vchErr) {
+        console.error('[DB_ERROR] Supabase vouchers query error:', vchErr);
+        throw vchErr;
+      }
+      if (vchs) vouchers = vchs;
+    }
+
+    // 4. Fetch Payment Records for target orders or company IDs
+    let dbPayments: any[] = [];
+    if (orderIds.length > 0 || companyIds.length > 0) {
+      try {
+        let pmtQuery = supabaseAdmin.from('payment_records').select('*');
+        if (orderIds.length > 0) {
+          pmtQuery = pmtQuery.in('order_id', orderIds);
+        } else {
+          pmtQuery = pmtQuery.in('company_id', companyIds);
+        }
+        const { data: pmts, error: pmtErr } = await pmtQuery.order('created_at', { ascending: false });
+        if (!pmtErr && pmts) dbPayments = pmts;
+      } catch (e) {
+        console.warn('payment_records query warning:', e);
+      }
+    }
+
+    // Unify payment records (include synthesized entries for verified orders missing rows in payment_records)
+    const paymentsMap = new Map<string, any>();
+    dbPayments.forEach((p) => paymentsMap.set(p.order_id || p.id, p));
+
+    const unifiedPayments: any[] = [...dbPayments];
+
+    orders.forEach((ord) => {
+      if (ord.payment_status !== 'PENDING_PAYMENT' || ord.utr_reference) {
+        if (!paymentsMap.has(ord.id)) {
+          const synthPmt = {
+            id: `pay-${ord.id}`,
+            order_id: ord.id,
+            order_number: ord.order_number,
+            amount: ord.total_amount,
+            method: ord.payment_method || 'RTGS_NEFT',
+            utr_reference: ord.utr_reference || 'Submitted',
+            payment_date: ord.payment_date || (ord.created_at ? ord.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+            status: ord.payment_status === 'PAID' ? 'VERIFIED' : 'PENDING',
+            created_at: ord.updated_at || ord.created_at,
+          };
+          unifiedPayments.push(synthPmt);
+          paymentsMap.set(ord.id, synthPmt);
+        }
+      }
+    });
+
+    return {
+      company,
+      orders,
+      payments: unifiedPayments,
+      vouchers,
+    };
+  }
+
+  // Local Persistent JSON DB Fallback
+  const db = readDB();
+
+  const companyIdsSet = new Set<string>([targetCompanyId]);
+  db.companies.forEach((c) => {
+    if (cleanEmail && c.email.toLowerCase() === cleanEmail) {
+      companyIdsSet.add(c.id);
+    }
+  });
+
+  if (userId) {
+    db.users.forEach((u) => {
+      if ((u.id === userId || (cleanEmail && u.email.toLowerCase() === cleanEmail)) && u.company_id) {
+        companyIdsSet.add(u.company_id);
+      }
+    });
+  }
+
+  const companyOrders = db.orders.filter(
+    (o) =>
+      companyIdsSet.has(o.company_id) ||
+      (cleanEmail && o.company?.email && o.company.email.toLowerCase() === cleanEmail)
+  );
+
+  const orderIdsSet = new Set(companyOrders.map((o) => o.id));
+
+  const companyVouchers = db.vouchers.filter(
+    (v) => companyIdsSet.has(v.company_id) || orderIdsSet.has(v.order_id)
+  );
+
+  const dbPayments = (db.payment_records || []).filter(
+    (p) => orderIdsSet.has(p.order_id) || companyIdsSet.has(p.company_id)
+  );
+
+  const paymentsMap = new Map<string, any>();
+  dbPayments.forEach((p) => paymentsMap.set(p.order_id || p.id, p));
+
+  const unifiedPayments: any[] = [...dbPayments];
+
+  companyOrders.forEach((ord) => {
+    if (ord.payment_status !== 'PENDING_PAYMENT' || ord.utr_reference) {
+      if (!paymentsMap.has(ord.id)) {
+        const synthPmt = {
+          id: `pay-${ord.id}`,
+          order_id: ord.id,
+          order_number: ord.order_number,
+          amount: ord.total_amount,
+          method: ord.payment_method || 'RTGS_NEFT',
+          utr_reference: ord.utr_reference || 'Submitted',
+          payment_date: ord.payment_date || (ord.created_at ? ord.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+          status: ord.payment_status === 'PAID' ? 'VERIFIED' : 'PENDING',
+          created_at: ord.updated_at || ord.created_at,
+        };
+        unifiedPayments.push(synthPmt);
+        paymentsMap.set(ord.id, synthPmt);
+      }
+    }
+  });
+
+  return {
+    company,
+    orders: companyOrders,
+    payments: unifiedPayments,
+    vouchers: companyVouchers,
+  };
+}
+
 
 
 

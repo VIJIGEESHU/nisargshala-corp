@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDB, resolveCompanyForUser } from '@/lib/store';
-import { getSupabaseAdmin, isSupabaseConfigured, isValidUUID } from '@/lib/supabase';
+import { getCorporateDataForCompany, resolveCompanyForUser } from '@/lib/store';
 
 export async function GET(req: NextRequest) {
   // 1. Authenticate Corporate HR session
@@ -20,68 +19,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Invalid user session.' }, { status: 401 });
   }
 
-  // 2. CRITICAL AUTHORIZATION: Resolve company strictly from session.userId in DB
-  const resolved = await resolveCompanyForUser(session.userId);
-  if (!resolved || !resolved.company) {
-    return NextResponse.json({ error: 'FORBIDDEN', message: 'Company resolution failed for user.' }, { status: 403 });
-  }
-
-  const company = resolved.company;
-  const targetCompanyId = company.id;
-
-  if (isSupabaseConfigured()) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      let orders: any[] = [];
-      let vouchers: any[] = [];
-
-      if (targetCompanyId && isValidUUID(targetCompanyId)) {
-        // Fetch Orders for target company UUID
-        const { data: ords, error: ordErr } = await supabaseAdmin
-          .from('orders')
-          .select('*, items:order_items(*)')
-          .eq('company_id', targetCompanyId)
-          .order('created_at', { ascending: false });
-
-        if (!ordErr && ords) orders = ords;
-
-        // Fetch Vouchers for target company UUID
-        const { data: vchs, error: vchErr } = await supabaseAdmin
-          .from('vouchers')
-          .select('*')
-          .eq('company_id', targetCompanyId)
-          .order('created_at', { ascending: false });
-
-        if (!vchErr && vchs) vouchers = vchs;
-      }
-
-      return NextResponse.json({
-        company,
-        orders,
-        vouchers,
-      });
-    } catch (err: any) {
-      console.error('[CORPORATE_DATA_ERROR] Server error fetching corporate data:', err);
+  try {
+    // 2. CRITICAL AUTHORIZATION: Resolve company strictly from session.userId in DB
+    const resolved = await resolveCompanyForUser(session.userId);
+    if (!resolved || !resolved.company) {
+      return NextResponse.json({ error: 'FORBIDDEN', message: 'Company resolution failed for user.' }, { status: 403 });
     }
+
+    // 3. Fetch orders, payments, and vouchers linked to the resolved company
+    const data = await getCorporateDataForCompany(resolved.company, session.userId);
+
+    return NextResponse.json({
+      company: data.company,
+      orders: data.orders,
+      payments: data.payments,
+      vouchers: data.vouchers,
+    });
+  } catch (err: any) {
+    console.error('[CORPORATE_DATA_ERROR] Server error fetching corporate data:', err);
+    return NextResponse.json(
+      { error: 'SERVER_ERROR', message: err.message || 'Error fetching corporate portal records.' },
+      { status: 500 }
+    );
   }
-
-  // Local Persistent JSON DB Fallback
-  const db = readDB();
-
-  // Company Data Isolation Filtering based strictly on server-resolved company
-  const companyOrders = db.orders.filter(
-    (o) =>
-      o.company_id === targetCompanyId ||
-      (company.email && o.company?.email?.toLowerCase() === company.email.toLowerCase())
-  );
-
-  const companyVouchers = db.vouchers.filter(
-    (v) => v.company_id === targetCompanyId
-  );
-
-  return NextResponse.json({
-    company,
-    orders: companyOrders,
-    vouchers: companyVouchers,
-  });
 }

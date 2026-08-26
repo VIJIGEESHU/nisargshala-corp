@@ -1,6 +1,7 @@
 import {
   registerCorporateUserInDB,
   resolveCompanyForUser,
+  getCorporateDataForCompany,
   createCorporateOrderInDB,
   submitOrderPaymentInDB,
   confirmPaymentAndGenerateVouchersInDB,
@@ -239,6 +240,51 @@ async function runAcceptanceTests() {
     );
   } catch (err: any) {
     assert(false, 'Criterion 9: Backward Compatibility', err.message);
+  }
+
+  // 10. TEST GET CORPORATE DATA LINKAGE (ORDERS, PAYMENTS, VOUCHERS)
+  try {
+    const resolved = await resolveCompanyForUser(regUser.id);
+    const dataRes = await getCorporateDataForCompany(resolved!.company, regUser.id);
+
+    assert(
+      dataRes.company.id === regUser.company_id &&
+      dataRes.orders.length >= 1 &&
+      dataRes.payments.length >= 1 &&
+      dataRes.vouchers.length === 8,
+      'Criterion 10: getCorporateDataForCompany Data Linkage (Orders, Payments, Vouchers)',
+      `Orders: ${dataRes.orders.length} | Payments: ${dataRes.payments.length} | Vouchers: ${dataRes.vouchers.length}`
+    );
+  } catch (err: any) {
+    assert(false, 'Criterion 10: getCorporateDataForCompany Data Linkage', err.message);
+  }
+
+  // 11. TEST COMPANY DATA ISOLATION & ZERO-ORDER STATE
+  try {
+    const freshUserEmail = `hr.zero.${Date.now()}@zeroorder.com`;
+    const freshUser = await registerCorporateUserInDB({
+      company_name: 'Zero Order Corp',
+      contact_person: 'Zero HR',
+      email: freshUserEmail,
+      mobile: '+91 99999 00000',
+      billing_address: 'Zero Address',
+      password_hash: 'dummyhash123',
+    });
+
+    const freshResolved = await resolveCompanyForUser(freshUser.id);
+    const zeroData = await getCorporateDataForCompany(freshResolved!.company, freshUser.id);
+
+    assert(
+      zeroData.company.id === freshUser.company_id &&
+      zeroData.orders.length === 0 &&
+      zeroData.payments.length === 0 &&
+      zeroData.vouchers.length === 0 &&
+      !zeroData.orders.some((o: any) => o.id === createdOrder.id),
+      'Criterion 11: Company Data Isolation & Zero-Order Empty State',
+      `Zero Order Company -> Orders: ${zeroData.orders.length} | Payments: ${zeroData.payments.length} | Vouchers: ${zeroData.vouchers.length}`
+    );
+  } catch (err: any) {
+    assert(false, 'Criterion 11: Company Data Isolation & Zero-Order State', err.message);
   }
 
   console.log('\n================================================================');
