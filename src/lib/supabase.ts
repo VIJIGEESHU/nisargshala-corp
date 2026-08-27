@@ -68,11 +68,11 @@ export const getSupabaseAdmin = () => {
   }
 
   const serviceRoleKey = getResolvedServiceRoleKey();
-  if (!serviceRoleKey || serviceRoleKey.includes('placeholder')) {
-    console.warn('[SUPABASE_CONFIG_WARNING] Server-side SUPABASE_SERVICE_ROLE_KEY is missing or invalid. Falling back to anon key (may trigger permission errors if RLS is enabled).');
+  if (!serviceRoleKey || serviceRoleKey.includes('placeholder') || serviceRoleKey.includes('dummy')) {
+    throw new Error('SUPABASE_SERVER_KEY_MISSING: Privileged server key (SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY) is not configured in server environment variables.');
   }
 
-  return createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
+  return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

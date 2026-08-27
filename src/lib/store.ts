@@ -964,20 +964,23 @@ export async function resolveCompanyForUser(userId: string) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
 
-      // 1. Look up user in corporate_users by user_id or id
-      let { data: userProfile } = await supabaseAdmin
-        .from('corporate_users')
-        .select('*, company:companies(*)')
-        .eq('user_id', cleanUserId)
-        .maybeSingle();
+      // 1. Look up user in corporate_users safely checking isValidUUID
+      let userProfile: any = null;
 
-      if (!userProfile) {
-        const { data: userById } = await supabaseAdmin
+      if (isValidUUID(cleanUserId)) {
+        const { data: profile } = await supabaseAdmin
           .from('corporate_users')
           .select('*, company:companies(*)')
-          .eq('id', cleanUserId)
+          .or(`user_id.eq.${cleanUserId},id.eq.${cleanUserId}`)
           .maybeSingle();
-        userProfile = userById;
+        userProfile = profile;
+      } else {
+        const { data: profile } = await supabaseAdmin
+          .from('corporate_users')
+          .select('*, company:companies(*)')
+          .eq('email', cleanUserId.toLowerCase())
+          .maybeSingle();
+        userProfile = profile;
       }
 
       if (userProfile && userProfile.company) {
@@ -989,7 +992,7 @@ export async function resolveCompanyForUser(userId: string) {
         };
       }
 
-      if (userProfile && userProfile.company_id) {
+      if (userProfile && userProfile.company_id && isValidUUID(userProfile.company_id)) {
         const { data: company } = await supabaseAdmin
           .from('companies')
           .select('*')
@@ -1113,7 +1116,7 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
         }
       }
 
-      if (userId) {
+      if (userId && isValidUUID(userId)) {
         const { data: userComps } = await supabaseAdmin
           .from('corporate_users')
           .select('company_id')
@@ -1129,14 +1132,15 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
     }
 
     const companyIds = Array.from(companyIdsSet);
+    const uuidCompanyIds = companyIds.filter((id) => isValidUUID(id));
 
     // 2. Fetch Orders for target company IDs
     let orders: any[] = [];
-    if (companyIds.length > 0) {
+    if (uuidCompanyIds.length > 0) {
       const { data: ords, error: ordErr } = await supabaseAdmin
         .from('orders')
         .select('*, items:order_items(*)')
-        .in('company_id', companyIds)
+        .in('company_id', uuidCompanyIds)
         .order('created_at', { ascending: false });
 
       if (ordErr) {
@@ -1147,15 +1151,16 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
     }
 
     const orderIds = orders.map((o) => o.id);
+    const uuidOrderIds = orderIds.filter((id) => isValidUUID(id));
 
     // 3. Fetch Vouchers for target company IDs or orders
     let vouchers: any[] = [];
-    if (companyIds.length > 0) {
+    if (uuidCompanyIds.length > 0) {
       let vchQuery = supabaseAdmin.from('vouchers').select('*');
-      if (orderIds.length > 0) {
-        vchQuery = vchQuery.or(`company_id.in.(${companyIds.join(',')}),order_id.in.(${orderIds.join(',')})`);
+      if (uuidOrderIds.length > 0) {
+        vchQuery = vchQuery.or(`company_id.in.(${uuidCompanyIds.join(',')}),order_id.in.(${uuidOrderIds.join(',')})`);
       } else {
-        vchQuery = vchQuery.in('company_id', companyIds);
+        vchQuery = vchQuery.in('company_id', uuidCompanyIds);
       }
 
       const { data: vchs, error: vchErr } = await vchQuery.order('created_at', { ascending: false });
@@ -1169,13 +1174,13 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
 
     // 4. Fetch Payment Records for target orders or company IDs
     let dbPayments: any[] = [];
-    if (orderIds.length > 0 || companyIds.length > 0) {
+    if (uuidOrderIds.length > 0 || uuidCompanyIds.length > 0) {
       try {
         let pmtQuery = supabaseAdmin.from('payment_records').select('*');
-        if (orderIds.length > 0) {
-          pmtQuery = pmtQuery.in('order_id', orderIds);
+        if (uuidOrderIds.length > 0) {
+          pmtQuery = pmtQuery.in('order_id', uuidOrderIds);
         } else {
-          pmtQuery = pmtQuery.in('company_id', companyIds);
+          pmtQuery = pmtQuery.in('company_id', uuidCompanyIds);
         }
         const { data: pmts, error: pmtErr } = await pmtQuery.order('created_at', { ascending: false });
         if (!pmtErr && pmts) dbPayments = pmts;
