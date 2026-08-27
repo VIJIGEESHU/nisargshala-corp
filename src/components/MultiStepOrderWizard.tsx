@@ -584,6 +584,26 @@ export default function MultiStepOrderWizard() {
                   <p className="text-[11px] text-forest-600 font-medium">
                     Please keep this order reference for your records.
                   </p>
+                  <div className="pt-2 text-xs text-forest-800 font-medium flex items-center justify-center gap-2 flex-wrap">
+                    <span>For quick assistance, you can also connect with us on Call or WhatsApp:</span>
+                    <a
+                      href="https://wa.me/919049002053"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono font-bold text-emerald-700 hover:underline inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200"
+                    >
+                      📞 9049002053
+                    </a>
+                    <span>/</span>
+                    <a
+                      href="https://wa.me/918698969892"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono font-bold text-emerald-700 hover:underline inline-flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200"
+                    >
+                      💬 8698969892
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitUtr} className="bg-white p-6 rounded-2xl border border-forest-200 space-y-4 text-xs">
