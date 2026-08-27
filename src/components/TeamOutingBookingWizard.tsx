@@ -83,7 +83,7 @@ export default function TeamOutingBookingWizard({ initialPackageCode }: TeamOuti
     setError(null);
 
     // GSTIN format check
-    const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[0-9A-Z]{1}[0-9A-Z]{1}$/i;
     if (!companyDetails.gst_number || !gstinRegex.test(companyDetails.gst_number.trim().toUpperCase())) {
       setError('A valid 15-character corporate GSTIN is mandatory (e.g. 27AAAAA0000A1Z5).');
       return;
@@ -107,6 +107,7 @@ export default function TeamOutingBookingWizard({ initialPackageCode }: TeamOuti
           event_date: eventDate,
           attendees_count: attendeesCount,
           special_requirements: specialReqs,
+          gst_number: companyDetails.gst_number.trim().toUpperCase(),
         }),
       });
 

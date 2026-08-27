@@ -26,20 +26,21 @@ export async function POST(req: NextRequest) {
     }
 
     const company = resolved.company;
+    const body = await req.json();
+    const { package_code, event_date, attendees_count, special_requirements, gst_number } = body;
+
+    const effectiveGstin = (gst_number || company.gst_number || '').trim().toUpperCase();
 
     // Enforce mandatory GSTIN format check
-    if (!company.gst_number || !validateGSTINFormat(company.gst_number)) {
+    if (!effectiveGstin || !validateGSTINFormat(effectiveGstin)) {
       return NextResponse.json(
         {
           error: 'MANDATORY_GSTIN_REQUIRED',
-          message: 'A valid 15-character corporate GSTIN is mandatory to book team outings and retreats. Please update your corporate profile with a valid GSTIN.',
+          message: 'A valid 15-character corporate GSTIN is mandatory to book team outings and retreats. Please enter a valid GSTIN.',
         },
         { status: 400 }
       );
     }
-
-    const body = await req.json();
-    const { package_code, event_date, attendees_count, special_requirements } = body;
 
     if (!package_code || !event_date || !attendees_count) {
       return NextResponse.json({ error: 'MISSING_FIELDS', message: 'Package code, event date, and attendees count are required.' }, { status: 400 });
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
       event_date,
       attendees_count: Number(attendees_count),
       special_requirements,
+      gst_number,
     });
 
     return NextResponse.json({

@@ -36,11 +36,12 @@ async function runTeamOutingsAndInvoiceTests() {
   // Test 1: GSTIN Format Validation
   try {
     const validGstin = validateGSTINFormat('27AAAAA0000A1Z5');
+    const userScreenshotGstin = validateGSTINFormat('27ARHPV2783R17N');
     const invalidGstin = validateGSTINFormat('INVALID123');
     assert(
-      validGstin === true && invalidGstin === false,
-      'Test 1: Server-side 15-character GSTIN format validation works correctly',
-      `Valid: 27AAAAA0000A1Z5 (${validGstin}) | Invalid: INVALID123 (${invalidGstin})`
+      validGstin === true && userScreenshotGstin === true && invalidGstin === false,
+      'Test 1: Server-side 15-character GSTIN format validation accepts standard & user GSTINs (27ARHPV2783R17N)',
+      `Valid: 27AAAAA0000A1Z5 (${validGstin}) | User GSTIN: 27ARHPV2783R17N (${userScreenshotGstin}) | Invalid: INVALID123 (${invalidGstin})`
     );
   } catch (err: any) {
     assert(false, 'Test 1: GSTIN validation', err.message);

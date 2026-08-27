@@ -729,6 +729,30 @@
       "gst_number": "27ARHPV2783R1ZN",
       "status": "ACTIVE",
       "created_at": "2026-08-27T17:32:23.905Z"
+    },
+    {
+      "id": "b6f94880-9bfc-4020-96b0-08d2df466ca0",
+      "company_name": "Apex Gateway Logistics Pvt Ltd",
+      "contact_person": "Vikram Mehta",
+      "designation": "HR Manager",
+      "email": "gateway.corp.1787853040889@nisargshala.in",
+      "mobile": "+91 98220 11223",
+      "billing_address": "BKC, Mumbai, Maharashtra",
+      "gst_number": "27ARHPV2783R1ZN",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:50:40.889Z"
+    },
+    {
+      "id": "97ac8a19-49bd-44b7-a36f-b7b1d9ced7a8",
+      "company_name": "Apex Gateway Logistics Pvt Ltd",
+      "contact_person": "Vikram Mehta",
+      "designation": "HR Manager",
+      "email": "gateway.corp.1787853060550@nisargshala.in",
+      "mobile": "+91 98220 11223",
+      "billing_address": "BKC, Mumbai, Maharashtra",
+      "gst_number": "27ARHPV2783R1ZN",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:51:00.550Z"
     }
   ],
   "users": [
@@ -1316,6 +1340,24 @@
       "password_hash": "scrypt:placeholder",
       "role": "CORPORATE_HR",
       "created_at": "2026-08-27T17:32:23.905Z"
+    },
+    {
+      "id": "41960365-bb32-45b0-8bdf-eb423e7cab23",
+      "company_id": "b6f94880-9bfc-4020-96b0-08d2df466ca0",
+      "email": "gateway.corp.1787853040889@nisargshala.in",
+      "full_name": "Vikram Mehta",
+      "password_hash": "scrypt:placeholder",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:50:40.889Z"
+    },
+    {
+      "id": "524eb3a3-6b01-437d-83b1-2cec670b9c17",
+      "company_id": "97ac8a19-49bd-44b7-a36f-b7b1d9ced7a8",
+      "email": "gateway.corp.1787853060550@nisargshala.in",
+      "full_name": "Vikram Mehta",
+      "password_hash": "scrypt:placeholder",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:51:00.550Z"
     }
   ],
   "orders": [
@@ -5376,6 +5418,34 @@
       "special_requirements": "Needs conference room setup and guided trekking",
       "status": "NEW",
       "created_at": "2026-08-27T17:32:23.938Z"
+    },
+    {
+      "id": "37b746d2-faaf-43f0-aeee-862fe97f22cd",
+      "enquiry_number": "ENQ-20260827-4810",
+      "company_name": "Global Tech Offsites Ltd",
+      "contact_person": "Ananya Roy",
+      "email": "enquiry.1787853040926@globaltech.com",
+      "mobile": "+91 91111 22222",
+      "team_size": 45,
+      "preferred_location": "Panchgani",
+      "experience_type": "Leadership Strategy Offsite",
+      "special_requirements": "Needs conference room setup and guided trekking",
+      "status": "NEW",
+      "created_at": "2026-08-27T17:50:40.928Z"
+    },
+    {
+      "id": "eec337fc-675a-45d5-bfde-026e17e63249",
+      "enquiry_number": "ENQ-20260827-6428",
+      "company_name": "Global Tech Offsites Ltd",
+      "contact_person": "Ananya Roy",
+      "email": "enquiry.1787853060583@globaltech.com",
+      "mobile": "+91 91111 22222",
+      "team_size": 45,
+      "preferred_location": "Panchgani",
+      "experience_type": "Leadership Strategy Offsite",
+      "special_requirements": "Needs conference room setup and guided trekking",
+      "status": "NEW",
+      "created_at": "2026-08-27T17:51:00.585Z"
     }
   ],
   "team_outing_bookings": [
@@ -5450,6 +5520,78 @@
       },
       "utr_reference": "UTR998877665544",
       "payment_date": "2026-08-27"
+    },
+    {
+      "id": "0db043de-029e-49f1-888e-dc8d5a5e4c93",
+      "booking_number": "OUTING-20260827-2833",
+      "company_id": "b6f94880-9bfc-4020-96b0-08d2df466ca0",
+      "package_code": "WILDERNESS_BONDING",
+      "package_title": "Wilderness Team Immersion Camp",
+      "location": "Western Ghats Sanctuary, Maharashtra",
+      "event_date": "2026-10-15",
+      "attendees_count": 20,
+      "unit_price": 3200,
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "payment_status": "AWAITING_VERIFICATION",
+      "booking_status": "PENDING_PAYMENT",
+      "special_requirements": "Barbecue dinner & Guided hike",
+      "email_status": "PENDING",
+      "created_at": "2026-08-27T17:50:40.895Z",
+      "updated_at": "2026-08-27T17:50:40.899Z",
+      "company": {
+        "id": "b6f94880-9bfc-4020-96b0-08d2df466ca0",
+        "company_name": "Apex Gateway Logistics Pvt Ltd",
+        "contact_person": "Vikram Mehta",
+        "designation": "HR Manager",
+        "email": "gateway.corp.1787853040889@nisargshala.in",
+        "mobile": "+91 98220 11223",
+        "billing_address": "BKC, Mumbai, Maharashtra",
+        "gst_number": "27ARHPV2783R1ZN",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:50:40.889Z"
+      },
+      "utr_reference": "UTR998877665544",
+      "payment_date": "2026-08-27"
+    },
+    {
+      "id": "8be5f712-9cea-4130-a523-ffa6023d101c",
+      "booking_number": "OUTING-20260827-3263",
+      "company_id": "97ac8a19-49bd-44b7-a36f-b7b1d9ced7a8",
+      "package_code": "WILDERNESS_BONDING",
+      "package_title": "Wilderness Team Immersion Camp",
+      "location": "Western Ghats Sanctuary, Maharashtra",
+      "event_date": "2026-10-15",
+      "attendees_count": 20,
+      "unit_price": 3200,
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "payment_status": "AWAITING_VERIFICATION",
+      "booking_status": "PENDING_PAYMENT",
+      "special_requirements": "Barbecue dinner & Guided hike",
+      "email_status": "PENDING",
+      "created_at": "2026-08-27T17:51:00.557Z",
+      "updated_at": "2026-08-27T17:51:00.560Z",
+      "company": {
+        "id": "97ac8a19-49bd-44b7-a36f-b7b1d9ced7a8",
+        "company_name": "Apex Gateway Logistics Pvt Ltd",
+        "contact_person": "Vikram Mehta",
+        "designation": "HR Manager",
+        "email": "gateway.corp.1787853060550@nisargshala.in",
+        "mobile": "+91 98220 11223",
+        "billing_address": "BKC, Mumbai, Maharashtra",
+        "gst_number": "27ARHPV2783R1ZN",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:51:00.550Z"
+      },
+      "utr_reference": "UTR998877665544",
+      "payment_date": "2026-08-27"
     }
   ],
   "tax_invoices": [
@@ -5486,6 +5628,40 @@
       "advance_received": 75520,
       "balance_due": 0,
       "created_at": "2026-08-27T17:32:23.916Z"
+    },
+    {
+      "id": "dc9a2c51-3264-46a9-8964-aaed821dac8f",
+      "invoice_number": "NS/26-27/000003",
+      "booking_id": "0db043de-029e-49f1-888e-dc8d5a5e4c93",
+      "company_id": "b6f94880-9bfc-4020-96b0-08d2df466ca0",
+      "invoice_date": "2026-08-27",
+      "due_date": "2026-09-03",
+      "seller_gstin": "27ARHPV2783R1ZN",
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "advance_received": 75520,
+      "balance_due": 0,
+      "created_at": "2026-08-27T17:50:40.905Z"
+    },
+    {
+      "id": "5e38c1e4-2436-4f31-aad6-0d3fc31d76b1",
+      "invoice_number": "NS/26-27/000004",
+      "booking_id": "8be5f712-9cea-4130-a523-ffa6023d101c",
+      "company_id": "97ac8a19-49bd-44b7-a36f-b7b1d9ced7a8",
+      "invoice_date": "2026-08-27",
+      "due_date": "2026-09-03",
+      "seller_gstin": "27ARHPV2783R1ZN",
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "advance_received": 75520,
+      "balance_due": 0,
+      "created_at": "2026-08-27T17:51:00.565Z"
     }
   ]
 }

@@ -1565,7 +1565,7 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
 export function validateGSTINFormat(gstin: string): boolean {
   if (!gstin || typeof gstin !== 'string') return false;
   const clean = gstin.trim().toUpperCase();
-  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(clean);
+  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[0-9A-Z]{1}[0-9A-Z]{1}$/.test(clean);
 }
 
 /**
@@ -1708,6 +1708,7 @@ export async function createTeamOutingBookingInDB(params: {
   event_date: string;
   attendees_count: number;
   special_requirements?: string;
+  gst_number?: string;
 }): Promise<{ booking: DBTeamOutingBooking; company: DBCompany }> {
   // Validate mandatory GSTIN
   const resolved = await resolveCompanyForUser(params.company_id);
@@ -1716,8 +1717,27 @@ export async function createTeamOutingBookingInDB(params: {
     throw new Error('Corporate account profile not found.');
   }
 
-  if (!company.gst_number || !validateGSTINFormat(company.gst_number)) {
-    throw new Error('A valid corporate GSTIN is mandatory to book team outings and retreats. Please update your corporate details with a valid GSTIN.');
+  const effectiveGstin = (params.gst_number || company.gst_number || '').trim().toUpperCase();
+
+  if (!effectiveGstin || !validateGSTINFormat(effectiveGstin)) {
+    throw new Error('A valid 15-character corporate GSTIN is mandatory to book team outings and retreats. Please enter a valid GSTIN.');
+  }
+
+  // Update profile in DB if GSTIN changed or updated
+  if (company.gst_number !== effectiveGstin) {
+    company.gst_number = effectiveGstin;
+    const db = readDB();
+    const dbComp = db.companies.find((c) => c.id === company.id);
+    if (dbComp) {
+      dbComp.gst_number = effectiveGstin;
+      writeDB(db);
+    }
+    if (isSupabaseConfigured() && isValidUUID(company.id)) {
+      try {
+        const supabaseAdmin = getSupabaseAdmin();
+        await supabaseAdmin.from('companies').update({ gst_number: effectiveGstin }).eq('id', company.id);
+      } catch (e) {}
+    }
   }
 
   const pkg = DEFAULT_OUTING_PACKAGES.find((p) => p.package_code === params.package_code) || DEFAULT_OUTING_PACKAGES[0];
