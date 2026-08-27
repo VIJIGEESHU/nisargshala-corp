@@ -227,3 +227,78 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
 </html>
   `;
 }
+
+/**
+ * Generates a clean PDF binary buffer for the Tax Invoice document.
+ */
+export function generateTaxInvoicePdfBuffer(data: InvoiceData): Buffer {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
+
+  const itemLines = data.items
+    .map(
+      (item) =>
+        `0 -15 Td (${item.description.replace(/[()]/g, '')} | Qty: ${item.quantity} | Unit: INR ${formatCurrency(item.unitPrice)} | Total: INR ${formatCurrency(item.totalPrice)}) Tj`
+    )
+    .join('\n');
+
+  const pdfText = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 595 842] /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Length 850 >>
+stream
+BT
+/F1 22 Tf 50 790 Td (TAX INVOICE) Tj
+/F2 12 Tf 350 0 Td (No: ${data.invoiceNumber}) Tj
+/F2 10 Tf -350 -30 Td (FROM: Nisargshala | 89, Babuji Bungalow, Pune - 412115 | Email: hemantvavale@gmail.com) Tj
+/F1 10 Tf 0 -15 Td (Seller GSTIN: 27ARHPV2783R1ZN) Tj
+/F2 10 Tf 0 -25 Td (TO: ${data.companyName.replace(/[()]/g, '')} | Attn: ${data.contactPerson.replace(/[()]/g, '')}) Tj
+/F1 10 Tf 0 -15 Td (Buyer GSTIN: ${data.buyerGstin}) Tj
+/F2 10 Tf 0 -15 Td (Address: ${data.billingAddress.replace(/[()]/g, '')}) Tj
+/F2 10 Tf 0 -15 Td (Date Issued: ${data.invoiceDate}   |   Due Date: ${data.dueDate}) Tj
+/F1 12 Tf 0 -30 Td (INVOICE ITEMS) Tj
+/F2 10 Tf
+${itemLines}
+/F1 11 Tf 0 -30 Td (Subtotal: INR ${formatCurrency(data.subtotal)}) Tj
+/F1 11 Tf 0 -15 Td (GST Tax (${data.gstRate}%): INR ${formatCurrency(data.gstAmount)}) Tj
+/F1 13 Tf 0 -18 Td (Total Amount: INR ${formatCurrency(data.totalAmount)}) Tj
+/F2 10 Tf 0 -15 Td (Less: Advance Received: INR ${formatCurrency(data.advanceReceived)}) Tj
+/F1 14 Tf 0 -20 Td (TOTAL DUE: INR ${formatCurrency(data.totalDue)}/-) Tj
+/F1 11 Tf 0 -35 Td (PAYMENT INSTRUCTIONS) Tj
+/F2 10 Tf 0 -15 Td (Bank Name: HDFC Bank   |   Account Name: NISARGSHALA) Tj
+/F2 10 Tf 0 -15 Td (Account Number: 5020097103825   |   IFSC: HDFC0002493) Tj
+/F2 10 Tf 0 -15 Td (Payment Reference: ${data.referenceNumber}) Tj
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000245 00000 n 
+0000000320 00000 n 
+0000000390 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1290
+%%EOF`;
+
+  return Buffer.from(pdfText);
+}

@@ -310,7 +310,72 @@ export async function generateCombinedVouchersHtml(vouchers: VoucherPDFData[]): 
 }
 
 /**
- * Creates a ZIP archive containing individual HTML/text vouchers for an entire order.
+ * Generates a clean PDF binary buffer for a voucher certificate.
+ */
+export function generateVoucherPdfBuffer(data: VoucherPDFData): Buffer {
+  const formattedValue = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(data.voucherValue);
+
+  const pdfText = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 595 842] /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Length 850 >>
+stream
+BT
+/F1 22 Tf 50 790 Td (NISARGSHALA CORPORATE VOUCHER) Tj
+/F2 10 Tf 0 -18 Td (Official Experience Gift Certificate | Ref: ${data.humanRef}) Tj
+/F1 16 Tf 0 -35 Td (Product: ${data.productTitle.replace(/[()]/g, '')}) Tj
+/F2 12 Tf 0 -20 Td (Company: ${data.companyName.replace(/[()]/g, '')}) Tj
+/F1 18 Tf 0 -30 Td (Voucher Value: ${formattedValue.replace(/[()]/g, '')}) Tj
+/F1 14 Tf 0 -35 Td (Secret Redemption Code: ${data.redemptionCode}) Tj
+/F2 10 Tf 0 -18 Td (Issue Date: ${data.issueDate}   |   Expiry Date: ${data.expiryDate}) Tj
+/F2 10 Tf 0 -18 Td (Seller GSTIN: 27ARHPV2783R1ZN) Tj
+/F1 12 Tf 0 -35 Td (Eligible Experience Modules:) Tj
+/F2 10 Tf
+${data.eligibleExperiences.map(exp => `0 -15 Td (- ${exp.replace(/[()]/g, '')}) Tj`).join('\n')}
+0 -30 Td (Terms & Conditions:) Tj
+${data.terms.map(t => `0 -14 Td (- ${t.replace(/[()]/g, '')}) Tj`).join('\n')}
+0 -30 Td (How to Redeem: Visit https://nisargshala.in/redeem and enter code during checkout.) Tj
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000245 00000 n 
+0000000320 00000 n 
+0000000390 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1290
+%%EOF`;
+
+  return Buffer.from(pdfText);
+}
+
+/**
+ * Creates a ZIP archive containing individual PDF and HTML vouchers for an entire order.
  */
 export async function generateBulkOrderVouchersZip(vouchers: VoucherPDFData[]): Promise<Buffer> {
   const zip = new JSZip();
@@ -318,7 +383,11 @@ export async function generateBulkOrderVouchersZip(vouchers: VoucherPDFData[]): 
   for (const voucher of vouchers) {
     const qrCode = await generateRedemptionQRCode();
     const html = generateVoucherHtml(voucher, qrCode);
-    zip.file(`${voucher.humanRef}-${voucher.redemptionCode.slice(-4)}.html`, html);
+    const pdfBuf = generateVoucherPdfBuffer(voucher);
+
+    const baseName = `${voucher.humanRef}-${voucher.redemptionCode.slice(-4)}`;
+    zip.file(`${baseName}.pdf`, pdfBuf);
+    zip.file(`${baseName}.html`, html);
   }
 
   // Also include the single combined document inside the ZIP for convenience

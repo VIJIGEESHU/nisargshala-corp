@@ -312,6 +312,7 @@ export async function sendTeamOutingConfirmationEmail(params: {
   totalAmount: number;
   utrReference: string;
   invoiceHtml: string;
+  invoicePdfBuffer?: Buffer;
   buyerGstin: string;
 }) {
   const {
@@ -326,6 +327,7 @@ export async function sendTeamOutingConfirmationEmail(params: {
     totalAmount,
     utrReference,
     invoiceHtml,
+    invoicePdfBuffer,
     buyerGstin,
   } = params;
 
@@ -427,7 +429,7 @@ export async function sendTeamOutingConfirmationEmail(params: {
           <!-- Invoice Attachment Notice -->
           <div style="background-color: #fdf9f5; border: 1px solid #e5e2de; border-radius: 10px; padding: 16px; text-align: center; margin: 24px 0;">
             <p style="margin: 0; font-size: 13px; color: #1b6c40; font-weight: 600;">
-              📄 Your official Tax Invoice is attached to this email as an HTML/PDF document.
+              📄 Your official Tax Invoice is attached to this email in PDF format.
             </p>
           </div>
 
@@ -455,7 +457,8 @@ export async function sendTeamOutingConfirmationEmail(params: {
   </html>
   `;
 
-  const attachmentFilename = `TAX_INVOICE_${bookingNumber}.html`;
+  const pdfAttachment = invoicePdfBuffer || Buffer.from(invoiceHtml);
+  const pdfFilename = `TAX_INVOICE_${bookingNumber}.pdf`;
 
   // Resend API
   if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) {
@@ -473,8 +476,8 @@ export async function sendTeamOutingConfirmationEmail(params: {
           html: htmlBody,
           attachments: [
             {
-              filename: attachmentFilename,
-              content: Buffer.from(invoiceHtml).toString('base64'),
+              filename: pdfFilename,
+              content: pdfAttachment.toString('base64'),
             },
           ],
         }),
@@ -512,8 +515,9 @@ export async function sendTeamOutingConfirmationEmail(params: {
       html: htmlBody,
       attachments: [
         {
-          filename: attachmentFilename,
-          content: invoiceHtml,
+          filename: pdfFilename,
+          content: pdfAttachment,
+          contentType: 'application/pdf',
         },
       ],
     });

@@ -149,7 +149,7 @@ export default function Navbar() {
               </div>
             ) : (
               <Link
-                href="/login"
+                href="/login?redirect=/#vouchers"
                 className="flex items-center space-x-2 bg-forest-800 hover:bg-forest-900 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-md transition-all"
               >
                 <User className="w-4 h-4" />

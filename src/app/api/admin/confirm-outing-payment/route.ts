@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDB, writeDB, generateTaxInvoiceRecord, resolveCompanyForUser } from '@/lib/store';
-import { generateTaxInvoiceHtml } from '@/lib/invoicePdfGenerator';
+import { generateTaxInvoiceHtml, generateTaxInvoicePdfBuffer } from '@/lib/invoicePdfGenerator';
 import { sendTeamOutingConfirmationEmail } from '@/lib/email';
 import { isSupabaseConfigured, getSupabaseAdmin, isValidUUID } from '@/lib/supabase';
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Render Tax Invoice HTML
-    const invoiceHtml = generateTaxInvoiceHtml({
+    const invoicePayload = {
       invoiceNumber: invoiceRecord.invoice_number,
       invoiceDate: invoiceRecord.invoice_date,
       dueDate: invoiceRecord.due_date,
@@ -103,9 +103,12 @@ export async function POST(req: NextRequest) {
       totalAmount: booking.total_amount,
       advanceReceived: booking.total_amount,
       totalDue: 0,
-    });
+    };
 
-    // Send Confirmation Email with Tax Invoice Attached
+    const invoiceHtml = generateTaxInvoiceHtml(invoicePayload);
+    const invoicePdfBuffer = generateTaxInvoicePdfBuffer(invoicePayload);
+
+    // Send Confirmation Email with Tax Invoice PDF Attached
     let emailResult: any = { success: false, reason: 'NOT_ATTEMPTED' };
     try {
       emailResult = await sendTeamOutingConfirmationEmail({
@@ -120,6 +123,7 @@ export async function POST(req: NextRequest) {
         totalAmount: booking.total_amount,
         utrReference: booking.utr_reference || 'N/A',
         invoiceHtml: invoiceHtml,
+        invoicePdfBuffer: invoicePdfBuffer,
         buyerGstin: invoiceRecord.buyer_gstin,
       });
 

@@ -962,40 +962,7 @@ export async function authenticateCorporateUserInDB(email: string, password: str
     };
   }
 
-  // 2. Attempt Supabase Auth GoTrue login if configured
-  if (isSupabaseConfigured()) {
-    try {
-      const supabaseAdmin = getSupabaseAdmin();
-      const { data: authData, error: authErr } = await supabaseAdmin.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
-
-      if (!authErr && authData?.user) {
-        const resolved = await resolveCompanyForUser(authData.user.id);
-        const userRole = resolved?.user?.role || 'CORPORATE_HR';
-
-        if (loginType === 'admin' && userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
-          return { success: false, reason: 'FORBIDDEN' };
-        }
-
-        return {
-          success: true,
-          role: userRole,
-          user: {
-            id: authData.user.id,
-            email: authData.user.email,
-            role: userRole,
-            company: resolved?.company || null,
-          },
-        };
-      }
-    } catch (e) {
-      console.warn('Supabase auth.signInWithPassword warning, falling back to database password verification:', e);
-    }
-  }
-
-  // 3. Custom Multi-Algorithm Password Verification
+  // 2. Custom Multi-Algorithm Password Verification from DB/Supabase Table
   const db = readDB();
   let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
 
@@ -1024,68 +991,93 @@ export async function authenticateCorporateUserInDB(email: string, password: str
     }
   }
 
-  if (!user || !user.password_hash) {
-    return { success: false, reason: 'INVALID_CREDENTIALS' };
-  }
-
-  const { valid, needsRehash } = verifyPassword(password, user.password_hash);
-  if (!valid) {
-    return { success: false, reason: 'INVALID_CREDENTIALS' };
-  }
-
-  if (loginType === 'admin' && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
-    return { success: false, reason: 'FORBIDDEN' };
-  }
-
-  // Transparent re-hashing if authenticated via legacy hash
-  if (needsRehash) {
-    const newCanonicalHash = hashPasswordCanonical(password);
-    user.password_hash = newCanonicalHash;
-
-    const localIdx = db.users.findIndex((u) => u.id === user.id || u.email.toLowerCase() === cleanEmail);
-    if (localIdx >= 0) {
-      db.users[localIdx].password_hash = newCanonicalHash;
-      writeDB(db);
-    } else {
-      db.users.push(user);
-      writeDB(db);
-    }
-
-    if (isSupabaseConfigured()) {
-      try {
-        const supabaseAdmin = getSupabaseAdmin();
-        if (isValidUUID(user.id)) {
-          await supabaseAdmin
-            .from('corporate_users')
-            .update({ password_hash: newCanonicalHash })
-            .or(`user_id.eq.${user.id},id.eq.${user.id}`);
-
-          try {
-            await supabaseAdmin.auth.admin.updateUserById(user.id, { password });
-          } catch (ae) {}
-        }
-      } catch (se) {
-        console.warn('Supabase transparent rehash update error:', se);
+  if (user && user.password_hash) {
+    const { valid, needsRehash } = verifyPassword(password, user.password_hash);
+    if (valid) {
+      if (loginType === 'admin' && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+        return { success: false, reason: 'FORBIDDEN' };
       }
+
+      // Transparent re-hashing if authenticated via legacy hash
+      if (needsRehash) {
+        const newCanonicalHash = hashPasswordCanonical(password);
+        user.password_hash = newCanonicalHash;
+
+        const localIdx = db.users.findIndex((u) => u.id === user.id || u.email.toLowerCase() === cleanEmail);
+        if (localIdx >= 0) {
+          db.users[localIdx].password_hash = newCanonicalHash;
+          writeDB(db);
+        } else {
+          db.users.push(user);
+          writeDB(db);
+        }
+
+        if (isSupabaseConfigured()) {
+          try {
+            const supabaseAdmin = getSupabaseAdmin();
+            if (isValidUUID(user.id)) {
+              await supabaseAdmin
+                .from('corporate_users')
+                .update({ password_hash: newCanonicalHash })
+                .or(`user_id.eq.${user.id},id.eq.${user.id}`);
+            }
+          } catch (se) {}
+        }
+      }
+
+      const resolved = await resolveCompanyForUser(user.id);
+      const company = resolved?.company || db.companies.find((c) => c.id === user.company_id);
+
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        company: company || null,
+      };
+
+      return {
+        success: true,
+        role: user.role,
+        user: safeUser,
+      };
     }
   }
 
-  const resolved = await resolveCompanyForUser(user.id);
-  const company = resolved?.company || db.companies.find((c) => c.id === user.company_id);
+  // 3. Fallback to Supabase Auth GoTrue login if configured
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data: authData, error: authErr } = await supabaseAdmin.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    full_name: user.full_name,
-    role: user.role,
-    company: company || null,
-  };
+      if (!authErr && authData?.user) {
+        const resolved = await resolveCompanyForUser(authData.user.id);
+        const userRole = resolved?.user?.role || 'CORPORATE_HR';
 
-  return {
-    success: true,
-    role: user.role,
-    user: safeUser,
-  };
+        if (loginType === 'admin' && userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
+          return { success: false, reason: 'FORBIDDEN' };
+        }
+
+        return {
+          success: true,
+          role: userRole,
+          user: {
+            id: authData.user.id,
+            email: authData.user.email,
+            role: userRole,
+            company: resolved?.company || null,
+          },
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase auth.signInWithPassword warning:', e);
+    }
+  }
+
+  return { success: false, reason: 'INVALID_CREDENTIALS' };
 }
 
 import { sendOTPEmail } from './email';
@@ -1205,6 +1197,26 @@ export async function verifyOTPAndResetPassword(email: string, otp_code: string,
   }
 
   writeDB(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin
+        .from('corporate_users')
+        .update({ password_hash: newPasswordHash })
+        .eq('email', cleanEmail);
+
+      try {
+        const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();
+        const authUser = usersList?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
+        if (authUser) {
+          await supabaseAdmin.auth.admin.updateUserById(authUser.id, { password_hash: newPasswordHash });
+        }
+      } catch (ae) {}
+    } catch (se) {
+      console.warn('Supabase password reset sync warning:', se);
+    }
+  }
 
   return {
     success: true,

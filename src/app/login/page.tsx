@@ -10,7 +10,7 @@ import { Mail, Lock, ArrowRight, AlertCircle, Building2, User, Phone, CheckCircl
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/corporate';
+  const redirectUrl = searchParams.get('redirect') || '/#vouchers';
   const queryMsg = searchParams.get('msg');
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>('login');
