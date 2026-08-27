@@ -572,9 +572,17 @@ export default function MultiStepOrderWizard() {
               {utrSuccess ? (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-8 rounded-2xl text-center space-y-3">
                   <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                  <h3 className="font-serif text-xl font-bold">Payment Reference Submitted Successfully!</h3>
-                  <p className="text-xs text-emerald-800 max-w-md mx-auto">
-                    Nisargshala administrator is verifying your bank transaction. Once confirmed, your vouchers will be activated and ready for digital PDF download.
+                  <h3 className="font-serif text-xl font-bold">Payment Details Submitted Successfully!</h3>
+                  <p className="text-xs text-emerald-800 max-w-lg mx-auto leading-relaxed">
+                    Nisargshala Operations will verify your payment and email your activated voucher package directly to your registered corporate email: <strong className="font-semibold text-emerald-950">{company?.email}</strong>.
+                  </p>
+                  <div className="bg-white/80 p-4 rounded-xl border border-emerald-200 inline-block text-left text-xs space-y-1 my-2">
+                    <div>Order Reference: <strong className="font-mono text-amber-800">{activeOrder.order_number}</strong></div>
+                    <div>Registered Corporate Email: <strong className="text-forest-900">{company?.email}</strong></div>
+                    <div>Total Order Amount: <strong className="text-amber-700">₹{totals.total.toLocaleString('en-IN')}</strong></div>
+                  </div>
+                  <p className="text-[11px] text-forest-600 font-medium">
+                    Please keep this order reference for your records.
                   </p>
                 </div>
               ) : (

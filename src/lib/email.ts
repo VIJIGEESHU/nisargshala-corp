@@ -197,14 +197,18 @@ export async function sendVouchersConfirmationEmail(params: {
             </div>
 
             <p style="font-size: 13px; line-height: 1.6; color: #5a6e60;">
-              Your complete corporate voucher package is attached to this email as a compressed ZIP file. You can also view and download individual vouchers at any time from your HR Dashboard:
+              Your complete corporate voucher package is attached directly to this email as a compressed ZIP archive containing individual PDF vouchers for distribution to your employees.
             </p>
 
-            <div style="text-align: center; margin: 25px 0;">
-              <a href="https://corp.nisargshala.in/corporate" style="background-color: #05A658; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: bold; display: inline-block;">
-                Access Corporate HR Dashboard
-              </a>
+            <div style="background-color: #faf8f5; border: 1px solid #e8e2d5; border-radius: 12px; padding: 15px 20px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; font-size: 13px; color: #6b5c43; font-weight: 600;">
+                📎 Your voucher package is attached to this email. Please keep this email and attachments for your company records.
+              </p>
             </div>
+
+            <p style="font-size: 12px; line-height: 1.6; color: #5a6e60;">
+              Need help with your order? Contact Nisargshala Corporate Operations at <strong>corporate@nisargshala.in</strong> or call <strong>+91 90490 02053</strong>.
+            </p>
 
             <hr style="border: none; border-top: 1px solid #eef2ef; margin: 30px 0;">
 

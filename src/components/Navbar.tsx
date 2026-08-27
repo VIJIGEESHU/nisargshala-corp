@@ -72,13 +72,6 @@ export default function Navbar() {
               Corporate Products
             </Link>
             <Link
-              href="/corporate"
-              className="hover:text-forest-800 transition-colors flex items-center gap-1.5 py-2 border-b-2 border-transparent hover:border-forest-800"
-            >
-              <Building2 className="w-4 h-4 text-forest-800" />
-              HR Dashboard
-            </Link>
-            <Link
               href="/redeem-guide"
               className="hover:text-forest-800 transition-colors flex items-center gap-1.5 py-2 border-b-2 border-transparent hover:border-forest-800"
             >
@@ -108,7 +101,7 @@ export default function Navbar() {
                   </div>
                   <div className="text-left">
                     <span className="block font-bold text-forest-950 truncate max-w-[120px]">
-                      {session.company?.company_name || 'Corporate HR'}
+                      {session.company?.company_name || 'Corporate Account'}
                     </span>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-forest-600" />
@@ -123,19 +116,11 @@ export default function Navbar() {
                     </div>
 
                     <Link
-                      href="/corporate"
+                      href="/"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 hover:bg-sand-50 text-gray-800 font-semibold"
                     >
-                      <Building2 className="w-4 h-4 text-forest-800" /> HR Dashboard
-                    </Link>
-
-                    <Link
-                      href="/corporate#orders"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-sand-50 text-gray-800 font-semibold"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-forest-800" /> Order History
+                      <ShoppingBag className="w-4 h-4 text-forest-800" /> Corporate Products
                     </Link>
 
                     <button

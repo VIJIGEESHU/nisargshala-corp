@@ -176,6 +176,32 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleResendEmail = async (orderId: string) => {
+    if (!confirm('Resend the voucher package email to the customer? This will reuse existing vouchers without creating duplicates.')) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/resend-vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to resend voucher email.');
+      }
+
+      alert(data.message || 'Voucher package email resent successfully!');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/admin/login');
@@ -386,13 +412,22 @@ export default function AdminDashboardPage() {
                             </button>
                           )}
                           {ord.payment_status === 'PAID' && (
-                            <a
-                              href={`/api/vouchers/download?order_id=${ord.id}`}
-                              target="_blank"
-                              className="inline-flex items-center gap-1 bg-forest-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold"
-                            >
-                              <Download className="w-3 h-3" /> Download All ZIP
-                            </a>
+                            <div className="inline-flex items-center gap-2">
+                              <a
+                                href={`/api/vouchers/download?order_id=${ord.id}`}
+                                target="_blank"
+                                className="inline-flex items-center gap-1 bg-forest-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold"
+                              >
+                                <Download className="w-3 h-3" /> Download All ZIP
+                              </a>
+                              <button
+                                onClick={() => handleResendEmail(ord.id)}
+                                disabled={actionLoading}
+                                className="inline-flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold"
+                              >
+                                Resend Voucher Email
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
