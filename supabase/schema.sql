@@ -344,3 +344,30 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role, postgres;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role, postgres;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role, postgres;
 
+-- Enable RLS and create explicit service_role policies on all tables
+ALTER TABLE IF EXISTS companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS corporate_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS vouchers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS payment_records ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access on companies" ON companies;
+CREATE POLICY "Service role full access on companies" ON companies FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on corporate_users" ON corporate_users;
+CREATE POLICY "Service role full access on corporate_users" ON corporate_users FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on orders" ON orders;
+CREATE POLICY "Service role full access on orders" ON orders FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on order_items" ON order_items;
+CREATE POLICY "Service role full access on order_items" ON order_items FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on vouchers" ON vouchers;
+CREATE POLICY "Service role full access on vouchers" ON vouchers FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on payment_records" ON payment_records;
+CREATE POLICY "Service role full access on payment_records" ON payment_records FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+

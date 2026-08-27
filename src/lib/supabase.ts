@@ -13,6 +13,10 @@ const supabaseAnonKey =
  * 2. SUPABASE_SECRET_KEY (Supabase newer naming convention)
  * 3. SUPABASE_SERVICE_KEY
  * 4. SUPABASE_KEY
+ * 5. SUPABASE_SERVICE_ROLE
+ * 6. SUPABASE_SECRET
+ * 7. SUPABASE_ADMIN_KEY
+ * 8. SUPABASE_SERVICE_ROLE_SECRET
  */
 function getResolvedServiceRoleKey(): string {
   if (typeof window !== 'undefined') return '';
@@ -21,8 +25,29 @@ function getResolvedServiceRoleKey(): string {
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SERVICE_KEY ||
     process.env.SUPABASE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.SUPABASE_SECRET ||
+    process.env.SUPABASE_ADMIN_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_SECRET ||
     ''
   );
+}
+
+/**
+ * Helper to inspect the role encoded inside a Supabase JWT token.
+ * Returns 'service_role', 'anon', 'authenticated', etc.
+ */
+export function getJwtRole(token: string): string | null {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const payloadStr = Buffer.from(parts[1], 'base64').toString('utf-8');
+    const payload = JSON.parse(payloadStr);
+    return payload.role || null;
+  } catch (e) {
+    return null;
+  }
 }
 
 // Safe storage wrapper for Supabase Auth to prevent iOS Safari SecurityError in Private Browsing mode
@@ -72,6 +97,11 @@ export const getSupabaseAdmin = () => {
     throw new Error('SUPABASE_SERVER_KEY_MISSING: Privileged server key (SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY) is not configured in server environment variables.');
   }
 
+  const role = getJwtRole(serviceRoleKey);
+  if (role === 'anon') {
+    throw new Error('SUPABASE_SERVER_KEY_INVALID: The environment variable configured for the server key contains an unprivileged anon key ("role": "anon"). Please set SUPABASE_SERVICE_ROLE_KEY in your server environment variables to the secret service_role key from your Supabase Dashboard -> Settings -> API.');
+  }
+
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
@@ -90,7 +120,11 @@ export function isSupabaseConfigured(): boolean {
   const isUrlValid = Boolean(url && !url.includes('placeholder') && !url.includes('dummy'));
   const isKeyValid = Boolean(serviceKey && !serviceKey.includes('placeholder') && !serviceKey.includes('dummy'));
 
-  return isUrlValid && isKeyValid;
+  // Ensure key is not an unprivileged anon token
+  const tokenRole = getJwtRole(serviceKey);
+  const isNotAnon = tokenRole !== 'anon';
+
+  return isUrlValid && isKeyValid && isNotAnon;
 }
 
 /**
