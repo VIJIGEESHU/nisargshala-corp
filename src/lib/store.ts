@@ -87,6 +87,87 @@ export interface DBExperience {
   current_price: number;
 }
 
+export interface DBOutingPackage {
+  package_code: string;
+  package_title: string;
+  category: 'TEAM_OUTING' | 'LEADERSHIP_RETREAT' | 'FAMILY_DAY' | 'ADVENTURE' | 'CUSTOM';
+  location: string;
+  description: string;
+  minimum_attendees: number;
+  pricing_model: 'PER_PERSON' | 'PACKAGE_FIXED';
+  base_price: number;
+  inclusions: string[];
+  exclusions?: string[];
+  active: boolean;
+}
+
+export interface DBTeamOutingBooking {
+  id: string;
+  booking_number: string; // OUTING-YYYYMMDD-XXXX
+  company_id: string;
+  package_code: string;
+  package_title: string;
+  location: string;
+  event_date: string;
+  attendees_count: number;
+  unit_price: number;
+  subtotal_amount: number;
+  gst_rate: number;
+  gst_amount: number;
+  total_amount: number;
+  buyer_gstin: string;
+  utr_reference?: string;
+  payment_date?: string;
+  payment_method?: string;
+  payment_status: 'PENDING_PAYMENT' | 'AWAITING_VERIFICATION' | 'PAID' | 'CANCELLED';
+  booking_status: 'REQUESTED' | 'PENDING_PAYMENT' | 'AWAITING_VERIFICATION' | 'PAID' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+  invoice_number?: string; // NS/26-27/000123
+  special_requirements?: string;
+  email_status?: 'PENDING' | 'SENT' | 'FAILED';
+  email_sent_at?: string;
+  email_error?: string;
+  created_at: string;
+  updated_at: string;
+  company?: DBCompany;
+}
+
+export interface DBCustomEnquiry {
+  id: string;
+  enquiry_number: string; // ENQ-YYYYMMDD-XXXX
+  company_name: string;
+  contact_person: string;
+  email: string;
+  mobile: string;
+  gst_number?: string;
+  team_size: number;
+  preferred_date?: string;
+  preferred_location?: string;
+  experience_type?: string;
+  budget_range?: string;
+  special_requirements?: string;
+  status: 'NEW' | 'CONTACTED' | 'QUOTED' | 'CONVERTED' | 'CLOSED';
+  created_at: string;
+}
+
+export interface DBInvoice {
+  id: string;
+  invoice_number: string; // NS/26-27/000123
+  order_id?: string;
+  booking_id?: string;
+  company_id: string;
+  invoice_date: string;
+  due_date: string;
+  seller_gstin: string; // 27ARHPV2783R1ZN
+  buyer_gstin: string;
+  subtotal_amount: number;
+  gst_rate: number;
+  gst_amount: number;
+  total_amount: number;
+  advance_received: number;
+  balance_due: number;
+  created_at: string;
+}
+
 export interface DBBankSettings {
   account_holder: string;
   bank_name: string;
@@ -104,6 +185,9 @@ export interface DatabaseSchema {
   vouchers: DBVoucher[];
   payment_records: any[];
   audit_logs: any[];
+  team_outing_bookings?: DBTeamOutingBooking[];
+  custom_enquiries?: DBCustomEnquiry[];
+  tax_invoices?: DBInvoice[];
   settings?: DBBankSettings;
   experiences?: DBExperience[];
 }
@@ -720,6 +804,10 @@ export async function registerCorporateUserInDB(params: {
   const now = new Date().toISOString();
   const cleanEmail = params.email.trim().toLowerCase();
 
+  if (!params.gst_number || !validateGSTINFormat(params.gst_number)) {
+    throw new Error('A valid 15-character corporate GSTIN is mandatory (e.g. 27AAAAA0000A1Z5).');
+  }
+
   // Guarantee canonical scrypt password hash
   const canonicalHash = params.password_hash && params.password_hash.startsWith('scrypt:')
     ? params.password_hash
@@ -1192,17 +1280,18 @@ export async function resolveCompanyForUser(userId: string) {
 
   // Persistent Local JSON DB Fallback
   const db = readDB();
-  const user = db.users.find((u) => u.id === cleanUserId || u.email.toLowerCase() === cleanUserId.toLowerCase());
-  if (!user) return null;
+  let user = db.users.find((u) => u.id === cleanUserId || u.company_id === cleanUserId || u.email.toLowerCase() === cleanUserId.toLowerCase());
+  let company = db.companies.find((c) => c.id === cleanUserId || (user && c.id === user.company_id) || (user && c.email.toLowerCase() === user.email.toLowerCase()));
 
-  let company = db.companies.find((c) => c.id === user.company_id);
-  if (!company) {
-    company = db.companies.find((c) => c.email.toLowerCase() === user.email.toLowerCase());
+  if (!company && user) {
+    company = db.companies.find((c) => c.id === user?.company_id);
   }
 
   if (!company) return null;
 
-  const { password_hash: _ph2, ...safeUser } = user;
+  const safeUser = user
+    ? (({ password_hash: _ph, ...rest }) => rest)(user)
+    : { id: cleanUserId, email: company.email, full_name: company.contact_person, role: 'CORPORATE_HR', company_id: company.id };
 
   return {
     user: safeUser,
@@ -1468,6 +1557,364 @@ export async function getCorporateDataForCompany(company: DBCompany, userId?: st
     payments: unifiedPayments,
     vouchers: companyVouchers,
   };
+}
+
+/**
+ * Validate standard 15-character Indian GSTIN format
+ */
+export function validateGSTINFormat(gstin: string): boolean {
+  if (!gstin || typeof gstin !== 'string') return false;
+  const clean = gstin.trim().toUpperCase();
+  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(clean);
+}
+
+/**
+ * Generate unique, concurrency-safe Tax Invoice number (e.g. NS/26-27/000123)
+ */
+export function generateInvoiceNumberInDB(): string {
+  const db = readDB();
+  const invoices = db.tax_invoices || [];
+  const seq = invoices.length + 1;
+  const seqStr = seq.toString().padStart(6, '0');
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const nextYear = (now.getFullYear() + 1).toString().slice(-2);
+  return `NS/${year}-${nextYear}/${seqStr}`;
+}
+
+export const DEFAULT_OUTING_PACKAGES: DBOutingPackage[] = [
+  {
+    package_code: 'WILDERNESS_BONDING',
+    package_title: 'Wilderness Team Immersion Camp',
+    category: 'TEAM_OUTING',
+    location: 'Western Ghats Sanctuary, Maharashtra',
+    description: 'Immersive outdoor camping, wilderness team bonding challenges, survival skills workshops, stargazing, and bonfire sessions.',
+    minimum_attendees: 10,
+    pricing_model: 'PER_PERSON',
+    base_price: 3200,
+    inclusions: ['Tent Accommodation', 'All Meals & Barbecue', 'Guided Wilderness Hikes', 'Team Challenges', 'Instructor Charges'],
+    active: true,
+  },
+  {
+    package_code: 'EXECUTIVE_RETREAT',
+    package_title: 'Executive Leadership & Strategy Retreat',
+    category: 'LEADERSHIP_RETREAT',
+    location: 'Forest Edge Sanctuary, Panchgani',
+    description: 'High-impact executive offsite combining strategic planning sessions, mindful leadership hikes, river crossing, and luxury eco-resort stay.',
+    minimum_attendees: 10,
+    pricing_model: 'PER_PERSON',
+    base_price: 5500,
+    inclusions: ['Eco-Resort Stay', 'Conference & Strategy Setup', 'Mindfulness Sessions', 'Adventure Facilitators', 'Gourmet Meals'],
+    active: true,
+  },
+  {
+    package_code: 'FAMILY_DAY_OUTING',
+    package_title: 'Corporate Family Day & Eco-Adventure',
+    category: 'FAMILY_DAY',
+    location: 'Pawna Lake Wilderness Site, Lonavala',
+    description: 'Action-packed day outing for employees and their families with kayaking, obstacle courses, kids adventure camps, and lakefront dining.',
+    minimum_attendees: 15,
+    pricing_model: 'PER_PERSON',
+    base_price: 2800,
+    inclusions: ['Lakefront Access', 'Kids Adventure Module', 'Water Activities', 'Breakfast, Lunch & Hi-Tea', 'Safety Gear & Instructors'],
+    active: true,
+  },
+];
+
+/**
+ * Generate & Persist Tax Invoice Record
+ */
+export async function generateTaxInvoiceRecord(params: {
+  company_id: string;
+  buyer_gstin: string;
+  subtotal_amount: number;
+  gst_rate: number;
+  gst_amount: number;
+  total_amount: number;
+  order_id?: string;
+  booking_id?: string;
+}): Promise<DBInvoice> {
+  const db = readDB();
+  if (!db.tax_invoices) db.tax_invoices = [];
+
+  // Check if invoice already generated for this transaction to enforce idempotency
+  if (params.order_id) {
+    const existing = db.tax_invoices.find((inv) => inv.order_id === params.order_id);
+    if (existing) return existing;
+  }
+  if (params.booking_id) {
+    const existing = db.tax_invoices.find((inv) => inv.booking_id === params.booking_id);
+    if (existing) return existing;
+  }
+
+  const invoiceNumber = generateInvoiceNumberInDB();
+  const now = new Date();
+  const invoiceDate = now.toISOString().slice(0, 10);
+  const dueDate = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10);
+
+  const invoiceRecord: DBInvoice = {
+    id: crypto.randomUUID(),
+    invoice_number: invoiceNumber,
+    order_id: params.order_id,
+    booking_id: params.booking_id,
+    company_id: params.company_id,
+    invoice_date: invoiceDate,
+    due_date: dueDate,
+    seller_gstin: '27ARHPV2783R1ZN',
+    buyer_gstin: params.buyer_gstin.trim().toUpperCase(),
+    subtotal_amount: params.subtotal_amount,
+    gst_rate: params.gst_rate,
+    gst_amount: params.gst_amount,
+    total_amount: params.total_amount,
+    advance_received: params.total_amount,
+    balance_due: 0,
+    created_at: now.toISOString(),
+  };
+
+  db.tax_invoices.push(invoiceRecord);
+  writeDB(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('tax_invoices').insert({
+        id: invoiceRecord.id,
+        invoice_number: invoiceRecord.invoice_number,
+        order_id: isValidUUID(params.order_id || '') ? params.order_id : null,
+        booking_id: isValidUUID(params.booking_id || '') ? params.booking_id : null,
+        company_id: isValidUUID(params.company_id) ? params.company_id : null,
+        invoice_date: invoiceDate,
+        seller_gstin: '27ARHPV2783R1ZN',
+        buyer_gstin: params.buyer_gstin,
+        subtotal_amount: params.subtotal_amount,
+        gst_rate: params.gst_rate,
+        gst_amount: params.gst_amount,
+        total_amount: params.total_amount,
+      });
+    } catch (e) {
+      console.warn('Supabase insert tax_invoices warning:', e);
+    }
+  }
+
+  return invoiceRecord;
+}
+
+/**
+ * Create Corporate Team Outing Booking with Server-Side Authoritative Pricing
+ */
+export async function createTeamOutingBookingInDB(params: {
+  company_id: string;
+  package_code: string;
+  event_date: string;
+  attendees_count: number;
+  special_requirements?: string;
+}): Promise<{ booking: DBTeamOutingBooking; company: DBCompany }> {
+  // Validate mandatory GSTIN
+  const resolved = await resolveCompanyForUser(params.company_id);
+  const company = resolved?.company;
+  if (!company) {
+    throw new Error('Corporate account profile not found.');
+  }
+
+  if (!company.gst_number || !validateGSTINFormat(company.gst_number)) {
+    throw new Error('A valid corporate GSTIN is mandatory to book team outings and retreats. Please update your corporate details with a valid GSTIN.');
+  }
+
+  const pkg = DEFAULT_OUTING_PACKAGES.find((p) => p.package_code === params.package_code) || DEFAULT_OUTING_PACKAGES[0];
+
+  const minAttendees = pkg.minimum_attendees || 10;
+  if (params.attendees_count < minAttendees) {
+    throw new Error(`Minimum group size for ${pkg.package_title} is ${minAttendees} participants.`);
+  }
+
+  // Server-authoritative tax and pricing calculation
+  const bankSettings = await getBankSettingsInDB();
+  const gstRate = bankSettings.gst_rate || 18;
+
+  const unitPrice = pkg.base_price;
+  const subtotalAmount = unitPrice * params.attendees_count;
+  const gstAmount = Math.round((subtotalAmount * gstRate) / 100);
+  const totalAmount = subtotalAmount + gstAmount;
+
+  const now = new Date().toISOString();
+  const dateSuffix = now.slice(0, 10).replace(/-/g, '');
+  const randomRand = Math.floor(1000 + Math.random() * 9000);
+  const bookingNumber = `OUTING-${dateSuffix}-${randomRand}`;
+  const bookingId = crypto.randomUUID();
+
+  const booking: DBTeamOutingBooking = {
+    id: bookingId,
+    booking_number: bookingNumber,
+    company_id: company.id,
+    package_code: pkg.package_code,
+    package_title: pkg.package_title,
+    location: pkg.location,
+    event_date: params.event_date,
+    attendees_count: params.attendees_count,
+    unit_price: unitPrice,
+    subtotal_amount: subtotalAmount,
+    gst_rate: gstRate,
+    gst_amount: gstAmount,
+    total_amount: totalAmount,
+    buyer_gstin: company.gst_number,
+    payment_status: 'PENDING_PAYMENT',
+    booking_status: 'REQUESTED',
+    special_requirements: params.special_requirements,
+    email_status: 'PENDING',
+    created_at: now,
+    updated_at: now,
+    company,
+  };
+
+  const db = readDB();
+  if (!db.team_outing_bookings) db.team_outing_bookings = [];
+  db.team_outing_bookings.push(booking);
+  writeDB(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('team_outing_bookings').insert({
+        id: bookingId,
+        booking_number: bookingNumber,
+        company_id: isValidUUID(company.id) ? company.id : null,
+        package_code: pkg.package_code,
+        package_title: pkg.package_title,
+        location: pkg.location,
+        event_date: params.event_date,
+        attendees_count: params.attendees_count,
+        unit_price: unitPrice,
+        subtotal_amount: subtotalAmount,
+        gst_rate: gstRate,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+        buyer_gstin: company.gst_number,
+        payment_status: 'PENDING_PAYMENT',
+        booking_status: 'REQUESTED',
+        special_requirements: params.special_requirements,
+      });
+    } catch (e) {
+      console.warn('Supabase insert team_outing_bookings warning:', e);
+    }
+  }
+
+  return { booking, company };
+}
+
+/**
+ * Submit UTR Payment Reference for Team Outing Booking
+ */
+export async function submitOutingPaymentUtrInDB(params: {
+  booking_id: string;
+  company_id: string;
+  utr_reference: string;
+  payment_date?: string;
+}) {
+  const db = readDB();
+  if (!db.team_outing_bookings) db.team_outing_bookings = [];
+
+  let booking = db.team_outing_bookings.find((b) => b.id === params.booking_id || b.booking_number === params.booking_id);
+
+  if (!booking && isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      let query = supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)');
+      if (isValidUUID(params.booking_id)) {
+        query = query.or(`id.eq.${params.booking_id},booking_number.eq.${params.booking_id}`);
+      } else {
+        query = query.eq('booking_number', params.booking_id);
+      }
+      const { data: sbBooking } = await query.maybeSingle();
+      if (sbBooking) booking = sbBooking;
+    } catch (e) {}
+  }
+
+  if (!booking) {
+    throw new Error('Team Outing booking not found.');
+  }
+
+  if (booking.company_id !== params.company_id) {
+    throw new Error('FORBIDDEN: You do not have permission to submit payments for this booking.');
+  }
+
+  booking.utr_reference = params.utr_reference.trim().toUpperCase();
+  booking.payment_date = params.payment_date || new Date().toISOString().slice(0, 10);
+  booking.payment_status = 'AWAITING_VERIFICATION';
+  booking.booking_status = 'PENDING_PAYMENT';
+  booking.updated_at = new Date().toISOString();
+
+  writeDB(db);
+
+  if (isSupabaseConfigured() && isValidUUID(booking.id)) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('team_outing_bookings').update({
+        utr_reference: booking.utr_reference,
+        payment_date: booking.payment_date,
+        payment_status: 'AWAITING_VERIFICATION',
+        booking_status: 'PENDING_PAYMENT',
+      }).eq('id', booking.id);
+    } catch (e) {
+      console.warn('Supabase update team_outing_bookings warning:', e);
+    }
+  }
+
+  return { success: true, booking };
+}
+
+/**
+ * Submit Custom Corporate Experience Enquiry
+ */
+export async function createCustomCorporateEnquiryInDB(params: {
+  company_name: string;
+  contact_person: string;
+  email: string;
+  mobile: string;
+  gst_number?: string;
+  team_size: number;
+  preferred_date?: string;
+  preferred_location?: string;
+  experience_type?: string;
+  budget_range?: string;
+  special_requirements?: string;
+}): Promise<DBCustomEnquiry> {
+  const db = readDB();
+  if (!db.custom_enquiries) db.custom_enquiries = [];
+
+  const now = new Date().toISOString();
+  const dateSuffix = now.slice(0, 10).replace(/-/g, '');
+  const randomRand = Math.floor(1000 + Math.random() * 9000);
+  const enquiryNumber = `ENQ-${dateSuffix}-${randomRand}`;
+
+  const enquiry: DBCustomEnquiry = {
+    id: crypto.randomUUID(),
+    enquiry_number: enquiryNumber,
+    company_name: params.company_name.trim(),
+    contact_person: params.contact_person.trim(),
+    email: params.email.trim().toLowerCase(),
+    mobile: params.mobile.trim(),
+    gst_number: params.gst_number?.trim().toUpperCase(),
+    team_size: params.team_size,
+    preferred_date: params.preferred_date,
+    preferred_location: params.preferred_location,
+    experience_type: params.experience_type,
+    budget_range: params.budget_range,
+    special_requirements: params.special_requirements,
+    status: 'NEW',
+    created_at: now,
+  };
+
+  db.custom_enquiries.push(enquiry);
+  writeDB(db);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      await supabaseAdmin.from('custom_enquiries').insert(enquiry);
+    } catch (e) {}
+  }
+
+  return enquiry;
 }
 
 

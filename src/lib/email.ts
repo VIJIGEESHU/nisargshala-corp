@@ -296,3 +296,233 @@ export async function sendVouchersConfirmationEmail(params: {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Dispatch Corporate Team Outing & Retreat Confirmation Email with Tax Invoice PDF
+ */
+export async function sendTeamOutingConfirmationEmail(params: {
+  to: string;
+  clientName: string;
+  companyName: string;
+  bookingNumber: string;
+  packageTitle: string;
+  eventDate: string;
+  attendeesCount: number;
+  location: string;
+  totalAmount: number;
+  utrReference: string;
+  invoiceHtml: string;
+  buyerGstin: string;
+}) {
+  const {
+    to,
+    clientName,
+    companyName,
+    bookingNumber,
+    packageTitle,
+    eventDate,
+    attendeesCount,
+    location,
+    totalAmount,
+    utrReference,
+    invoiceHtml,
+    buyerGstin,
+  } = params;
+
+  const cleanTo = to.trim().toLowerCase();
+  console.log(`[OUTING ${bookingNumber}] EMAIL_ATTEMPT | Recipient: ${cleanTo} | Booking: ${bookingNumber}`);
+
+  if (!isEmailConfigured()) {
+    console.warn(`[OUTING ${bookingNumber}] EMAIL_SKIPPED | Email service not configured | Recipient: ${cleanTo}`);
+    return { success: false, reason: 'EMAIL_SERVICE_NOT_CONFIGURED' };
+  }
+
+  const fromEmail = process.env.EMAIL_FROM || '"Nisargshala Corporate Gateway" <corporate@nisargshala.in>';
+  const subject = `Your Corporate Retreat is Confirmed — Booking #${bookingNumber}`;
+
+  const htmlBody = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Booking Confirmation - Nisargshala</title>
+  </head>
+  <body style="background-color: #fdf9f5; font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 30px 10px; color: #1c1c19;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #ebe7e4; box-shadow: 0 16px 36px rgba(10,43,27,0.06);">
+      <!-- Header Logo -->
+      <tr>
+        <td style="padding: 24px; text-align: center; border-bottom: 1px solid #f1ede9;">
+          <img src="https://lh3.googleusercontent.com/aida/AEtjO1Wo5cE3j5ldDaBxn7DbRwf_3dx_qN03Uhtod9ib84Bqqa7jj-hRdQn-iKqgO19CwqxF0GD9_ZaVNpgSPnBijEAW5xXpvwmyGt6T211W9GB8Xx4mPb-FKpew9BpU4ryU-fQNY-Aqklf7RWKruJldUpEhlKwjOT0HQKvUo3xTyFtavOxCg9SxnardMxlI5VEYGoU1d_Rajw-N9Fp6I9FnjYO96HoITrd6I6I-cWf_YN-aYWaxznqXsUTnoEA" alt="Nisargshala Logo" style="height: 48px; width: auto; object-fit: contain;" />
+        </td>
+      </tr>
+      
+      <!-- Hero Banner -->
+      <tr>
+        <td style="background-color: #062018; position: relative; padding: 40px 30px; text-align: center; color: #ffffff;">
+          <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #ffffff; letter-spacing: -0.5px;">Your Corporate Retreat is Confirmed</h1>
+          <p style="color: #a5f4bc; font-size: 14px; margin-top: 8px;">Experience: <strong>${packageTitle}</strong></p>
+        </td>
+      </tr>
+
+      <!-- Body Content -->
+      <tr>
+        <td style="padding: 36px 30px;">
+          <p style="font-size: 16px; line-height: 1.6; color: #424843; margin-top: 0;">
+            Hello <strong>${clientName}</strong> (<strong style="color: #1b6c40;">${companyName}</strong>),<br/>
+            We are thrilled to host your team for an unforgettable experience blending professional growth with natural immersion.
+          </p>
+
+          <!-- Booking Summary Box -->
+          <div style="background-color: #f7f3ef; border: 1px solid #e5e2de; border-radius: 12px; padding: 24px; margin: 28px 0;">
+            <h2 style="color: #062018; font-size: 18px; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e5e2de; padding-bottom: 10px;">
+              📅 Booking Summary
+            </h2>
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 14px; color: #1c1c19;">
+              <tr>
+                <td width="35%" style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Booking Reference</td>
+                <td style="font-weight: 700; color: #1b6c40;">${bookingNumber}</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Event Date</td>
+                <td style="font-weight: 600;">${eventDate}</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Attendees</td>
+                <td style="font-weight: 600;">${attendeesCount} Team Members</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Location</td>
+                <td style="font-weight: 600;">${location}</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Total Amount Paid</td>
+                <td style="font-weight: 700; color: #062018;">₹${totalAmount.toLocaleString('en-IN')} (Includes GST)</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Payment UTR Ref</td>
+                <td style="font-family: monospace; font-size: 13px; font-weight: 600; color: #1b6c40;">${utrReference}</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Seller GSTIN</td>
+                <td style="font-family: monospace; font-size: 12px;">27ARHPV2783R1ZN (Nisargshala)</td>
+              </tr>
+              <tr>
+                <td style="color: #727973; font-weight: 600; text-transform: uppercase; font-size: 11px;">Buyer GSTIN</td>
+                <td style="font-family: monospace; font-size: 12px;">${buyerGstin}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- What to Expect Checklist -->
+          <div style="margin: 28px 0;">
+            <h3 style="color: #062018; font-size: 16px; margin-bottom: 12px;">What to Expect</h3>
+            <ul style="padding-left: 20px; color: #424843; font-size: 14px; line-height: 1.8; margin: 0;">
+              <li><strong>Pre-Arrival Guide:</strong> Look out for our comprehensive guide detailing packing lists and essential info in your inbox.</li>
+              <li><strong>Team Building Activities:</strong> Your customized itinerary including guided hikes and leadership workshops is being finalized.</li>
+              <li><strong>Dietary Preferences:</strong> Please inform our coordinator of any special dietary requirements prior to arrival.</li>
+            </ul>
+          </div>
+
+          <!-- Invoice Attachment Notice -->
+          <div style="background-color: #fdf9f5; border: 1px solid #e5e2de; border-radius: 10px; padding: 16px; text-align: center; margin: 24px 0;">
+            <p style="margin: 0; font-size: 13px; color: #1b6c40; font-weight: 600;">
+              📄 Your official Tax Invoice is attached to this email as an HTML/PDF document.
+            </p>
+          </div>
+
+          <!-- Call / WhatsApp Support Box -->
+          <div style="background-color: #062018; color: #ffffff; border-radius: 12px; padding: 20px; text-align: center; margin-top: 28px;">
+            <p style="margin: 0 0 10px 0; font-size: 13px; color: #a5f4bc; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+              Need Operational Assistance or Customization?
+            </p>
+            <p style="margin: 0; font-size: 15px; font-weight: 600;">
+              📞 Call: <a href="tel:+919049002053" style="color: #ffffff; text-decoration: underline;">+91 90490 02053</a> &nbsp;|&nbsp;
+              💬 WhatsApp: <a href="https://wa.me/918698969892" style="color: #a5f4bc; text-decoration: underline;">+91 86989 69892</a>
+            </p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #ebe7e4; margin: 36px 0 20px 0;"/>
+
+          <p style="font-size: 12px; color: #727973; margin: 0; text-align: center;">
+            © 2026 Nisargshala Corporate Nature Retreats & Experiences. All rights reserved.<br/>
+            <a href="https://corp.nisargshala.in" style="color: #1b6c40; text-decoration: none;">https://corp.nisargshala.in</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
+  `;
+
+  const attachmentFilename = `TAX_INVOICE_${bookingNumber}.html`;
+
+  // Resend API
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [cleanTo],
+          subject,
+          html: htmlBody,
+          attachments: [
+            {
+              filename: attachmentFilename,
+              content: Buffer.from(invoiceHtml).toString('base64'),
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(`[OUTING ${bookingNumber}] EMAIL_FAILED | Resend API error: ${response.status}`);
+      } else {
+        console.log(`[OUTING ${bookingNumber}] EMAIL_SENT | Resend | Recipient: ${cleanTo}`);
+        return { success: true, provider: 'Resend' };
+      }
+    } catch (err: any) {
+      console.error(`[OUTING ${bookingNumber}] EMAIL_FAILED | Resend error: ${err.message}`);
+    }
+  }
+
+  // SMTP Fallback
+  try {
+    const isSecure = process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465';
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST?.trim(),
+      port: Number(process.env.SMTP_PORT) || (isSecure ? 465 : 587),
+      secure: isSecure,
+      auth: {
+        user: process.env.SMTP_USER?.trim(),
+        pass: process.env.SMTP_PASSWORD?.trim(),
+      },
+      tls: { rejectUnauthorized: false },
+    });
+
+    await transporter.sendMail({
+      from: fromEmail,
+      to: cleanTo,
+      subject,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: attachmentFilename,
+          content: invoiceHtml,
+        },
+      ],
+    });
+
+    console.log(`[OUTING ${bookingNumber}] EMAIL_SENT | SMTP | Recipient: ${cleanTo}`);
+    return { success: true, provider: 'SMTP' };
+  } catch (err: any) {
+    console.error(`[OUTING ${bookingNumber}] EMAIL_FAILED | SMTP error: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+

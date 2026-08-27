@@ -143,3 +143,57 @@ export function calculateOrderTotal(
   return { subtotal, gst, gstRate, total, breakdown };
 }
 
+export interface OutingPackage {
+  package_code: string;
+  package_title: string;
+  category: 'TEAM_OUTING' | 'LEADERSHIP_RETREAT' | 'FAMILY_DAY' | 'ADVENTURE' | 'CUSTOM';
+  location: string;
+  description: string;
+  minimum_attendees: number;
+  pricing_model: 'PER_PERSON' | 'PACKAGE_FIXED';
+  base_price: number;
+  inclusions: string[];
+  exclusions?: string[];
+  active: boolean;
+}
+
+export const DEFAULT_OUTING_PACKAGES: OutingPackage[] = [
+  {
+    package_code: 'WILDERNESS_BONDING',
+    package_title: 'Wilderness Team Immersion Camp',
+    category: 'TEAM_OUTING',
+    location: 'Western Ghats Sanctuary, Maharashtra',
+    description: 'Immersive outdoor camping, wilderness team bonding challenges, survival skills workshops, stargazing, and bonfire sessions.',
+    minimum_attendees: 10,
+    pricing_model: 'PER_PERSON',
+    base_price: 3200,
+    inclusions: ['Tent Accommodation', 'All Meals & Barbecue', 'Guided Wilderness Hikes', 'Team Challenges', 'Instructor Charges'],
+    active: true,
+  },
+  {
+    package_code: 'EXECUTIVE_RETREAT',
+    package_title: 'Executive Leadership & Strategy Retreat',
+    category: 'LEADERSHIP_RETREAT',
+    location: 'Forest Edge Sanctuary, Panchgani',
+    description: 'High-impact executive offsite combining strategic planning sessions, mindful leadership hikes, river crossing, and luxury eco-resort stay.',
+    minimum_attendees: 10,
+    pricing_model: 'PER_PERSON',
+    base_price: 5500,
+    inclusions: ['Eco-Resort Stay', 'Conference & Strategy Setup', 'Mindfulness Sessions', 'Adventure Facilitators', 'Gourmet Meals'],
+    active: true,
+  },
+  {
+    package_code: 'FAMILY_DAY_OUTING',
+    package_title: 'Corporate Family Day & Eco-Adventure',
+    category: 'FAMILY_DAY',
+    location: 'Pawna Lake Wilderness Site, Lonavala',
+    description: 'Action-packed day outing for employees and their families with kayaking, obstacle courses, kids adventure camps, and lakefront dining.',
+    minimum_attendees: 15,
+    pricing_model: 'PER_PERSON',
+    base_price: 2800,
+    inclusions: ['Lakefront Access', 'Kids Adventure Module', 'Water Activities', 'Breakfast, Lunch & Hi-Tea', 'Safety Gear & Instructors'],
+    active: true,
+  },
+];
+
+

@@ -58,6 +58,7 @@ async function runDisabledHrDashboardTests() {
       contact_person: 'Resend Manager',
       email: `hr.resend.${Date.now()}@resendtest.com`,
       mobile: '+91 97777 55555',
+      gst_number: '27AAAAA0000A1Z5',
       password_hash: 'resendhash123',
     });
 

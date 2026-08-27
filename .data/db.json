@@ -541,6 +541,194 @@
       "billing_address": "Head Office",
       "status": "ACTIVE",
       "created_at": "2026-08-27T13:30:05.300Z"
+    },
+    {
+      "id": "bf97b3ce-2146-41b5-9b37-a7dbf8abd6d1",
+      "company_name": "Apex Gateway Logistics Pvt Ltd",
+      "contact_person": "Vikram Mehta",
+      "designation": "HR Manager",
+      "email": "gateway.corp.1787851412192@nisargshala.in",
+      "mobile": "+91 98220 11223",
+      "billing_address": "BKC, Mumbai, Maharashtra",
+      "gst_number": "27ARHPV2783R1ZN",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:23:32.192Z"
+    },
+    {
+      "id": "f8ebc73c-d275-4a54-b729-ec2a066a149c",
+      "company_name": "Apex Gateway Logistics Pvt Ltd",
+      "contact_person": "Vikram Mehta",
+      "designation": "HR Manager",
+      "email": "gateway.corp.1787851436703@nisargshala.in",
+      "mobile": "+91 98220 11223",
+      "billing_address": "BKC, Mumbai, Maharashtra",
+      "gst_number": "27ARHPV2783R1ZN",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:23:56.703Z"
+    },
+    {
+      "id": "112ac6b3-4608-4980-be23-dc882c868182",
+      "company_name": "Legacy SHA256 Corp",
+      "contact_person": "Legacy Admin",
+      "email": "legacy.user.1787851448902@legacycorp.com",
+      "mobile": "+91 97777 66666",
+      "billing_address": "Head Office",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:24:08.903Z"
+    },
+    {
+      "id": "49d95edd-af20-4518-a032-7c130d3386ac",
+      "company_name": "Auth Test Corp",
+      "contact_person": "Auth Manager",
+      "designation": "HR Manager",
+      "email": "auth.test.1787851501606@corporatepartner.com",
+      "mobile": "+91 98888 77777",
+      "billing_address": "Head Office",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:25:01.653Z"
+    },
+    {
+      "id": "f27142d5-7182-4da3-a5be-63febd93ef39",
+      "company_name": "Legacy SHA256 Corp",
+      "contact_person": "Legacy Admin",
+      "email": "legacy.user.1787851501752@legacycorp.com",
+      "mobile": "+91 97777 66666",
+      "billing_address": "Head Office",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:25:01.753Z"
+    },
+    {
+      "id": "df45e971-eef8-4eee-993e-cc3056bdac46",
+      "company_name": "Lifecycle Corp",
+      "contact_person": "Lifecycle Officer",
+      "designation": "HR Manager",
+      "email": "lifecycle.1787851501929@fullflow.com",
+      "mobile": "+91 96666 44444",
+      "billing_address": "Head Office",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:25:01.980Z"
+    },
+    {
+      "id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "company_name": "Acme Technologies Pvt Ltd",
+      "contact_person": "Hemant Vavale (Updated)",
+      "designation": "Senior HR Director",
+      "email": "hr.test.1787851526370@acmetech.com",
+      "mobile": "+91 98200 12345",
+      "billing_address": "Suite 500, Cyber City, Magarpatta, Pune 411028",
+      "gst_number": "27AAAAA9999Z1Z0",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:25:26.370Z"
+    },
+    {
+      "id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "company_name": "Acme Technologies Pvt Ltd",
+      "contact_person": "Hemant Vavale (Updated)",
+      "designation": "Senior HR Director",
+      "email": "hr.test.1787851579503@acmetech.com",
+      "mobile": "+91 98200 12345",
+      "billing_address": "Suite 500, Cyber City, Magarpatta, Pune 411028",
+      "gst_number": "27AAAAA9999Z1Z0",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:26:19.503Z"
+    },
+    {
+      "id": "0046a42d-b7ae-4651-a99e-690eb0fc61fb",
+      "company_name": "Zero Order Corp",
+      "contact_person": "Zero HR",
+      "designation": "HR Manager",
+      "email": "hr.zero.1787851579599@zeroorder.com",
+      "mobile": "+91 99999 00000",
+      "billing_address": "Zero Address",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:26:19.599Z"
+    },
+    {
+      "id": "679939f9-6811-40df-a786-d199d2afd235",
+      "company_name": "Sec Test Corp",
+      "contact_person": "Sec HR",
+      "designation": "HR Manager",
+      "email": "hr.sec.1787851579653@sectest.com",
+      "mobile": "+91 98888 77777",
+      "billing_address": "Sec Address",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:26:19.653Z"
+    },
+    {
+      "id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+      "company_name": "Resend Test Corp",
+      "contact_person": "Resend Manager",
+      "designation": "HR Manager",
+      "email": "hr.resend.1787851612752@resendtest.com",
+      "mobile": "+91 97777 55555",
+      "billing_address": "Head Office",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:26:52.752Z"
+    },
+    {
+      "id": "0e59e0ac-7a8b-4659-8a78-c3986ac8e821",
+      "company_name": "Acme Resolution Corp",
+      "contact_person": "Resolution Manager",
+      "designation": "HR Lead",
+      "email": "hr.resolution.1787851623323@acmetest.com",
+      "mobile": "+91 98000 11111",
+      "billing_address": "100 Cyber Tower, Pune",
+      "gst_number": "27AAACA1234A1Z1",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:27:03.323Z"
+    },
+    {
+      "id": "76c25344-848b-4288-90d9-ad3cc1b426a4",
+      "company_name": "Acme Checkout Pvt Ltd",
+      "contact_person": "Checkout Manager",
+      "designation": "HR Generalist",
+      "email": "hr.checkout.1787851634087@acmecheckout.com",
+      "mobile": "+91 98777 66666",
+      "billing_address": "Tech Park, Sector 5, Navi Mumbai",
+      "gst_number": "27AAAAA8888A1Z9",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:27:14.087Z"
+    },
+    {
+      "id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "company_name": "Company Alpha Pvt Ltd",
+      "contact_person": "Alpha HR",
+      "designation": "HR Manager",
+      "email": "hr.alpha.1787851670030@alpha.com",
+      "mobile": "+91 91111 11111",
+      "billing_address": "Head Office",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:27:50.030Z"
+    },
+    {
+      "id": "65960c04-9f2b-46b9-85db-e7eb63694c62",
+      "company_name": "Company Beta Pvt Ltd",
+      "contact_person": "Beta HR",
+      "designation": "HR Manager",
+      "email": "hr.beta.1787851670087@beta.com",
+      "mobile": "+91 92222 22222",
+      "billing_address": "Head Office",
+      "gst_number": "27AAAAA0000A1Z5",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:27:50.087Z"
+    },
+    {
+      "id": "44ed8b9b-2e4a-4135-919c-06cb029e78fe",
+      "company_name": "Apex Gateway Logistics Pvt Ltd",
+      "contact_person": "Vikram Mehta",
+      "designation": "HR Manager",
+      "email": "gateway.corp.1787851943905@nisargshala.in",
+      "mobile": "+91 98220 11223",
+      "billing_address": "BKC, Mumbai, Maharashtra",
+      "gst_number": "27ARHPV2783R1ZN",
+      "status": "ACTIVE",
+      "created_at": "2026-08-27T17:32:23.905Z"
     }
   ],
   "users": [
@@ -984,9 +1172,390 @@
       "password_hash": "scrypt:b2fe2098a9a7d9c4cff6cdfb9a9c4ee1:ba2bef992a59858b910e9db34437bea526318948cce45d3888952c0823922aee784f617606661afc16a07ff470b2fce63552b56b4986874d2fc9fca46cfff3da",
       "role": "CORPORATE_HR",
       "created_at": "2026-08-27T13:30:05.300Z"
+    },
+    {
+      "id": "b840fa24-dbf4-48a9-a727-aca32f67c02c",
+      "company_id": "bf97b3ce-2146-41b5-9b37-a7dbf8abd6d1",
+      "email": "gateway.corp.1787851412192@nisargshala.in",
+      "full_name": "Vikram Mehta",
+      "password_hash": "scrypt:placeholder",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:23:32.192Z"
+    },
+    {
+      "id": "f94bc9e6-695f-475e-b252-fc2c88e85abf",
+      "company_id": "f8ebc73c-d275-4a54-b729-ec2a066a149c",
+      "email": "gateway.corp.1787851436703@nisargshala.in",
+      "full_name": "Vikram Mehta",
+      "password_hash": "scrypt:placeholder",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:23:56.703Z"
+    },
+    {
+      "id": "efcd877c-d78d-4f14-ba99-06761807342f",
+      "company_id": "112ac6b3-4608-4980-be23-dc882c868182",
+      "email": "legacy.user.1787851448902@legacycorp.com",
+      "full_name": "Legacy Admin",
+      "password_hash": "scrypt:0563c436500d5c076de82b5ea4f79a34:27f0b7d610244a383b1d82f728cdb11f3bb1177ae8db5396b5f48285fcea58c3f4354deceb77324177a2a50af0e741ffebce4b1352d56198319fafaf11e0c739",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:24:08.903Z"
+    },
+    {
+      "id": "657da446-e5f2-4591-8454-336e08dea7f1",
+      "company_id": "49d95edd-af20-4518-a032-7c130d3386ac",
+      "email": "auth.test.1787851501606@corporatepartner.com",
+      "full_name": "Auth Manager",
+      "password_hash": "scrypt:17651dac3d3b200f2ab71865d875de6f:d19e6b3a6cc5bd614ffac8c92083645c355f371c825f16e282c0643cac7b0540584c9ae45b2d066dcc4168c572b74fc32303d0b90ac6e61e7da1300e9371b91c",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:25:01.653Z"
+    },
+    {
+      "id": "75a094d3-3f6d-468e-adb5-164ed0154549",
+      "company_id": "f27142d5-7182-4da3-a5be-63febd93ef39",
+      "email": "legacy.user.1787851501752@legacycorp.com",
+      "full_name": "Legacy Admin",
+      "password_hash": "scrypt:013639d833f668b750f11fafd2bf2365:79929ae18f8ab706318b8a1624452e734de43449990709c7b770e4115fa40cbabaee938ed0220973a950489ca8a5216ecd2d6b493d722ef1c069a55bf428c0fd",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:25:01.753Z"
+    },
+    {
+      "id": "32279b5f-9ef7-40e6-96c5-daafb571a9ce",
+      "company_id": "df45e971-eef8-4eee-993e-cc3056bdac46",
+      "email": "lifecycle.1787851501929@fullflow.com",
+      "full_name": "Lifecycle Officer",
+      "password_hash": "scrypt:c87b63276293a62619af47639a2a7731:e027aca3240809d79e50e21e27814de422b2d463631cf967ab1a4c54fc9ecfa4fdfaeaf6d8b167488b84bc0415e4d6bdb5469d4be46e963a474115444892d149",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:25:01.980Z"
+    },
+    {
+      "id": "1ed212c2-bcc4-404f-9008-cde1a493a478",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "email": "hr.test.1787851526370@acmetech.com",
+      "full_name": "Hemant Vavale (Updated)",
+      "password_hash": "scrypt:c897f9f519b299064396411bed2fa96d:65f042950d2633cea4cc282077e2de047b2176a71a66dcd2863fd01aa176d6e99c1e364193b6237c8115521ea65916f3f96b1bdb9448ac3f8de39c1d4418d1bd",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:25:26.370Z"
+    },
+    {
+      "id": "873dbdea-8992-4945-b07f-f21b7a92f6dd",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "email": "hr.test.1787851579503@acmetech.com",
+      "full_name": "Hemant Vavale (Updated)",
+      "password_hash": "scrypt:e022a1c99f5a1d1ad2713134c4ceffe7:a123d0b1597f40ab27d246bd4c8b3edb9402e505041155ac5000c1ccf84a57d538d0a84e141f93eeb44fa37b54127993cefe09583aa8125d421447e074d1d1c7",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:26:19.503Z"
+    },
+    {
+      "id": "37a7fc8b-da44-4999-9a1e-b562a07a7c78",
+      "company_id": "0046a42d-b7ae-4651-a99e-690eb0fc61fb",
+      "email": "hr.zero.1787851579599@zeroorder.com",
+      "full_name": "Zero HR",
+      "password_hash": "scrypt:a56e8d03518124e7868fe328c0a5a108:e677ebd456e030b842ed4cc9804b7580d756571d7d5353d5900f308a608521d36119c86a610021c2553a844271382772b0bdb26993b6ed5b13a9ce335dd13b37",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:26:19.599Z"
+    },
+    {
+      "id": "f3d3b132-033e-4545-bfcf-f1dc04f497f9",
+      "company_id": "679939f9-6811-40df-a786-d199d2afd235",
+      "email": "hr.sec.1787851579653@sectest.com",
+      "full_name": "Sec HR",
+      "password_hash": "scrypt:6e208351f4e20229a4b11b212d9913c4:f79bd2686f66027878314d76bae4ff5904f4a5a10ef0f5a2f5422f07b95763161503cf8617e657a1f4dc777cd0d89c66eb40104bf6eaa669573c48e5fbd9c55b",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:26:19.653Z"
+    },
+    {
+      "id": "605194f6-2966-43f7-a212-8d83de2273e0",
+      "company_id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+      "email": "hr.resend.1787851612752@resendtest.com",
+      "full_name": "Resend Manager",
+      "password_hash": "scrypt:464fb40d5bb2a526c5d04fbc7c16bfa4:46050aefbcb884ce85d641eb9165f0a1727044460aeb25878dfd51042ab607853f8c8699fc4fce668b312841828e2a315f06962dc619e05367d497d9ab3c02ba",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:26:52.752Z"
+    },
+    {
+      "id": "d240a157-2102-44ff-aa12-b337557c6f14",
+      "company_id": "0e59e0ac-7a8b-4659-8a78-c3986ac8e821",
+      "email": "hr.resolution.1787851623323@acmetest.com",
+      "full_name": "Resolution Manager",
+      "password_hash": "scrypt:cb7237191774e16e1b59a85c4801355d:aac13cb7140177792bacabb416a091197aab4c9508bbd25dfcea18ee8cd416c49143ce59f16a34ae906a94bedabc5c1ddd0b7d64d35a1e8061bfd251ff0bd5a6",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:27:03.323Z"
+    },
+    {
+      "id": "74feec84-78ab-4c12-b354-897165a63620",
+      "company_id": "76c25344-848b-4288-90d9-ad3cc1b426a4",
+      "email": "hr.checkout.1787851634087@acmecheckout.com",
+      "full_name": "Checkout Manager",
+      "password_hash": "scrypt:7d6d6847e840ae463378aad60f48aeda:4d36b8677bbb787294ea4f3bb37c12a55eb091e7ece40a220a711773494fa46451d9ed7267343aa4824dfd5931291aa162ed53288785ef695ef5f8374abac488",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:27:14.087Z"
+    },
+    {
+      "id": "57f7e405-8d6c-4f8b-a35e-620d9be89a30",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "email": "hr.alpha.1787851670030@alpha.com",
+      "full_name": "Alpha HR",
+      "password_hash": "scrypt:443bfd366a261272f36855419abf8d08:533202a67f42e001641adc023d815740d2ed9bc2403bc160b4b6c67e9b0fc34878d144c1d4126b5628cc65ddbf5cdff1a9e7af1399f0730f7b6cd81556785995",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:27:50.030Z"
+    },
+    {
+      "id": "302738af-8abf-4bf0-88ec-1be035c493bb",
+      "company_id": "65960c04-9f2b-46b9-85db-e7eb63694c62",
+      "email": "hr.beta.1787851670087@beta.com",
+      "full_name": "Beta HR",
+      "password_hash": "scrypt:50d9ef02a537e67f6c36cf640895e0c7:6fdc654d9764b8fb62f02cb517773ce1c568bd0715702d8a3361db5eeda148779c4e6db41814bf099b1033d33c175c7e86840655cbe4fb859ad81552d9484730",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:27:50.087Z"
+    },
+    {
+      "id": "d5347edf-f549-43fa-8120-05027d825ff5",
+      "company_id": "44ed8b9b-2e4a-4135-919c-06cb029e78fe",
+      "email": "gateway.corp.1787851943905@nisargshala.in",
+      "full_name": "Vikram Mehta",
+      "password_hash": "scrypt:placeholder",
+      "role": "CORPORATE_HR",
+      "created_at": "2026-08-27T17:32:23.905Z"
     }
   ],
   "orders": [
+    {
+      "id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "order_number": "ORD-20260827-4348",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "subtotal_amount": 24000,
+      "gst_amount": 4320,
+      "total_amount": 28320,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "created_at": "2026-08-27T17:27:50.135Z",
+      "updated_at": "2026-08-27T17:27:50.138Z",
+      "company": {
+        "id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+        "company_name": "Company Alpha Pvt Ltd",
+        "contact_person": "Alpha HR",
+        "designation": "HR Manager",
+        "email": "hr.alpha.1787851670030@alpha.com",
+        "mobile": "+91 91111 11111",
+        "billing_address": "Head Office",
+        "gst_number": "27AAAAA0000A1Z5",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:27:50.030Z"
+      },
+      "items": [
+        {
+          "id": "75d305b2-e4ec-45aa-9697-9ac2a8b1b1e9",
+          "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+          "product_code": "INDIVIDUAL",
+          "quantity": 3,
+          "unit_price": 4000,
+          "total_price": 12000
+        },
+        {
+          "id": "a0f178e5-6289-47b2-b623-6fc3898819f5",
+          "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+          "product_code": "FAMILY",
+          "quantity": 1,
+          "unit_price": 12000,
+          "total_price": 12000
+        }
+      ],
+      "confirmed_by": "admin-tester",
+      "confirmed_at": "2026-08-27T17:27:50.138Z"
+    },
+    {
+      "id": "e15dff12-41c0-44a2-b3ce-9c9887f1b8fc",
+      "order_number": "ORD-20260827-3554",
+      "company_id": "76c25344-848b-4288-90d9-ad3cc1b426a4",
+      "subtotal_amount": 20000,
+      "gst_amount": 3600,
+      "total_amount": 23600,
+      "payment_status": "PENDING_PAYMENT",
+      "order_status": "SUBMITTED",
+      "payment_method": "RTGS_NEFT",
+      "created_at": "2026-08-27T17:27:14.158Z",
+      "updated_at": "2026-08-27T17:27:14.158Z",
+      "company": {
+        "id": "76c25344-848b-4288-90d9-ad3cc1b426a4",
+        "company_name": "Acme Checkout Pvt Ltd",
+        "contact_person": "Checkout Manager",
+        "designation": "HR Generalist",
+        "email": "hr.checkout.1787851634087@acmecheckout.com",
+        "mobile": "+91 98777 66666",
+        "billing_address": "Tech Park, Sector 5, Navi Mumbai",
+        "gst_number": "27AAAAA8888A1Z9",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:27:14.087Z"
+      },
+      "items": [
+        {
+          "id": "b967b93e-8dd3-4426-a2f7-ab0fd12523af",
+          "order_id": "e15dff12-41c0-44a2-b3ce-9c9887f1b8fc",
+          "product_code": "INDIVIDUAL",
+          "quantity": 2,
+          "unit_price": 4000,
+          "total_price": 8000
+        },
+        {
+          "id": "6f71cf9f-f16a-416a-b707-8434dcbb6a7c",
+          "order_id": "e15dff12-41c0-44a2-b3ce-9c9887f1b8fc",
+          "product_code": "FAMILY",
+          "quantity": 1,
+          "unit_price": 12000,
+          "total_price": 12000
+        }
+      ]
+    },
+    {
+      "id": "59f47b51-a873-46ed-a6fe-847941e80935",
+      "order_number": "ORD-20260827-3579",
+      "company_id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+      "subtotal_amount": 8000,
+      "gst_amount": 1440,
+      "total_amount": 9440,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "created_at": "2026-08-27T17:26:52.827Z",
+      "updated_at": "2026-08-27T17:26:52.829Z",
+      "company": {
+        "id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+        "company_name": "Resend Test Corp",
+        "contact_person": "Resend Manager",
+        "designation": "HR Manager",
+        "email": "hr.resend.1787851612752@resendtest.com",
+        "mobile": "+91 97777 55555",
+        "billing_address": "Head Office",
+        "gst_number": "27AAAAA0000A1Z5",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:26:52.752Z"
+      },
+      "items": [
+        {
+          "id": "be83f356-e721-40a4-83da-e40e25db3c8e",
+          "order_id": "59f47b51-a873-46ed-a6fe-847941e80935",
+          "product_code": "INDIVIDUAL",
+          "quantity": 2,
+          "unit_price": 4000,
+          "total_price": 8000
+        }
+      ],
+      "confirmed_by": "admin-test",
+      "confirmed_at": "2026-08-27T17:26:52.829Z"
+    },
+    {
+      "id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "order_number": "ORD-20260827-6530",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "subtotal_amount": 51000,
+      "gst_amount": 9180,
+      "total_amount": 60180,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "notes": "Automated test purchase",
+      "created_at": "2026-08-27T17:26:19.569Z",
+      "updated_at": "2026-08-27T17:26:19.573Z",
+      "company": {
+        "id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+        "company_name": "Acme Technologies Pvt Ltd",
+        "contact_person": "Hemant Vavale",
+        "designation": "VP of Human Resources",
+        "email": "hr.test.1787851579503@acmetech.com",
+        "mobile": "+91 98200 12345",
+        "billing_address": "Plot 42, Tech Park, MIDC, Pune 411057",
+        "gst_number": "27AAAAA1234A1Z5",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:26:19.503Z"
+      },
+      "items": [
+        {
+          "id": "8b4107d7-4c33-4176-98f2-dd4930f9274f",
+          "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+          "product_code": "INDIVIDUAL",
+          "quantity": 5,
+          "unit_price": 4000,
+          "total_price": 20000
+        },
+        {
+          "id": "b73055e5-a762-4022-825e-2d8ee1269a01",
+          "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+          "product_code": "FAMILY",
+          "quantity": 2,
+          "unit_price": 12000,
+          "total_price": 24000
+        },
+        {
+          "id": "2850347c-6149-4da3-beda-1f45ddc74e24",
+          "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+          "product_code": "KIDS",
+          "quantity": 1,
+          "unit_price": 7000,
+          "total_price": 7000
+        }
+      ],
+      "utr_reference": "UTR-TEST-1787851579571",
+      "payment_date": "2026-08-27",
+      "confirmed_by": "admin-tester",
+      "confirmed_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "order_number": "ORD-20260827-1875",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "subtotal_amount": 51000,
+      "gst_amount": 9180,
+      "total_amount": 60180,
+      "payment_status": "PAID",
+      "order_status": "COMPLETED",
+      "payment_method": "RTGS_NEFT",
+      "notes": "Automated test purchase",
+      "created_at": "2026-08-27T17:25:26.414Z",
+      "updated_at": "2026-08-27T17:25:26.420Z",
+      "company": {
+        "id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+        "company_name": "Acme Technologies Pvt Ltd",
+        "contact_person": "Hemant Vavale",
+        "designation": "VP of Human Resources",
+        "email": "hr.test.1787851526370@acmetech.com",
+        "mobile": "+91 98200 12345",
+        "billing_address": "Plot 42, Tech Park, MIDC, Pune 411057",
+        "gst_number": "27AAAAA1234A1Z5",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:25:26.370Z"
+      },
+      "items": [
+        {
+          "id": "a23423f6-acef-4e49-b45e-9ae5d22e22ab",
+          "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+          "product_code": "INDIVIDUAL",
+          "quantity": 5,
+          "unit_price": 4000,
+          "total_price": 20000
+        },
+        {
+          "id": "f64fa878-3a01-484b-870a-610589059dd9",
+          "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+          "product_code": "FAMILY",
+          "quantity": 2,
+          "unit_price": 12000,
+          "total_price": 24000
+        },
+        {
+          "id": "8fec4ebe-6074-42ae-85f2-6c9742c9220d",
+          "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+          "product_code": "KIDS",
+          "quantity": 1,
+          "unit_price": 7000,
+          "total_price": 7000
+        }
+      ],
+      "utr_reference": "UTR-TEST-1787851526416",
+      "payment_date": "2026-08-27",
+      "confirmed_by": "admin-tester",
+      "confirmed_at": "2026-08-27T17:25:26.420Z"
+    },
     {
       "id": "73d4f9d3-d1a4-40fa-afa2-b5d14084a465",
       "order_number": "ORD-20260827-6937",
@@ -2299,9 +2868,503 @@
       "quantity": 2,
       "unit_price": 4000,
       "total_price": 8000
+    },
+    {
+      "id": "a23423f6-acef-4e49-b45e-9ae5d22e22ab",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "product_code": "INDIVIDUAL",
+      "quantity": 5,
+      "unit_price": 4000,
+      "total_price": 20000
+    },
+    {
+      "id": "f64fa878-3a01-484b-870a-610589059dd9",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "product_code": "FAMILY",
+      "quantity": 2,
+      "unit_price": 12000,
+      "total_price": 24000
+    },
+    {
+      "id": "8fec4ebe-6074-42ae-85f2-6c9742c9220d",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "product_code": "KIDS",
+      "quantity": 1,
+      "unit_price": 7000,
+      "total_price": 7000
+    },
+    {
+      "id": "8b4107d7-4c33-4176-98f2-dd4930f9274f",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "product_code": "INDIVIDUAL",
+      "quantity": 5,
+      "unit_price": 4000,
+      "total_price": 20000
+    },
+    {
+      "id": "b73055e5-a762-4022-825e-2d8ee1269a01",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "product_code": "FAMILY",
+      "quantity": 2,
+      "unit_price": 12000,
+      "total_price": 24000
+    },
+    {
+      "id": "2850347c-6149-4da3-beda-1f45ddc74e24",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "product_code": "KIDS",
+      "quantity": 1,
+      "unit_price": 7000,
+      "total_price": 7000
+    },
+    {
+      "id": "be83f356-e721-40a4-83da-e40e25db3c8e",
+      "order_id": "59f47b51-a873-46ed-a6fe-847941e80935",
+      "product_code": "INDIVIDUAL",
+      "quantity": 2,
+      "unit_price": 4000,
+      "total_price": 8000
+    },
+    {
+      "id": "b967b93e-8dd3-4426-a2f7-ab0fd12523af",
+      "order_id": "e15dff12-41c0-44a2-b3ce-9c9887f1b8fc",
+      "product_code": "INDIVIDUAL",
+      "quantity": 2,
+      "unit_price": 4000,
+      "total_price": 8000
+    },
+    {
+      "id": "6f71cf9f-f16a-416a-b707-8434dcbb6a7c",
+      "order_id": "e15dff12-41c0-44a2-b3ce-9c9887f1b8fc",
+      "product_code": "FAMILY",
+      "quantity": 1,
+      "unit_price": 12000,
+      "total_price": 12000
+    },
+    {
+      "id": "75d305b2-e4ec-45aa-9697-9ac2a8b1b1e9",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "product_code": "INDIVIDUAL",
+      "quantity": 3,
+      "unit_price": 4000,
+      "total_price": 12000
+    },
+    {
+      "id": "a0f178e5-6289-47b2-b623-6fc3898819f5",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "product_code": "FAMILY",
+      "quantity": 1,
+      "unit_price": 12000,
+      "total_price": 12000
     }
   ],
   "vouchers": [
+    {
+      "id": "845c5001-944e-4dc7-9519-36fa3735071a",
+      "human_ref": "NS-CORP-2026-0128",
+      "redemption_code": "NS-PUET-EQYJ-4GX5",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:27:50.138Z",
+      "expiry_date": "2027-08-27T17:27:50.138Z",
+      "created_at": "2026-08-27T17:27:50.138Z",
+      "updated_at": "2026-08-27T17:27:50.138Z"
+    },
+    {
+      "id": "74c6dbf7-c3cf-450f-b950-093cdede3b62",
+      "human_ref": "NS-CORP-2026-0127",
+      "redemption_code": "NS-D7KX-9N67-KDG7",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:27:50.138Z",
+      "expiry_date": "2027-08-27T17:27:50.138Z",
+      "created_at": "2026-08-27T17:27:50.138Z",
+      "updated_at": "2026-08-27T17:27:50.138Z"
+    },
+    {
+      "id": "9d9660d9-c024-4e59-81bc-33a317600d2d",
+      "human_ref": "NS-CORP-2026-0126",
+      "redemption_code": "NS-JCMP-NR9Y-E4W2",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:27:50.138Z",
+      "expiry_date": "2027-08-27T17:27:50.138Z",
+      "created_at": "2026-08-27T17:27:50.138Z",
+      "updated_at": "2026-08-27T17:27:50.138Z"
+    },
+    {
+      "id": "714fdbec-2392-4760-b731-cd174a28c41d",
+      "human_ref": "NS-CORP-2026-0125",
+      "redemption_code": "NS-TS7K-69NM-6HQ8",
+      "order_id": "a5afda2c-1f1c-4600-a07d-72e9bb3c1936",
+      "company_id": "2c49d81d-ae71-47de-a6cb-27c5a14eece7",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:27:50.138Z",
+      "expiry_date": "2027-08-27T17:27:50.138Z",
+      "created_at": "2026-08-27T17:27:50.138Z",
+      "updated_at": "2026-08-27T17:27:50.138Z"
+    },
+    {
+      "id": "13d61419-7a79-4e12-a700-b2d657366da3",
+      "human_ref": "NS-CORP-2026-0124",
+      "redemption_code": "NS-R3R8-YACD-Y7J9",
+      "order_id": "59f47b51-a873-46ed-a6fe-847941e80935",
+      "company_id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:52.829Z",
+      "expiry_date": "2027-08-27T17:26:52.829Z",
+      "created_at": "2026-08-27T17:26:52.829Z",
+      "updated_at": "2026-08-27T17:26:52.829Z"
+    },
+    {
+      "id": "317063c9-81ad-497f-8ee6-c890b60cf083",
+      "human_ref": "NS-CORP-2026-0123",
+      "redemption_code": "NS-KNGV-KRV6-TPYZ",
+      "order_id": "59f47b51-a873-46ed-a6fe-847941e80935",
+      "company_id": "a1e164c0-3242-4765-b27b-922588f5fbbb",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:52.829Z",
+      "expiry_date": "2027-08-27T17:26:52.829Z",
+      "created_at": "2026-08-27T17:26:52.829Z",
+      "updated_at": "2026-08-27T17:26:52.829Z"
+    },
+    {
+      "id": "4ebdb450-03f0-43c2-b8a2-4d1995068365",
+      "human_ref": "NS-CORP-2026-0122",
+      "redemption_code": "NS-CG86-N3EB-2WY6",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "KIDS",
+      "voucher_value": 7000,
+      "eligible_experience_codes": [
+        "HUPPYA",
+        "SAHAS"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "afa418b0-8058-49f5-9020-b86a433528ce",
+      "human_ref": "NS-CORP-2026-0121",
+      "redemption_code": "NS-GDVN-U4F8-4QK7",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "d5acfb28-bd56-4676-8b7c-0a579404bd71",
+      "human_ref": "NS-CORP-2026-0120",
+      "redemption_code": "NS-9B87-PJVH-7DZV",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "18a9ecfb-0c7f-4280-a213-6807aebd2113",
+      "human_ref": "NS-CORP-2026-0119",
+      "redemption_code": "NS-7EXH-YKJG-NSS6",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "7056f3ec-8b3d-4264-b862-5b5d1ae77bcd",
+      "human_ref": "NS-CORP-2026-0118",
+      "redemption_code": "NS-JRVK-DDQH-DYDQ",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "b7e2bff4-adb2-414b-b292-440b0814b798",
+      "human_ref": "NS-CORP-2026-0117",
+      "redemption_code": "NS-Y7N5-VRX8-VHVC",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "8bb89ac2-355f-45af-a1a9-005c552e250a",
+      "human_ref": "NS-CORP-2026-0116",
+      "redemption_code": "NS-VDTS-BSXT-QG7N",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "89b3e73b-8dab-4662-b3c0-e923ce18dddd",
+      "human_ref": "NS-CORP-2026-0115",
+      "redemption_code": "NS-MF44-SW9G-3XZQ",
+      "order_id": "c609f975-5c2d-4d30-9f08-801ab3f295be",
+      "company_id": "ed417574-825c-480a-bb7b-6f05a21cc926",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:26:19.573Z",
+      "expiry_date": "2027-08-27T17:26:19.573Z",
+      "created_at": "2026-08-27T17:26:19.573Z",
+      "updated_at": "2026-08-27T17:26:19.573Z"
+    },
+    {
+      "id": "f22bd4fe-a9bf-43b6-93ea-66f71dad30ac",
+      "human_ref": "NS-CORP-2026-0114",
+      "redemption_code": "NS-A4YV-ZPXU-X32Y",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "KIDS",
+      "voucher_value": 7000,
+      "eligible_experience_codes": [
+        "HUPPYA",
+        "SAHAS"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "5fb711d2-4fbf-4230-861a-191600ac2d73",
+      "human_ref": "NS-CORP-2026-0113",
+      "redemption_code": "NS-3732-BT7D-WR5B",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "1b40b2d7-d25f-402e-ac55-9659c2afabfd",
+      "human_ref": "NS-CORP-2026-0112",
+      "redemption_code": "NS-FEFY-XY9A-MD7X",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "FAMILY",
+      "voucher_value": 12000,
+      "eligible_experience_codes": [
+        "FAMILY_CAMPING",
+        "FAMILY_ADVENTURE",
+        "KUTUHAL_ADULT",
+        "KUTUHAL_CHILD"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "e965db22-0a16-4376-af47-4d06f4596925",
+      "human_ref": "NS-CORP-2026-0111",
+      "redemption_code": "NS-B8BG-TTPC-ZFAV",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "41b4a87d-d9f1-4760-bf33-ca83cbca531f",
+      "human_ref": "NS-CORP-2026-0110",
+      "redemption_code": "NS-CBEK-BVHD-NFVU",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "1ad9f16c-691b-4f61-9fcd-a36fd1065684",
+      "human_ref": "NS-CORP-2026-0109",
+      "redemption_code": "NS-2W3G-KJGK-AQ2D",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "6b5ce8ed-26aa-41f8-996d-a0b56b4807e9",
+      "human_ref": "NS-CORP-2026-0108",
+      "redemption_code": "NS-ZP8B-Q6B8-WY8E",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
+    {
+      "id": "70445306-aa7b-43b4-b29b-90c8193ee4ae",
+      "human_ref": "NS-CORP-2026-0107",
+      "redemption_code": "NS-2AWH-Y2UJ-BZ4C",
+      "order_id": "11682c19-4519-46c1-87f1-9f3f1c21338a",
+      "company_id": "6a41317c-68d5-4754-9214-c8c387bf96dc",
+      "product_code": "INDIVIDUAL",
+      "voucher_value": 4000,
+      "eligible_experience_codes": [
+        "CAMPING_OVERNIGHT",
+        "ADVENTURE"
+      ],
+      "status": "ACTIVE",
+      "issue_date": "2026-08-27T17:25:26.420Z",
+      "expiry_date": "2027-08-27T17:25:26.420Z",
+      "created_at": "2026-08-27T17:25:26.420Z",
+      "updated_at": "2026-08-27T17:25:26.420Z"
+    },
     {
       "id": "6b8747f2-9293-4f53-b956-6a91e8f0ee11",
       "human_ref": "NS-CORP-2026-0106",
@@ -4270,5 +5333,159 @@
     "ifsc_code": "HDFC0002493",
     "validity_months": 12,
     "gst_rate": 18
-  }
+  },
+  "custom_enquiries": [
+    {
+      "id": "251c4ee9-5560-4ee6-9085-e819db3e817b",
+      "enquiry_number": "ENQ-20260827-7480",
+      "company_name": "Global Tech Offsites Ltd",
+      "contact_person": "Ananya Roy",
+      "email": "enquiry.1787851412197@globaltech.com",
+      "mobile": "+91 91111 22222",
+      "team_size": 45,
+      "preferred_location": "Panchgani",
+      "experience_type": "Leadership Strategy Offsite",
+      "special_requirements": "Needs conference room setup and guided trekking",
+      "status": "NEW",
+      "created_at": "2026-08-27T17:23:32.198Z"
+    },
+    {
+      "id": "490cc9bf-5d42-41f1-864a-839d6368f0e7",
+      "enquiry_number": "ENQ-20260827-5228",
+      "company_name": "Global Tech Offsites Ltd",
+      "contact_person": "Ananya Roy",
+      "email": "enquiry.1787851436735@globaltech.com",
+      "mobile": "+91 91111 22222",
+      "team_size": 45,
+      "preferred_location": "Panchgani",
+      "experience_type": "Leadership Strategy Offsite",
+      "special_requirements": "Needs conference room setup and guided trekking",
+      "status": "NEW",
+      "created_at": "2026-08-27T17:23:56.737Z"
+    },
+    {
+      "id": "d5f5555c-0e82-4d9e-972d-1892cd1dfd7c",
+      "enquiry_number": "ENQ-20260827-8845",
+      "company_name": "Global Tech Offsites Ltd",
+      "contact_person": "Ananya Roy",
+      "email": "enquiry.1787851943937@globaltech.com",
+      "mobile": "+91 91111 22222",
+      "team_size": 45,
+      "preferred_location": "Panchgani",
+      "experience_type": "Leadership Strategy Offsite",
+      "special_requirements": "Needs conference room setup and guided trekking",
+      "status": "NEW",
+      "created_at": "2026-08-27T17:32:23.938Z"
+    }
+  ],
+  "team_outing_bookings": [
+    {
+      "id": "94d37b99-c633-4379-a72e-9ccb64281e4a",
+      "booking_number": "OUTING-20260827-7624",
+      "company_id": "f8ebc73c-d275-4a54-b729-ec2a066a149c",
+      "package_code": "WILDERNESS_BONDING",
+      "package_title": "Wilderness Team Immersion Camp",
+      "location": "Western Ghats Sanctuary, Maharashtra",
+      "event_date": "2026-10-15",
+      "attendees_count": 20,
+      "unit_price": 3200,
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "payment_status": "AWAITING_VERIFICATION",
+      "booking_status": "PENDING_PAYMENT",
+      "special_requirements": "Barbecue dinner & Guided hike",
+      "email_status": "PENDING",
+      "created_at": "2026-08-27T17:23:56.707Z",
+      "updated_at": "2026-08-27T17:23:56.710Z",
+      "company": {
+        "id": "f8ebc73c-d275-4a54-b729-ec2a066a149c",
+        "company_name": "Apex Gateway Logistics Pvt Ltd",
+        "contact_person": "Vikram Mehta",
+        "designation": "HR Manager",
+        "email": "gateway.corp.1787851436703@nisargshala.in",
+        "mobile": "+91 98220 11223",
+        "billing_address": "BKC, Mumbai, Maharashtra",
+        "gst_number": "27ARHPV2783R1ZN",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:23:56.703Z"
+      },
+      "utr_reference": "UTR998877665544",
+      "payment_date": "2026-08-27"
+    },
+    {
+      "id": "3eb57db8-679c-4f20-b356-08c3e6678829",
+      "booking_number": "OUTING-20260827-7540",
+      "company_id": "44ed8b9b-2e4a-4135-919c-06cb029e78fe",
+      "package_code": "WILDERNESS_BONDING",
+      "package_title": "Wilderness Team Immersion Camp",
+      "location": "Western Ghats Sanctuary, Maharashtra",
+      "event_date": "2026-10-15",
+      "attendees_count": 20,
+      "unit_price": 3200,
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "payment_status": "AWAITING_VERIFICATION",
+      "booking_status": "PENDING_PAYMENT",
+      "special_requirements": "Barbecue dinner & Guided hike",
+      "email_status": "PENDING",
+      "created_at": "2026-08-27T17:32:23.910Z",
+      "updated_at": "2026-08-27T17:32:23.912Z",
+      "company": {
+        "id": "44ed8b9b-2e4a-4135-919c-06cb029e78fe",
+        "company_name": "Apex Gateway Logistics Pvt Ltd",
+        "contact_person": "Vikram Mehta",
+        "designation": "HR Manager",
+        "email": "gateway.corp.1787851943905@nisargshala.in",
+        "mobile": "+91 98220 11223",
+        "billing_address": "BKC, Mumbai, Maharashtra",
+        "gst_number": "27ARHPV2783R1ZN",
+        "status": "ACTIVE",
+        "created_at": "2026-08-27T17:32:23.905Z"
+      },
+      "utr_reference": "UTR998877665544",
+      "payment_date": "2026-08-27"
+    }
+  ],
+  "tax_invoices": [
+    {
+      "id": "552508d1-879e-4e59-8f2e-0f086dac1a9d",
+      "invoice_number": "NS/26-27/000001",
+      "booking_id": "94d37b99-c633-4379-a72e-9ccb64281e4a",
+      "company_id": "f8ebc73c-d275-4a54-b729-ec2a066a149c",
+      "invoice_date": "2026-08-27",
+      "due_date": "2026-09-03",
+      "seller_gstin": "27ARHPV2783R1ZN",
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "advance_received": 75520,
+      "balance_due": 0,
+      "created_at": "2026-08-27T17:23:56.713Z"
+    },
+    {
+      "id": "53aecba2-5996-4d8a-9241-697732af56f5",
+      "invoice_number": "NS/26-27/000002",
+      "booking_id": "3eb57db8-679c-4f20-b356-08c3e6678829",
+      "company_id": "44ed8b9b-2e4a-4135-919c-06cb029e78fe",
+      "invoice_date": "2026-08-27",
+      "due_date": "2026-09-03",
+      "seller_gstin": "27ARHPV2783R1ZN",
+      "buyer_gstin": "27ARHPV2783R1ZN",
+      "subtotal_amount": 64000,
+      "gst_rate": 18,
+      "gst_amount": 11520,
+      "total_amount": 75520,
+      "advance_received": 75520,
+      "balance_due": 0,
+      "created_at": "2026-08-27T17:32:23.916Z"
+    }
+  ]
 }

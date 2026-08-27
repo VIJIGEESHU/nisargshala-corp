@@ -41,6 +41,7 @@ async function runCorporatePasswordAuthTests() {
       contact_person: 'Auth Manager',
       email: testEmail,
       mobile: '+91 98888 77777',
+      gst_number: '27AAAAA0000A1Z5',
       password: rawPassword,
       password_hash: canonicalHash,
     });
@@ -236,6 +237,7 @@ async function runCorporatePasswordAuthTests() {
       contact_person: 'Lifecycle Officer',
       email: lifeEmail,
       mobile: '+91 96666 44444',
+      gst_number: '27AAAAA0000A1Z5',
       password: lifePass,
       password_hash: hashPasswordCanonical(lifePass),
     });

@@ -268,6 +268,7 @@ async function runAcceptanceTests() {
       email: freshUserEmail,
       mobile: '+91 99999 00000',
       billing_address: 'Zero Address',
+      gst_number: '27AAAAA0000A1Z5',
       password_hash: 'dummyhash123',
     });
 
@@ -296,6 +297,7 @@ async function runAcceptanceTests() {
       email: freshUserEmail,
       mobile: '+91 98888 77777',
       billing_address: 'Sec Address',
+      gst_number: '27AAAAA0000A1Z5',
       password_hash: 'dummyhash123',
     });
 

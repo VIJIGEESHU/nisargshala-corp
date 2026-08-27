@@ -39,6 +39,7 @@ async function runCompanyIsolationTests() {
       contact_person: 'Alpha HR',
       email: `hr.alpha.${Date.now()}@alpha.com`,
       mobile: '+91 91111 11111',
+      gst_number: '27AAAAA0000A1Z5',
       password_hash: 'alphahash',
     });
     const resA = await resolveCompanyForUser(userA.id);
@@ -49,6 +50,7 @@ async function runCompanyIsolationTests() {
       contact_person: 'Beta HR',
       email: `hr.beta.${Date.now()}@beta.com`,
       mobile: '+91 92222 22222',
+      gst_number: '27AAAAA0000A1Z5',
       password_hash: 'betahash',
     });
     const resB = await resolveCompanyForUser(userB.id);

@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { formatSafeDate } from '@/lib/dateUtils';
 import {
-  LayoutDashboard,
+  Compass,
   ShoppingBag,
   Ticket,
   Sliders,
@@ -18,17 +18,22 @@ import {
   RefreshCw,
   Edit,
   FileText,
-  LogOut
+  LogOut,
+  Mail,
+  HelpCircle,
+  PhoneCall
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'orders' | 'vouchers' | 'catalogue' | 'settings' | 'audit'>('orders');
-  
+  const [activeTab, setActiveTab] = useState<'outings' | 'orders' | 'enquiries' | 'vouchers' | 'catalogue' | 'settings'>('outings');
+
   // Data state
   const [orders, setOrders] = useState<any[]>([]);
   const [vouchers, setVouchers] = useState<any[]>([]);
+  const [outings, setOutings] = useState<any[]>([]);
+  const [enquiries, setEnquiries] = useState<any[]>([]);
   const [experiences, setExperiences] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +46,7 @@ export default function AdminDashboardPage() {
   const [bankSettings, setBankSettings] = useState({
     account_holder: 'NISARGSHALA',
     bank_name: 'HDFC Bank',
-    account_number: '50200097103825',
+    account_number: '5020097103825',
     ifsc_code: 'HDFC0002493',
     validity_months: 12,
     gst_rate: 18,
@@ -52,25 +57,6 @@ export default function AdminDashboardPage() {
   // Experience Price Edit State
   const [editingExpCode, setEditingExpCode] = useState<string | null>(null);
   const [editingExpPrice, setEditingExpPrice] = useState<number>(0);
-
-  const handleSaveExpPrice = async (code: string) => {
-    try {
-      const res = await fetch('/api/admin/experiences', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, current_price: editingExpPrice }),
-      });
-      const data = await res.json();
-      if (res.ok && data.experiences) {
-        setExperiences(data.experiences);
-        setEditingExpCode(null);
-      } else {
-        alert(data.message || 'Failed to update experience price.');
-      }
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
 
   useEffect(() => {
     checkAdminAuthAndFetch();
@@ -118,7 +104,6 @@ export default function AdminDashboardPage() {
   const checkAdminAuthAndFetch = async () => {
     setLoading(true);
     try {
-      // Check admin session
       const authRes = await fetch('/api/auth/session');
       if (!authRes.ok) {
         router.push('/admin/login');
@@ -133,12 +118,13 @@ export default function AdminDashboardPage() {
 
       setSession(authData.user);
 
-      // Fetch real data from backend API
       const dataRes = await fetch('/api/admin/data');
       if (dataRes.ok) {
         const payload = await dataRes.json();
         setOrders(payload.orders || []);
         setVouchers(payload.vouchers || []);
+        setOutings(payload.outings || []);
+        setEnquiries(payload.enquiries || []);
         setExperiences(payload.experiences || []);
         setAuditLogs(payload.auditLogs || []);
       }
@@ -149,8 +135,8 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleConfirmPayment = async (orderId: string) => {
-    if (!confirm('Are you sure you want to confirm payment for this order? This will generate and activate the distinct voucher instruments.')) {
+  const handleConfirmVoucherPayment = async (orderId: string) => {
+    if (!confirm('Verify payment for this voucher order? This will generate distinct vouchers and dispatch the confirmation email with Tax Invoice.')) {
       return;
     }
 
@@ -167,7 +153,7 @@ export default function AdminDashboardPage() {
         throw new Error(data.message || 'Failed to confirm payment.');
       }
 
-      alert(`Success! ${data.vouchers_count} distinct individual vouchers generated & activated.`);
+      alert(`Success! ${data.vouchers_count} distinct vouchers generated & email dispatched.`);
       checkAdminAuthAndFetch();
     } catch (err: any) {
       alert(err.message);
@@ -176,8 +162,8 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleResendEmail = async (orderId: string) => {
-    if (!confirm('Resend the voucher package email to the customer? This will reuse existing vouchers without creating duplicates.')) {
+  const handleResendVoucherEmail = async (orderId: string) => {
+    if (!confirm('Resend the voucher package email to the customer? This reuses existing vouchers without creating duplicates.')) {
       return;
     }
 
@@ -194,7 +180,60 @@ export default function AdminDashboardPage() {
         throw new Error(data.message || 'Failed to resend voucher email.');
       }
 
-      alert(data.message || 'Voucher package email resent successfully!');
+      alert(data.message || 'Voucher email resent successfully!');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmOutingPayment = async (bookingId: string) => {
+    if (!confirm('Verify payment for this Team Outing booking? This will generate the Tax Invoice and dispatch the retreat confirmation email.')) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/confirm-outing-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to confirm outing payment.');
+      }
+
+      alert(data.message || 'Team Outing payment verified & confirmation email dispatched successfully!');
+      checkAdminAuthAndFetch();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResendOutingInvoice = async (bookingId: string) => {
+    if (!confirm('Resend Tax Invoice & Confirmation email for this Team Outing booking?')) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/resend-outing-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to resend outing invoice.');
+      }
+
+      alert(data.message || 'Team Outing Tax Invoice email resent successfully!');
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -210,449 +249,509 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDF9F5] flex items-center justify-center">
         <div className="text-center space-y-3">
-          <RefreshCw className="w-8 h-8 text-forest-800 animate-spin mx-auto" />
-          <div className="text-xs font-semibold text-forest-900">Verifying Admin Session & Loading Portal Data...</div>
+          <RefreshCw className="w-8 h-8 text-emerald-800 animate-spin mx-auto" />
+          <div className="text-xs font-semibold text-emerald-950">Verifying Admin Session & Loading Portal Data...</div>
         </div>
       </div>
     );
   }
 
-  // Calculate metrics
-  const totalSales = orders.filter((o) => o.payment_status === 'PAID').reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
-  const activeVouchersCount = vouchers.filter((v) => v.status === 'ACTIVE').length;
-  const redeemedVouchersCount = vouchers.filter((v) => v.status === 'REDEEMED').length;
-  const pendingVerificationCount = orders.filter((o) => o.payment_status === 'AWAITING_VERIFICATION').length;
-
   return (
-    <div className="min-h-screen flex flex-col bg-sand-50">
+    <div className="min-h-screen bg-[#FDF9F5] text-slate-900 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-        {/* DASHBOARD HEADER */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-8 border-b border-forest-200 mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-forest-600/30 bg-white shrink-0">
-              <img src="/images/nisargshala-logo.png" alt="Nisargshala Logo" className="object-contain w-full h-full p-0.5" />
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* HEADER BAR */}
+        <div className="bg-[#062018] text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl border border-emerald-900">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+              <ShieldCheck className="w-4 h-4" /> Nisargshala Corporate Gateway Operational Console
             </div>
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Nisargshala Admin Operations Portal
-              </div>
-              <h1 className="font-serif text-3xl font-bold text-forest-950">
-                Corporate Voucher Operations
-              </h1>
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-white mt-1">Master Operations & Finance Admin</h1>
+            <p className="text-xs text-emerald-200/80 mt-1">
+              Logged in as: <strong className="text-white">{session?.email || 'Master Administrator'}</strong>
+            </p>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+          >
+            <LogOut className="w-4 h-4" /> Admin Logout
+          </button>
+        </div>
+
+        {/* METRICS CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Outing Bookings</span>
+            <div className="text-2xl font-bold font-serif text-[#062018]">{outings.length}</div>
+            <div className="text-[11px] text-emerald-600 font-semibold">
+              {outings.filter((b) => b.payment_status === 'AWAITING_VERIFICATION').length} Awaiting Verification
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={checkAdminAuthAndFetch}
-              className="inline-flex items-center gap-2 bg-white border border-forest-200 text-forest-800 hover:bg-forest-50 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Refresh Data
-            </button>
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Voucher Orders</span>
+            <div className="text-2xl font-bold font-serif text-[#062018]">{orders.length}</div>
+            <div className="text-[11px] text-emerald-600 font-semibold">
+              {orders.filter((o) => o.payment_status === 'AWAITING_VERIFICATION').length} Awaiting Verification
+            </div>
+          </div>
 
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-            >
-              <LogOut className="w-3.5 h-3.5 text-red-600" />
-              Admin Logout
-            </button>
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Custom Enquiries</span>
+            <div className="text-2xl font-bold font-serif text-[#062018]">{enquiries.length}</div>
+            <div className="text-[11px] text-amber-600 font-semibold">
+              {enquiries.filter((e) => e.status === 'NEW').length} New Enquiries
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Voucher Inventory</span>
+            <div className="text-2xl font-bold font-serif text-[#062018]">{vouchers.length}</div>
+            <div className="text-[11px] text-slate-500 font-medium">Issued across all corporate accounts</div>
           </div>
         </div>
 
-        {/* METRICS STATS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-2xl border border-forest-200 shadow-sm">
-            <div className="text-xs text-forest-600 font-semibold uppercase mb-1">Verified Corporate Sales</div>
-            <div className="text-3xl font-serif font-bold text-forest-950">₹{totalSales.toLocaleString('en-IN')}</div>
-            <div className="text-[11px] text-emerald-600 mt-2 font-medium">✓ Verified RTGS/NEFT Collections</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-forest-200 shadow-sm">
-            <div className="text-xs text-forest-600 font-semibold uppercase mb-1">Active Voucher Instruments</div>
-            <div className="text-3xl font-serif font-bold text-amber-600">{activeVouchersCount}</div>
-            <div className="text-[11px] text-forest-500 mt-2 font-medium">Distinct active secret codes</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-forest-200 shadow-sm">
-            <div className="text-xs text-forest-600 font-semibold uppercase mb-1">Redeemed Vouchers</div>
-            <div className="text-3xl font-serif font-bold text-forest-800">{redeemedVouchersCount}</div>
-            <div className="text-[11px] text-forest-500 mt-2 font-medium">Redeemed on nisargshala.in</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-forest-200 shadow-sm">
-            <div className="text-xs text-forest-600 font-semibold uppercase mb-1">Pending Verification</div>
-            <div className="text-3xl font-serif font-bold text-amber-700">{pendingVerificationCount}</div>
-            <div className="text-[11px] text-amber-600 mt-2 font-medium">UTR submitted, awaiting confirmation</div>
-          </div>
-        </div>
-
-        {/* TAB NAVIGATION */}
-        <div className="flex border-b border-forest-200 mb-8 overflow-x-auto">
+        {/* TABS NAVIGATION */}
+        <div className="flex border-b border-slate-200 space-x-4 overflow-x-auto text-xs font-bold">
+          <button
+            onClick={() => setActiveTab('outings')}
+            className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-all ${
+              activeTab === 'outings'
+                ? 'border-[#062018] text-[#062018]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Compass className="w-4 h-4" /> Team Outing Bookings ({outings.length})
+          </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`pb-4 px-6 font-semibold text-sm border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'orders'
-                ? 'border-amber-600 text-amber-600'
-                : 'border-transparent text-forest-600 hover:text-forest-900'
+                ? 'border-[#062018] text-[#062018]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            <ShoppingBag className="w-4 h-4" />
-            Corporate Orders ({orders.length})
+            <ShoppingBag className="w-4 h-4" /> Voucher Orders ({orders.length})
           </button>
-
+          <button
+            onClick={() => setActiveTab('enquiries')}
+            className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-all ${
+              activeTab === 'enquiries'
+                ? 'border-[#062018] text-[#062018]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <HelpCircle className="w-4 h-4" /> Custom Enquiries ({enquiries.length})
+          </button>
           <button
             onClick={() => setActiveTab('vouchers')}
-            className={`pb-4 px-6 font-semibold text-sm border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'vouchers'
-                ? 'border-amber-600 text-amber-600'
-                : 'border-transparent text-forest-600 hover:text-forest-900'
+                ? 'border-[#062018] text-[#062018]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            <Ticket className="w-4 h-4" />
-            Voucher Inventory ({vouchers.length})
+            <Ticket className="w-4 h-4" /> Voucher Inventory ({vouchers.length})
           </button>
-
-          <button
-            onClick={() => setActiveTab('catalogue')}
-            className={`pb-4 px-6 font-semibold text-sm border-b-2 flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'catalogue'
-                ? 'border-amber-600 text-amber-600'
-                : 'border-transparent text-forest-600 hover:text-forest-900'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            Experience Catalogue
-          </button>
-
           <button
             onClick={() => setActiveTab('settings')}
-            className={`pb-4 px-6 font-semibold text-sm border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`pb-3 px-4 flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'settings'
-                ? 'border-amber-600 text-amber-600'
-                : 'border-transparent text-forest-600 hover:text-forest-900'
+                ? 'border-[#062018] text-[#062018]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
-            <Settings className="w-4 h-4" />
-            Bank & Validity Settings
+            <Settings className="w-4 h-4" /> Bank & Tax Settings
           </button>
         </div>
 
-        {/* TAB 1: CORPORATE ORDERS */}
-        {activeTab === 'orders' && (
-          <div className="bg-white rounded-2xl border border-forest-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-forest-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <h3 className="font-serif text-lg font-bold text-forest-950">Corporate Orders & Payment Verification</h3>
-              <input
-                type="text"
-                placeholder="Search order or UTR..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 bg-sand-50 border border-forest-200 rounded-lg text-xs"
-              />
+        {/* TAB 1: TEAM OUTINGS */}
+        {activeTab === 'outings' && (
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-[#062018]">Corporate Team Outings & Retreats</h3>
+                <p className="text-xs text-slate-500">Manage outing bookings, verify bank UTRs, generate Tax Invoices, and send emails.</p>
+              </div>
+              <button
+                onClick={checkAdminAuthAndFetch}
+                className="p-2 text-slate-600 hover:text-[#062018] rounded-lg hover:bg-slate-100 transition-colors"
+                title="Refresh Outings"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
             </div>
 
-            {orders.length === 0 ? (
-              <div className="p-12 text-center text-forest-500 italic text-xs">
-                No corporate orders found. Orders submitted on the corporate portal will appear here in real time.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-sand-100 text-forest-800 uppercase text-[10px] font-bold">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 font-bold uppercase border-b border-slate-200">
+                    <th className="p-4">Booking Ref</th>
+                    <th className="p-4">Company & Contact</th>
+                    <th className="p-4">Event Date & Location</th>
+                    <th className="p-4">Attendees</th>
+                    <th className="p-4">Total Amount</th>
+                    <th className="p-4">Bank UTR</th>
+                    <th className="p-4">Payment & Booking Status</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {outings.length === 0 ? (
                     <tr>
-                      <th className="px-6 py-4">Order Ref</th>
-                      <th className="px-6 py-4">Company</th>
-                      <th className="px-6 py-4">Contact</th>
-                      <th className="px-6 py-4">Total Amount</th>
-                      <th className="px-6 py-4">UTR Reference</th>
-                      <th className="px-6 py-4">Payment Status</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
+                      <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">
+                        No team outing bookings found yet.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-forest-100">
-                    {orders.map((ord) => (
-                      <tr key={ord.id} className="hover:bg-sand-50">
-                        <td className="px-6 py-4 font-mono font-bold text-forest-950">{ord.order_number}</td>
-                        <td className="px-6 py-4 font-semibold">{ord.company?.company_name || ord.company_name || 'Corporate Client'}</td>
-                        <td className="px-6 py-4">{ord.company?.contact_person || 'N/A'}<br/><span className="text-[10px] text-forest-500">{ord.company?.email}</span></td>
-                        <td className="px-6 py-4 font-bold text-amber-700">₹{ord.total_amount.toLocaleString('en-IN')}</td>
-                        <td className="px-6 py-4 font-mono text-[11px]">{ord.utr_reference || 'N/A'}</td>
-                        <td className="px-6 py-4">
-                          {ord.payment_status === 'AWAITING_VERIFICATION' && (
-                            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">
-                              <Clock className="w-3 h-3" /> Awaiting Verification
-                            </span>
-                          )}
-                          {ord.payment_status === 'PAID' && (
-                            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-semibold">
-                              <CheckCircle2 className="w-3 h-3" /> Verified & Paid
-                            </span>
-                          )}
-                          {ord.payment_status === 'PENDING_PAYMENT' && (
-                            <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-semibold">
-                              Pending Payment
-                            </span>
-                          )}
+                  ) : (
+                    outings.map((b) => (
+                      <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 font-mono font-bold text-[#062018]">{b.booking_number}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-900">{b.company?.company_name || 'Corporate Partner'}</div>
+                          <div className="text-slate-500">{b.company?.contact_person || b.company?.email}</div>
+                          <div className="text-[11px] font-mono text-amber-700 font-semibold">GST: {b.buyer_gstin || b.company?.gst_number || 'Missing'}</div>
                         </td>
-                        <td className="px-6 py-4 text-right space-x-2">
-                          {ord.payment_status !== 'PAID' && (
-                            <button
-                              onClick={() => handleConfirmPayment(ord.id)}
-                              disabled={actionLoading}
-                              className="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg font-semibold shadow-sm text-[11px]"
-                            >
-                              Confirm Payment & Activate
-                            </button>
-                          )}
-                          {ord.payment_status === 'PAID' && (
-                            <div className="inline-flex items-center gap-2">
-                              <a
-                                href={`/api/vouchers/download?order_id=${ord.id}`}
-                                target="_blank"
-                                className="inline-flex items-center gap-1 bg-forest-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold"
-                              >
-                                <Download className="w-3 h-3" /> Download All ZIP
-                              </a>
-                              <button
-                                onClick={() => handleResendEmail(ord.id)}
-                                disabled={actionLoading}
-                                className="inline-flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold"
-                              >
-                                Resend Voucher Email
-                              </button>
-                            </div>
-                          )}
+                        <td className="p-4">
+                          <div className="font-semibold text-slate-800">{b.event_date}</div>
+                          <div className="text-slate-500 text-[11px]">{b.location}</div>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: VOUCHER INVENTORY */}
-        {activeTab === 'vouchers' && (
-          <div className="bg-white rounded-2xl border border-forest-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-forest-100 flex justify-between items-center">
-              <h3 className="font-serif text-lg font-bold text-forest-950">Distinct Voucher Inventory</h3>
-              <div className="text-xs text-forest-600">Total: {vouchers.length} individual voucher instruments</div>
-            </div>
-
-            {vouchers.length === 0 ? (
-              <div className="p-12 text-center text-forest-500 italic text-xs">
-                No active vouchers in database. Confirm payment on an order to generate individual vouchers.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-sand-100 text-forest-800 uppercase text-[10px] font-bold">
-                    <tr>
-                      <th className="px-6 py-4">Voucher Ref</th>
-                      <th className="px-6 py-4">Secret Redemption Code</th>
-                      <th className="px-6 py-4">Category</th>
-                      <th className="px-6 py-4">Face Value</th>
-                      <th className="px-6 py-4">Expiry Date</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-forest-100">
-                    {vouchers.map((vch) => (
-                      <tr key={vch.id} className="hover:bg-sand-50">
-                        <td className="px-6 py-4 font-mono font-bold text-forest-950">{vch.human_ref}</td>
-                        <td className="px-6 py-4 font-mono font-bold text-amber-700 tracking-wider">{vch.redemption_code}</td>
-                        <td className="px-6 py-4 font-semibold">{vch.product_code}</td>
-                        <td className="px-6 py-4 font-bold">₹{vch.voucher_value.toLocaleString('en-IN')}</td>
-                        <td className="px-6 py-4">{formatSafeDate(vch.expiry_date)}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full font-semibold ${
-                            vch.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' :
-                            vch.status === 'REDEEMED' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {vch.status}
+                        <td className="p-4 font-bold">{b.attendees_count} Pax</td>
+                        <td className="p-4 font-bold text-emerald-800 font-serif">₹{b.total_amount?.toLocaleString('en-IN')}</td>
+                        <td className="p-4 font-mono font-bold text-amber-600">{b.utr_reference || 'Not Submitted'}</td>
+                        <td className="p-4">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              b.payment_status === 'PAID'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : b.payment_status === 'AWAITING_VERIFICATION'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {b.payment_status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <a
-                            href={`/api/vouchers/download?voucher_id=${vch.id}`}
-                            target="_blank"
-                            className="inline-flex items-center gap-1 text-forest-800 font-semibold hover:underline"
-                          >
-                            <Download className="w-3.5 h-3.5" /> PDF
-                          </a>
+                        <td className="p-4 text-right space-x-2">
+                          {b.payment_status === 'AWAITING_VERIFICATION' || b.payment_status === 'PENDING_PAYMENT' ? (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleConfirmOutingPayment(b.id)}
+                              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg transition-all text-[11px]"
+                            >
+                              Verify Payment & Dispatch Invoice
+                            </button>
+                          ) : (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleResendOutingInvoice(b.id)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition-all text-[11px]"
+                            >
+                              Resend Invoice Email
+                            </button>
+                          )}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: CATALOGUE */}
-        {activeTab === 'catalogue' && (
-          <div className="bg-white rounded-2xl border border-forest-200 shadow-sm p-8">
-            <h3 className="font-serif text-lg font-bold text-forest-950 mb-2">Configurable Retail Experience Pricing</h3>
-            <p className="text-xs text-forest-600 mb-6">
-              Retail experience prices can be updated here by authorized administrators without altering locked corporate voucher face values.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-              {experiences.map((exp) => (
-                <div key={exp.code} className="p-4 bg-sand-50 rounded-xl border border-sand-200 flex justify-between items-center">
-                  <div>
-                    <div className="font-bold text-forest-950">{exp.title}</div>
-                    <div className="text-[11px] text-forest-500 font-mono">Code: {exp.code}</div>
-                  </div>
-                  <div className="text-right">
-                    {editingExpCode === exp.code ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={editingExpPrice}
-                          onChange={(e) => setEditingExpPrice(Number(e.target.value))}
-                          className="w-24 px-2 py-1 bg-white border border-forest-300 rounded font-bold text-amber-700"
-                        />
-                        <button
-                          onClick={() => handleSaveExpPrice(exp.code)}
-                          className="bg-forest-800 text-white px-2.5 py-1 rounded text-[10px] font-bold"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingExpCode(null)}
-                          className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-[10px]"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="font-bold text-base text-amber-700">₹{exp.current_price?.toLocaleString('en-IN')}</div>
-                        <button
-                          onClick={() => {
-                            setEditingExpCode(exp.code);
-                            setEditingExpPrice(exp.current_price);
-                          }}
-                          className="text-[11px] text-forest-600 hover:text-forest-900 underline flex items-center gap-1 mt-1 cursor-pointer"
-                        >
-                          <Edit className="w-3 h-3" /> Edit Price
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
-        {/* TAB 4: SETTINGS */}
+        {/* TAB 2: VOUCHER ORDERS */}
+        {activeTab === 'orders' && (
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-[#062018]">Corporate Voucher Bulk Orders</h3>
+                <p className="text-xs text-slate-500">Verify payments, issue distinct voucher certificates, and resend ZIP packages.</p>
+              </div>
+              <button
+                onClick={checkAdminAuthAndFetch}
+                className="p-2 text-slate-600 hover:text-[#062018] rounded-lg hover:bg-slate-100 transition-colors"
+                title="Refresh Orders"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 font-bold uppercase border-b border-slate-200">
+                    <th className="p-4">Order Ref</th>
+                    <th className="p-4">Company</th>
+                    <th className="p-4">Date</th>
+                    <th className="p-4">Total Amount</th>
+                    <th className="p-4">Bank UTR</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-slate-500 font-medium">
+                        No voucher orders found yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    orders.map((o) => (
+                      <tr key={o.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 font-mono font-bold text-[#062018]">{o.order_number}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-900">{o.company?.company_name || 'Corporate Partner'}</div>
+                          <div className="text-slate-500">{o.company?.contact_person || o.company?.email}</div>
+                          <div className="text-[11px] font-mono text-amber-700 font-semibold">GST: {o.company?.gst_number || 'Missing'}</div>
+                        </td>
+                        <td className="p-4 text-slate-600">{formatSafeDate(o.created_at)}</td>
+                        <td className="p-4 font-bold text-emerald-800 font-serif">₹{o.total_amount?.toLocaleString('en-IN')}</td>
+                        <td className="p-4 font-mono font-bold text-amber-600">{o.utr_reference || 'Not Submitted'}</td>
+                        <td className="p-4">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              o.payment_status === 'PAID'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : o.payment_status === 'AWAITING_VERIFICATION'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {o.payment_status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right space-x-2">
+                          {o.payment_status === 'AWAITING_VERIFICATION' || o.payment_status === 'PENDING_PAYMENT' ? (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleConfirmVoucherPayment(o.id)}
+                              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg transition-all text-[11px]"
+                            >
+                              Verify Payment & Issue Vouchers
+                            </button>
+                          ) : (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleResendVoucherEmail(o.id)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition-all text-[11px]"
+                            >
+                              Resend Vouchers Email
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: CUSTOM ENQUIRIES */}
+        {activeTab === 'enquiries' && (
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="font-serif font-bold text-lg text-[#062018]">Custom Corporate Experience Enquiries</h3>
+              <p className="text-xs text-slate-500">Inbound requests submitted via "Planning Something Different?".</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 font-bold uppercase border-b border-slate-200">
+                    <th className="p-4">Enquiry Ref</th>
+                    <th className="p-4">Company & Contact</th>
+                    <th className="p-4">Team Size</th>
+                    <th className="p-4">Preferred Location & Date</th>
+                    <th className="p-4">Special Requirements</th>
+                    <th className="p-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {enquiries.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500 font-medium">
+                        No custom enquiries submitted yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    enquiries.map((e) => (
+                      <tr key={e.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4 font-mono font-bold text-[#062018]">{e.enquiry_number}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-slate-900">{e.company_name}</div>
+                          <div className="text-slate-500">{e.contact_person} ({e.email})</div>
+                          <div className="text-emerald-700 font-semibold">{e.mobile}</div>
+                        </td>
+                        <td className="p-4 font-bold">{e.team_size} Pax</td>
+                        <td className="p-4">
+                          <div className="font-semibold text-slate-800">{e.preferred_location || 'Flexible'}</div>
+                          <div className="text-slate-500 text-[11px]">{e.preferred_date || 'Date TBD'}</div>
+                        </td>
+                        <td className="p-4 max-w-xs truncate text-slate-600">{e.special_requirements || 'Standard Program'}</td>
+                        <td className="p-4">
+                          <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold text-[10px]">
+                            {e.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: VOUCHERS INVENTORY */}
+        {activeTab === 'vouchers' && (
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100">
+              <h3 className="font-serif font-bold text-lg text-[#062018]">Issued Vouchers Master Directory</h3>
+              <p className="text-xs text-slate-500">Directory of all distinct vouchers generated across corporate orders.</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 font-bold uppercase border-b border-slate-200">
+                    <th className="p-4">Voucher Ref</th>
+                    <th className="p-4">Secret Code</th>
+                    <th className="p-4">Product Category</th>
+                    <th className="p-4">Value</th>
+                    <th className="p-4">Expiry Date</th>
+                    <th className="p-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {vouchers.map((v) => (
+                    <tr key={v.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-4 font-mono font-bold text-[#062018]">{v.human_ref}</td>
+                      <td className="p-4 font-mono font-bold text-amber-700">{v.redemption_code}</td>
+                      <td className="p-4 font-semibold">{v.product_code}</td>
+                      <td className="p-4 font-bold text-emerald-800">₹{v.voucher_value?.toLocaleString('en-IN')}</td>
+                      <td className="p-4 text-slate-600">{v.expiry_date}</td>
+                      <td className="p-4">
+                        <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[10px]">
+                          {v.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: BANK & TAX SETTINGS */}
         {activeTab === 'settings' && (
-          <div className="bg-white rounded-2xl border border-forest-200 shadow-sm p-8 max-w-2xl">
-            <h3 className="font-serif text-lg font-bold text-forest-950 mb-2">Bank Payment & Validity Settings</h3>
-            <p className="text-xs text-forest-600 mb-6">
-              Update the official Nisargshala bank account details displayed to corporate clients for RTGS/NEFT payment transfers.
-            </p>
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 max-w-2xl shadow-sm space-y-6">
+            <div>
+              <h3 className="font-serif font-bold text-xl text-[#062018]">Bank Payment Details & GST Rate</h3>
+              <p className="text-xs text-slate-500">Configure RTGS/NEFT payment recipient details and active tax rates.</p>
+            </div>
 
             {settingsMsg && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span>{settingsMsg}</span>
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
+                ✓ {settingsMsg}
               </div>
             )}
 
             <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">Account Holder Name *</label>
+                <label className="block font-bold text-slate-700 mb-1">Seller GSTIN (Nisargshala)</label>
                 <input
                   type="text"
-                  required
-                  value={bankSettings.account_holder}
-                  onChange={(e) => setBankSettings({ ...bankSettings, account_holder: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  disabled
+                  value="27ARHPV2783R1ZN"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 font-mono font-bold text-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">Bank Name *</label>
+                <label className="block font-bold text-slate-700 mb-1">Bank Name</label>
                 <input
                   type="text"
                   required
                   value={bankSettings.bank_name}
                   onChange={(e) => setBankSettings({ ...bankSettings, bank_name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-forest-800 font-semibold mb-1">Account Number *</label>
+                <label className="block font-bold text-slate-700 mb-1">Account Name</label>
                 <input
                   type="text"
                   required
-                  value={bankSettings.account_number}
-                  onChange={(e) => setBankSettings({ ...bankSettings, account_number: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl font-mono text-forest-950 focus:ring-2 focus:ring-amber-500"
+                  value={bankSettings.account_holder}
+                  onChange={(e) => setBankSettings({ ...bankSettings, account_holder: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-forest-800 font-semibold mb-1">IFSC Code *</label>
-                <input
-                  type="text"
-                  required
-                  value={bankSettings.ifsc_code}
-                  onChange={(e) => setBankSettings({ ...bankSettings, ifsc_code: e.target.value.toUpperCase() })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl font-mono uppercase text-forest-950 focus:ring-2 focus:ring-amber-500"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={bankSettings.account_number}
+                    onChange={(e) => setBankSettings({ ...bankSettings, account_number: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">IFSC Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={bankSettings.ifsc_code}
+                    onChange={(e) => setBankSettings({ ...bankSettings, ifsc_code: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-forest-800 font-semibold mb-1">Default Voucher Validity (Months)</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={60}
-                  value={bankSettings.validity_months}
-                  onChange={(e) => setBankSettings({ ...bankSettings, validity_months: Number(e.target.value) || 12 })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Configured GST Rate (%)</label>
+                  <input
+                    type="number"
+                    required
+                    value={bankSettings.gst_rate}
+                    onChange={(e) => setBankSettings({ ...bankSettings, gst_rate: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Voucher Validity (Months)</label>
+                  <input
+                    type="number"
+                    required
+                    value={bankSettings.validity_months}
+                    onChange={(e) => setBankSettings({ ...bankSettings, validity_months: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-forest-800 font-semibold mb-1">GST Rate (%) *</label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  max={28}
-                  value={bankSettings.gst_rate ?? 18}
-                  onChange={(e) => setBankSettings({ ...bankSettings, gst_rate: Number(e.target.value) })}
-                  className="w-full px-3.5 py-2.5 bg-sand-50 border border-forest-200 rounded-xl text-forest-950 focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={settingsLoading}
-                  className="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3 rounded-xl font-semibold text-xs shadow-lg transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
-                >
-                  {settingsLoading ? 'Saving Bank Settings...' : 'Save Settings'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={settingsLoading}
+                className="bg-[#062018] hover:bg-emerald-900 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md"
+              >
+                {settingsLoading ? 'Saving...' : 'Save Settings'}
+              </button>
             </form>
           </div>
         )}
