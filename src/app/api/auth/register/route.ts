@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { registerCorporateUserInDB } from '@/lib/store';
+import { hashPasswordCanonical } from '@/lib/password';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,29 +14,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    const cleanEmail = email.trim().toLowerCase();
+    const canonicalHash = hashPasswordCanonical(password);
 
     const newUser = await registerCorporateUserInDB({
       company_name,
       contact_person,
-      email,
+      email: cleanEmail,
       mobile,
-      password_hash: passwordHash,
+      password,
+      password_hash: canonicalHash,
       billing_address,
       gst_number,
     });
 
+    // Create safe response (stripping password_hash if present)
+    const safeUser = {
+      id: newUser.id,
+      email: newUser.email,
+      full_name: newUser.full_name,
+      company_id: newUser.company_id,
+      company_name: newUser.company_name,
+    };
+
     const res = NextResponse.json({
       success: true,
       message: 'Corporate HR account created successfully!',
-      user: newUser,
+      user: safeUser,
     });
 
     // Automatically set HR session cookie
     const sessionData = {
       userId: newUser.id,
       role: 'CORPORATE_HR',
-      email: newUser.email,
+      email: cleanEmail,
       companyId: newUser.company_id,
       companyName: newUser.company_name,
     };
@@ -46,6 +57,7 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax',
     });
 
     return res;

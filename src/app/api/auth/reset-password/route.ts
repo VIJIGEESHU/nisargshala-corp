@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { generatePasswordResetOTP, verifyOTPAndResetPassword } from '@/lib/store';
+import { hashPasswordCanonical } from '@/lib/password';
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const passwordHash = crypto.createHash('sha256').update(new_password).digest('hex');
-      const result = await verifyOTPAndResetPassword(email, otp_code, passwordHash);
+      const canonicalHash = hashPasswordCanonical(new_password);
+      const result = await verifyOTPAndResetPassword(email, otp_code, canonicalHash);
       return NextResponse.json(result);
     }
 
