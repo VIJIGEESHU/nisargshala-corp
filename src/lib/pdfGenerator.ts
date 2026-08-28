@@ -1,3 +1,5 @@
+import React from 'react';
+import ReactPDF, { Document, Page, View, Text, Image, StyleSheet, Font } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
 
@@ -12,6 +14,383 @@ export interface VoucherPDFData {
   eligibleExperiences: string[];
   terms: string[];
   assignedEmployee?: string;
+}
+
+try {
+  Font.register({
+    family: 'NotoSans',
+    fonts: [
+      { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf' },
+    ],
+  });
+} catch (e) {
+  console.warn('Font registration error for ReactPDF:', e);
+}
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    backgroundColor: '#F4F7F3',
+    fontFamily: 'NotoSans',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+  header: {
+    backgroundColor: '#043927',
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingLeft: 24,
+    paddingRight: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  brandTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    letterSpacing: 1.5,
+  },
+  brandSub: {
+    color: '#86EFAC',
+    fontSize: 8.5,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    marginTop: 4,
+    letterSpacing: 1.5,
+  },
+  badge: {
+    backgroundColor: '#D97706',
+    borderRadius: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+  },
+  body: {
+    padding: 24,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DCFCE7',
+    borderBottomStyle: 'dashed',
+    paddingBottom: 16,
+    marginBottom: 16,
+  },
+  productTitle: {
+    fontSize: 18,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#022C22',
+  },
+  issuedFor: {
+    fontSize: 9.5,
+    color: '#16A34A',
+    marginTop: 4,
+  },
+  companyName: {
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#022C22',
+  },
+  voucherValue: {
+    fontSize: 26,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#D97706',
+  },
+  codeBox: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#05A658',
+    borderStyle: 'dashed',
+    borderRadius: 10,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  codeLabel: {
+    fontSize: 8,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#05A658',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  secretCode: {
+    fontSize: 18,
+    fontFamily: 'Courier',
+    fontWeight: 'bold',
+    color: '#022C22',
+    letterSpacing: 3,
+  },
+  metaGrid: {
+    backgroundColor: '#FAFBF9',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  metaCol: {
+    flex: 1,
+  },
+  metaLabel: {
+    fontSize: 7.5,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#16A34A',
+    marginBottom: 2,
+  },
+  metaValue: {
+    fontSize: 10,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#022C22',
+  },
+  metaDivider: {
+    borderTopWidth: 1,
+    borderTopColor: '#DCFCE7',
+    paddingTop: 8,
+    marginTop: 2,
+  },
+  gstValue: {
+    fontSize: 9.5,
+    fontFamily: 'Courier',
+    fontWeight: 'bold',
+    color: '#022C22',
+  },
+  assignedBox: {
+    backgroundColor: '#DCFCE7',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+  },
+  assignedText: {
+    fontSize: 9.5,
+    color: '#022C22',
+  },
+  sectionTitle: {
+    fontSize: 9,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#022C22',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  list: {
+    marginBottom: 12,
+  },
+  listItem: {
+    fontSize: 9,
+    color: '#045830',
+    marginBottom: 3,
+    lineHeight: 1.4,
+  },
+  footer: {
+    backgroundColor: '#F4F7F3',
+    borderTopWidth: 1,
+    borderTopColor: '#DCFCE7',
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingLeft: 24,
+    paddingRight: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  instructions: {
+    maxWidth: 360,
+  },
+  instructionsTitle: {
+    fontSize: 9.5,
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+    color: '#045830',
+    marginBottom: 2,
+  },
+  instructionsText: {
+    fontSize: 8.5,
+    color: '#045830',
+    lineHeight: 1.4,
+  },
+  link: {
+    color: '#D97706',
+    fontFamily: 'NotoSans',
+    fontWeight: 'bold',
+  },
+  qrImg: {
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+});
+
+function createVoucherPdfElement(data: VoucherPDFData, qrCodeDataUrl: string) {
+  const formattedValue = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(data.voucherValue);
+
+  return React.createElement(
+    Document,
+    null,
+    React.createElement(
+      Page,
+      { size: 'A4', style: styles.page },
+      React.createElement(
+        View,
+        { style: styles.card },
+        // Header
+        React.createElement(
+          View,
+          { style: styles.header },
+          React.createElement(
+            View,
+            null,
+            React.createElement(Text, { style: styles.brandTitle }, 'NISARGSHALA'),
+            React.createElement(Text, { style: styles.brandSub }, 'CORPORATE EXPERIENCE GIFT VOUCHER')
+          ),
+          React.createElement(
+            View,
+            { style: styles.badge },
+            React.createElement(Text, { style: styles.badgeText }, 'Valid Gift Certificate')
+          )
+        ),
+        // Body
+        React.createElement(
+          View,
+          { style: styles.body },
+          // Title Row
+          React.createElement(
+            View,
+            { style: styles.titleRow },
+            React.createElement(
+              View,
+              null,
+              React.createElement(Text, { style: styles.productTitle }, data.productTitle),
+              React.createElement(
+                Text,
+                { style: styles.issuedFor },
+                'Issued for: ',
+                React.createElement(Text, { style: styles.companyName }, data.companyName)
+              )
+            ),
+            React.createElement(Text, { style: styles.voucherValue }, formattedValue)
+          ),
+          // Code Box
+          React.createElement(
+            View,
+            { style: styles.codeBox },
+            React.createElement(Text, { style: styles.codeLabel }, 'SECRET REDEMPTION CODE (CONFIDENTIAL)'),
+            React.createElement(Text, { style: styles.secretCode }, data.redemptionCode)
+          ),
+          // Meta Grid
+          React.createElement(
+            View,
+            { style: styles.metaGrid },
+            React.createElement(
+              View,
+              { style: styles.metaRow },
+              React.createElement(
+                View,
+                { style: styles.metaCol },
+                React.createElement(Text, { style: styles.metaLabel }, 'VOUCHER REF'),
+                React.createElement(Text, { style: styles.metaValue }, data.humanRef)
+              ),
+              React.createElement(
+                View,
+                { style: styles.metaCol },
+                React.createElement(Text, { style: styles.metaLabel }, 'ISSUE DATE'),
+                React.createElement(Text, { style: styles.metaValue }, data.issueDate)
+              ),
+              React.createElement(
+                View,
+                { style: styles.metaCol },
+                React.createElement(Text, { style: styles.metaLabel }, 'EXPIRY DATE'),
+                React.createElement(Text, { style: styles.metaValue }, data.expiryDate)
+              )
+            ),
+            React.createElement(
+              View,
+              { style: styles.metaDivider },
+              React.createElement(Text, { style: styles.metaLabel }, 'SELLER GSTIN (NISARGSHALA)'),
+              React.createElement(Text, { style: styles.gstValue }, '27ARHPV2783R1ZN')
+            )
+          ),
+          // Assigned Employee Banner
+          data.assignedEmployee
+            ? React.createElement(
+                View,
+                { style: styles.assignedBox },
+                React.createElement(
+                  Text,
+                  { style: styles.assignedText },
+                  'Assigned Recipient: ',
+                  React.createElement(Text, { style: { fontFamily: 'NotoSans', fontWeight: 'bold' } }, data.assignedEmployee)
+                )
+              )
+            : null,
+          // Eligible Experience Modules
+          React.createElement(Text, { style: styles.sectionTitle }, 'ELIGIBLE EXPERIENCE MODULES'),
+          React.createElement(
+            View,
+            { style: styles.list },
+            ...data.eligibleExperiences.map((exp, idx) =>
+              React.createElement(Text, { key: idx, style: styles.listItem }, `•  ${exp}`)
+            )
+          ),
+          // Terms & Conditions
+          React.createElement(Text, { style: styles.sectionTitle }, 'TERMS & CONDITIONS'),
+          React.createElement(
+            View,
+            { style: styles.list },
+            ...data.terms.map((t, idx) =>
+              React.createElement(Text, { key: idx, style: styles.listItem }, `•  ${t}`)
+            )
+          )
+        ),
+        // Footer
+        React.createElement(
+          View,
+          { style: styles.footer },
+          React.createElement(
+            View,
+            { style: styles.instructions },
+            React.createElement(Text, { style: styles.instructionsTitle }, 'How to Redeem:'),
+            React.createElement(
+              Text,
+              { style: styles.instructionsText },
+              'Visit the official Nisargshala retail website at ',
+              React.createElement(Text, { style: styles.link }, 'https://nisargshala.in/redeem'),
+              ', select your desired experience dates, and enter your secret code during checkout.'
+            )
+          ),
+          qrCodeDataUrl ? React.createElement(Image, { src: qrCodeDataUrl, style: styles.qrImg }) : null
+        )
+      )
+    )
+  );
 }
 
 /**
@@ -310,89 +689,25 @@ export async function generateCombinedVouchersHtml(vouchers: VoucherPDFData[]): 
 }
 
 /**
- * Generates a clean PDF binary buffer for a voucher certificate.
+ * Generates a styled vector PDF binary buffer for a voucher certificate using ReactPDF.
  */
-export function generateVoucherPdfBuffer(data: VoucherPDFData): Buffer {
-  const formattedValue = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(data.voucherValue);
-
-  const pdfText = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 595 842] /Contents 6 0 R >>
-endobj
-4 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
-endobj
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-6 0 obj
-<< /Length 850 >>
-stream
-BT
-/F1 22 Tf 50 790 Td (NISARGSHALA CORPORATE VOUCHER) Tj
-/F2 10 Tf 0 -18 Td (Official Experience Gift Certificate | Ref: ${data.humanRef}) Tj
-/F1 16 Tf 0 -35 Td (Product: ${data.productTitle.replace(/[()]/g, '')}) Tj
-/F2 12 Tf 0 -20 Td (Company: ${data.companyName.replace(/[()]/g, '')}) Tj
-/F1 18 Tf 0 -30 Td (Voucher Value: ${formattedValue.replace(/[()]/g, '')}) Tj
-/F1 14 Tf 0 -35 Td (Secret Redemption Code: ${data.redemptionCode}) Tj
-/F2 10 Tf 0 -18 Td (Issue Date: ${data.issueDate}   |   Expiry Date: ${data.expiryDate}) Tj
-/F2 10 Tf 0 -18 Td (Seller GSTIN: 27ARHPV2783R1ZN) Tj
-/F1 12 Tf 0 -35 Td (Eligible Experience Modules:) Tj
-/F2 10 Tf
-${data.eligibleExperiences.map(exp => `0 -15 Td (- ${exp.replace(/[()]/g, '')}) Tj`).join('\n')}
-0 -30 Td (Terms & Conditions:) Tj
-${data.terms.map(t => `0 -14 Td (- ${t.replace(/[()]/g, '')}) Tj`).join('\n')}
-0 -30 Td (How to Redeem: Visit https://nisargshala.in/redeem and enter code during checkout.) Tj
-ET
-endstream
-endobj
-xref
-0 7
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000245 00000 n 
-0000000320 00000 n 
-0000000390 00000 n 
-trailer
-<< /Size 7 /Root 1 0 R >>
-startxref
-1290
-%%EOF`;
-
-  return Buffer.from(pdfText);
+export async function generateVoucherPdfBuffer(data: VoucherPDFData): Promise<Buffer> {
+  const qrCodeDataUrl = await generateRedemptionQRCode();
+  const doc = createVoucherPdfElement(data, qrCodeDataUrl);
+  return await ReactPDF.renderToBuffer(doc);
 }
 
 /**
- * Creates a ZIP archive containing individual PDF and HTML vouchers for an entire order.
+ * Creates a ZIP archive containing individual PDF vouchers for an entire order.
  */
 export async function generateBulkOrderVouchersZip(vouchers: VoucherPDFData[]): Promise<Buffer> {
   const zip = new JSZip();
 
   for (const voucher of vouchers) {
-    const qrCode = await generateRedemptionQRCode();
-    const html = generateVoucherHtml(voucher, qrCode);
-    const pdfBuf = generateVoucherPdfBuffer(voucher);
-
+    const pdfBuf = await generateVoucherPdfBuffer(voucher);
     const baseName = `${voucher.humanRef}-${voucher.redemptionCode.slice(-4)}`;
     zip.file(`${baseName}.pdf`, pdfBuf);
-    zip.file(`${baseName}.html`, html);
   }
-
-  // Also include the single combined document inside the ZIP for convenience
-  const combinedHtml = await generateCombinedVouchersHtml(vouchers);
-  zip.file(`ALL_COMBINED_VOUCHERS_${vouchers.length}_UNITS.html`, combinedHtml);
 
   return await zip.generateAsync({ type: 'nodebuffer' });
 }

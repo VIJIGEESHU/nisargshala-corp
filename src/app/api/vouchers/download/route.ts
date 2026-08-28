@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDB, confirmPaymentAndGenerateVouchersInDB } from '@/lib/store';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
-import { generateVoucherHtml, generateBulkOrderVouchersZip, generateRedemptionQRCode } from '@/lib/pdfGenerator';
+import { generateVoucherHtml, generateVoucherPdfBuffer, generateBulkOrderVouchersZip, generateRedemptionQRCode } from '@/lib/pdfGenerator';
 import { LOCKED_VOUCHER_PRODUCTS } from '@/lib/pricing';
 
 export async function GET(req: NextRequest) {
@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const voucherId = searchParams.get('voucher_id');
   const orderId = searchParams.get('order_id');
   const companyId = searchParams.get('company_id');
+  const format = searchParams.get('format');
 
   try {
     let vouchers: any[] = [];
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'NOT_FOUND', message: 'No vouchers found for the requested parameters.' }, { status: 404 });
     }
 
-    // Format voucher data objects for HTML / ZIP generation
+    // Format voucher data objects for PDF / ZIP generation
     const formattedVouchers = vouchers.map((v) => {
       const pDef = LOCKED_VOUCHER_PRODUCTS[v.product_code as keyof typeof LOCKED_VOUCHER_PRODUCTS];
       return {
@@ -99,14 +100,24 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Case 1: Single Voucher HTML Document Download
-    if (vouchers.length === 1) {
+    // Case 1: Single Voucher PDF Download (or HTML if format=html requested)
+    if (vouchers.length === 1 && format === 'html') {
       const qrCode = await generateRedemptionQRCode();
       const html = generateVoucherHtml(formattedVouchers[0], qrCode);
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Disposition': `inline; filename="${formattedVouchers[0].humanRef}.html"`,
+        },
+      });
+    }
+
+    if (vouchers.length === 1) {
+      const pdfBuf = await generateVoucherPdfBuffer(formattedVouchers[0]);
+      return new NextResponse(new Uint8Array(pdfBuf), {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${formattedVouchers[0].humanRef}.pdf"`,
         },
       });
     }
