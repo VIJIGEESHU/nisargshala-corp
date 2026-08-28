@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactPDF, { Document, Page, View, Text, Image, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, StyleSheet, Font, renderToBuffer, pdf } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
 
@@ -688,13 +688,23 @@ export async function generateCombinedVouchersHtml(vouchers: VoucherPDFData[]): 
   `;
 }
 
+async function safeRenderToBuffer(doc: React.ReactElement): Promise<Buffer> {
+  if (typeof renderToBuffer === 'function') {
+    return await renderToBuffer(doc);
+  }
+  if (typeof pdf === 'function') {
+    return await pdf(doc).toBuffer();
+  }
+  throw new Error('PDF rendering engine unavailable');
+}
+
 /**
  * Generates a styled vector PDF binary buffer for a voucher certificate using ReactPDF.
  */
 export async function generateVoucherPdfBuffer(data: VoucherPDFData): Promise<Buffer> {
   const qrCodeDataUrl = await generateRedemptionQRCode();
   const doc = createVoucherPdfElement(data, qrCodeDataUrl);
-  return await ReactPDF.renderToBuffer(doc);
+  return await safeRenderToBuffer(doc);
 }
 
 /**
