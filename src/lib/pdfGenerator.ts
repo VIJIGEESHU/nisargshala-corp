@@ -688,12 +688,14 @@ export async function generateCombinedVouchersHtml(vouchers: VoucherPDFData[]): 
   `;
 }
 
-async function safeRenderToBuffer(doc: React.ReactElement): Promise<Buffer> {
+async function safeRenderToBuffer(doc: any): Promise<Buffer> {
   if (typeof renderToBuffer === 'function') {
-    return await renderToBuffer(doc);
+    const res = await renderToBuffer(doc);
+    return res as unknown as Buffer;
   }
   if (typeof pdf === 'function') {
-    return await pdf(doc).toBuffer();
+    const res = await pdf(doc).toBuffer();
+    return res as unknown as Buffer;
   }
   throw new Error('PDF rendering engine unavailable');
 }
