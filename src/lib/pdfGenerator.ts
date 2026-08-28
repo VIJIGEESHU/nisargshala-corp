@@ -1,5 +1,4 @@
-import React from 'react';
-import { Document, Page, View, Text, Image, StyleSheet, Font, renderToBuffer, pdf } from '@react-pdf/renderer';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
 
@@ -14,383 +13,6 @@ export interface VoucherPDFData {
   eligibleExperiences: string[];
   terms: string[];
   assignedEmployee?: string;
-}
-
-try {
-  Font.register({
-    family: 'NotoSans',
-    fonts: [
-      { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf' },
-    ],
-  });
-} catch (e) {
-  console.warn('Font registration error for ReactPDF:', e);
-}
-
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    backgroundColor: '#F4F7F3',
-    fontFamily: 'NotoSans',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-  header: {
-    backgroundColor: '#043927',
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingLeft: 24,
-    paddingRight: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  brandTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    letterSpacing: 1.5,
-  },
-  brandSub: {
-    color: '#86EFAC',
-    fontSize: 8.5,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    marginTop: 4,
-    letterSpacing: 1.5,
-  },
-  badge: {
-    backgroundColor: '#D97706',
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-  },
-  body: {
-    padding: 24,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    borderBottomWidth: 1,
-    borderBottomColor: '#DCFCE7',
-    borderBottomStyle: 'dashed',
-    paddingBottom: 16,
-    marginBottom: 16,
-  },
-  productTitle: {
-    fontSize: 18,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#022C22',
-  },
-  issuedFor: {
-    fontSize: 9.5,
-    color: '#16A34A',
-    marginTop: 4,
-  },
-  companyName: {
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#022C22',
-  },
-  voucherValue: {
-    fontSize: 26,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#D97706',
-  },
-  codeBox: {
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1.5,
-    borderColor: '#05A658',
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  codeLabel: {
-    fontSize: 8,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#05A658',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  secretCode: {
-    fontSize: 18,
-    fontFamily: 'Courier',
-    fontWeight: 'bold',
-    color: '#022C22',
-    letterSpacing: 3,
-  },
-  metaGrid: {
-    backgroundColor: '#FAFBF9',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  metaCol: {
-    flex: 1,
-  },
-  metaLabel: {
-    fontSize: 7.5,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#16A34A',
-    marginBottom: 2,
-  },
-  metaValue: {
-    fontSize: 10,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#022C22',
-  },
-  metaDivider: {
-    borderTopWidth: 1,
-    borderTopColor: '#DCFCE7',
-    paddingTop: 8,
-    marginTop: 2,
-  },
-  gstValue: {
-    fontSize: 9.5,
-    fontFamily: 'Courier',
-    fontWeight: 'bold',
-    color: '#022C22',
-  },
-  assignedBox: {
-    backgroundColor: '#DCFCE7',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 16,
-  },
-  assignedText: {
-    fontSize: 9.5,
-    color: '#022C22',
-  },
-  sectionTitle: {
-    fontSize: 9,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#022C22',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: 4,
-  },
-  list: {
-    marginBottom: 12,
-  },
-  listItem: {
-    fontSize: 9,
-    color: '#045830',
-    marginBottom: 3,
-    lineHeight: 1.4,
-  },
-  footer: {
-    backgroundColor: '#F4F7F3',
-    borderTopWidth: 1,
-    borderTopColor: '#DCFCE7',
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingLeft: 24,
-    paddingRight: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  instructions: {
-    maxWidth: 360,
-  },
-  instructionsTitle: {
-    fontSize: 9.5,
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-    color: '#045830',
-    marginBottom: 2,
-  },
-  instructionsText: {
-    fontSize: 8.5,
-    color: '#045830',
-    lineHeight: 1.4,
-  },
-  link: {
-    color: '#D97706',
-    fontFamily: 'NotoSans',
-    fontWeight: 'bold',
-  },
-  qrImg: {
-    width: 64,
-    height: 64,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-});
-
-function createVoucherPdfElement(data: VoucherPDFData, qrCodeDataUrl: string) {
-  const formattedValue = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(data.voucherValue);
-
-  return React.createElement(
-    Document,
-    null,
-    React.createElement(
-      Page,
-      { size: 'A4', style: styles.page },
-      React.createElement(
-        View,
-        { style: styles.card },
-        // Header
-        React.createElement(
-          View,
-          { style: styles.header },
-          React.createElement(
-            View,
-            null,
-            React.createElement(Text, { style: styles.brandTitle }, 'NISARGSHALA'),
-            React.createElement(Text, { style: styles.brandSub }, 'CORPORATE EXPERIENCE GIFT VOUCHER')
-          ),
-          React.createElement(
-            View,
-            { style: styles.badge },
-            React.createElement(Text, { style: styles.badgeText }, 'Valid Gift Certificate')
-          )
-        ),
-        // Body
-        React.createElement(
-          View,
-          { style: styles.body },
-          // Title Row
-          React.createElement(
-            View,
-            { style: styles.titleRow },
-            React.createElement(
-              View,
-              null,
-              React.createElement(Text, { style: styles.productTitle }, data.productTitle),
-              React.createElement(
-                Text,
-                { style: styles.issuedFor },
-                'Issued for: ',
-                React.createElement(Text, { style: styles.companyName }, data.companyName)
-              )
-            ),
-            React.createElement(Text, { style: styles.voucherValue }, formattedValue)
-          ),
-          // Code Box
-          React.createElement(
-            View,
-            { style: styles.codeBox },
-            React.createElement(Text, { style: styles.codeLabel }, 'SECRET REDEMPTION CODE (CONFIDENTIAL)'),
-            React.createElement(Text, { style: styles.secretCode }, data.redemptionCode)
-          ),
-          // Meta Grid
-          React.createElement(
-            View,
-            { style: styles.metaGrid },
-            React.createElement(
-              View,
-              { style: styles.metaRow },
-              React.createElement(
-                View,
-                { style: styles.metaCol },
-                React.createElement(Text, { style: styles.metaLabel }, 'VOUCHER REF'),
-                React.createElement(Text, { style: styles.metaValue }, data.humanRef)
-              ),
-              React.createElement(
-                View,
-                { style: styles.metaCol },
-                React.createElement(Text, { style: styles.metaLabel }, 'ISSUE DATE'),
-                React.createElement(Text, { style: styles.metaValue }, data.issueDate)
-              ),
-              React.createElement(
-                View,
-                { style: styles.metaCol },
-                React.createElement(Text, { style: styles.metaLabel }, 'EXPIRY DATE'),
-                React.createElement(Text, { style: styles.metaValue }, data.expiryDate)
-              )
-            ),
-            React.createElement(
-              View,
-              { style: styles.metaDivider },
-              React.createElement(Text, { style: styles.metaLabel }, 'SELLER GSTIN (NISARGSHALA)'),
-              React.createElement(Text, { style: styles.gstValue }, '27ARHPV2783R1ZN')
-            )
-          ),
-          // Assigned Employee Banner
-          data.assignedEmployee
-            ? React.createElement(
-                View,
-                { style: styles.assignedBox },
-                React.createElement(
-                  Text,
-                  { style: styles.assignedText },
-                  'Assigned Recipient: ',
-                  React.createElement(Text, { style: { fontFamily: 'NotoSans', fontWeight: 'bold' } }, data.assignedEmployee)
-                )
-              )
-            : null,
-          // Eligible Experience Modules
-          React.createElement(Text, { style: styles.sectionTitle }, 'ELIGIBLE EXPERIENCE MODULES'),
-          React.createElement(
-            View,
-            { style: styles.list },
-            ...data.eligibleExperiences.map((exp, idx) =>
-              React.createElement(Text, { key: idx, style: styles.listItem }, `•  ${exp}`)
-            )
-          ),
-          // Terms & Conditions
-          React.createElement(Text, { style: styles.sectionTitle }, 'TERMS & CONDITIONS'),
-          React.createElement(
-            View,
-            { style: styles.list },
-            ...data.terms.map((t, idx) =>
-              React.createElement(Text, { key: idx, style: styles.listItem }, `•  ${t}`)
-            )
-          )
-        ),
-        // Footer
-        React.createElement(
-          View,
-          { style: styles.footer },
-          React.createElement(
-            View,
-            { style: styles.instructions },
-            React.createElement(Text, { style: styles.instructionsTitle }, 'How to Redeem:'),
-            React.createElement(
-              Text,
-              { style: styles.instructionsText },
-              'Visit the official Nisargshala retail website at ',
-              React.createElement(Text, { style: styles.link }, 'https://nisargshala.in/redeem'),
-              ', select your desired experience dates, and enter your secret code during checkout.'
-            )
-          ),
-          qrCodeDataUrl ? React.createElement(Image, { src: qrCodeDataUrl, style: styles.qrImg }) : null
-        )
-      )
-    )
-  );
 }
 
 /**
@@ -688,25 +310,327 @@ export async function generateCombinedVouchersHtml(vouchers: VoucherPDFData[]): 
   `;
 }
 
-async function safeRenderToBuffer(doc: any): Promise<Buffer> {
-  if (typeof renderToBuffer === 'function') {
-    const res = await renderToBuffer(doc);
-    return res as unknown as Buffer;
-  }
-  if (typeof pdf === 'function') {
-    const res = await pdf(doc).toBuffer();
-    return res as unknown as Buffer;
-  }
-  throw new Error('PDF rendering engine unavailable');
-}
-
 /**
- * Generates a styled vector PDF binary buffer for a voucher certificate using ReactPDF.
+ * Generates a styled vector PDF binary buffer for a voucher certificate using pdf-lib (zero filesystem/node_modules asset dependencies).
  */
 export async function generateVoucherPdfBuffer(data: VoucherPDFData): Promise<Buffer> {
-  const qrCodeDataUrl = await generateRedemptionQRCode();
-  const doc = createVoucherPdfElement(data, qrCodeDataUrl);
-  return await safeRenderToBuffer(doc);
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4 Page
+
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontMono = await pdfDoc.embedFont(StandardFonts.CourierBold);
+
+  // Generate QR Code PNG Buffer
+  const redemptionUrl = 'https://nisargshala.in/redeem';
+  const qrBuffer = await QRCode.toBuffer(redemptionUrl, {
+    margin: 1,
+    width: 200,
+    color: { dark: '#05A658', light: '#FFFFFF' },
+  });
+  const qrImage = await pdfDoc.embedPng(qrBuffer);
+
+  const formattedValue = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(data.voucherValue);
+
+  const priceString = formattedValue.replace('₹', 'Rs. ').trim();
+
+  // 1. Outer Card Background
+  page.drawRectangle({
+    x: 40,
+    y: 50,
+    width: 515,
+    height: 740,
+    color: rgb(1, 1, 1),
+    borderColor: rgb(0.86, 0.99, 0.91),
+    borderWidth: 1.5,
+  });
+
+  // 2. Header Banner
+  page.drawRectangle({
+    x: 40,
+    y: 715,
+    width: 515,
+    height: 75,
+    color: rgb(0.015, 0.22, 0.15), // #043927
+  });
+
+  // Header Brand Title
+  page.drawText('NISARGSHALA', {
+    x: 64,
+    y: 754,
+    size: 20,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  // Header Subtitle
+  page.drawText('CORPORATE EXPERIENCE GIFT VOUCHER', {
+    x: 64,
+    y: 736,
+    size: 8.5,
+    font: fontBold,
+    color: rgb(0.525, 0.937, 0.675), // #86EFAC
+  });
+
+  // Badge "Valid Gift Certificate"
+  page.drawRectangle({
+    x: 385,
+    y: 740,
+    width: 145,
+    height: 24,
+    color: rgb(0.85, 0.46, 0.02), // #D97706
+  });
+
+  page.drawText('Valid Gift Certificate', {
+    x: 397,
+    y: 748,
+    size: 9,
+    font: fontBold,
+    color: rgb(1, 1, 1),
+  });
+
+  // 3. Title & Value Row
+  page.drawText(data.productTitle, {
+    x: 64,
+    y: 672,
+    size: 18,
+    font: fontBold,
+    color: rgb(0.01, 0.17, 0.13), // #022C22
+  });
+
+  page.drawText('Issued for: ', {
+    x: 64,
+    y: 654,
+    size: 9.5,
+    font: fontRegular,
+    color: rgb(0.08, 0.64, 0.29), // #16A34A
+  });
+
+  const issuedForWidth = fontRegular.widthOfTextAtSize('Issued for: ', 9.5);
+  page.drawText(data.companyName, {
+    x: 64 + issuedForWidth,
+    y: 654,
+    size: 9.5,
+    font: fontBold,
+    color: rgb(0.01, 0.17, 0.13),
+  });
+
+  // Voucher Value
+  const priceWidth = fontBold.widthOfTextAtSize(priceString, 26);
+  page.drawText(priceString, {
+    x: 555 - priceWidth,
+    y: 666,
+    size: 26,
+    font: fontBold,
+    color: rgb(0.85, 0.46, 0.02), // #D97706
+  });
+
+  // Dashed divider line
+  page.drawLine({
+    start: { x: 64, y: 640 },
+    end: { x: 531, y: 640 },
+    color: rgb(0.86, 0.99, 0.91),
+    thickness: 1.5,
+    dashArray: [4, 4],
+  });
+
+  // 4. Secret Code Box
+  page.drawRectangle({
+    x: 64,
+    y: 555,
+    width: 467,
+    height: 70,
+    color: rgb(0.94, 0.99, 0.96), // #F0FDF4
+    borderColor: rgb(0.02, 0.65, 0.35), // #05A658
+    borderWidth: 1.5,
+    borderDashArray: [4, 4],
+  });
+
+  const codeLabelText = 'SECRET REDEMPTION CODE (CONFIDENTIAL)';
+  const codeLabelWidth = fontBold.widthOfTextAtSize(codeLabelText, 8);
+  page.drawText(codeLabelText, {
+    x: 64 + (467 - codeLabelWidth) / 2,
+    y: 604,
+    size: 8,
+    font: fontBold,
+    color: rgb(0.02, 0.65, 0.35),
+  });
+
+  const codeText = data.redemptionCode;
+  const codeWidth = fontMono.widthOfTextAtSize(codeText, 18);
+  page.drawText(codeText, {
+    x: 64 + (467 - codeWidth) / 2,
+    y: 574,
+    size: 18,
+    font: fontMono,
+    color: rgb(0.01, 0.17, 0.13),
+  });
+
+  // 5. Meta Grid Box
+  page.drawRectangle({
+    x: 64,
+    y: 445,
+    width: 467,
+    height: 95,
+    color: rgb(0.98, 0.98, 0.97), // #FAFBF9
+    borderColor: rgb(0.9, 0.9, 0.9),
+    borderWidth: 0.5,
+  });
+
+  // Col 1: Voucher Ref
+  page.drawText('VOUCHER REF', { x: 80, y: 520, size: 7.5, font: fontBold, color: rgb(0.08, 0.64, 0.29) });
+  page.drawText(data.humanRef, { x: 80, y: 505, size: 10, font: fontBold, color: rgb(0.01, 0.17, 0.13) });
+
+  // Col 2: Issue Date
+  page.drawText('ISSUE DATE', { x: 230, y: 520, size: 7.5, font: fontBold, color: rgb(0.08, 0.64, 0.29) });
+  page.drawText(data.issueDate, { x: 230, y: 505, size: 10, font: fontBold, color: rgb(0.01, 0.17, 0.13) });
+
+  // Col 3: Expiry Date
+  page.drawText('EXPIRY DATE', { x: 380, y: 520, size: 7.5, font: fontBold, color: rgb(0.08, 0.64, 0.29) });
+  page.drawText(data.expiryDate, { x: 380, y: 505, size: 10, font: fontBold, color: rgb(0.01, 0.17, 0.13) });
+
+  // Meta Grid Divider
+  page.drawLine({
+    start: { x: 80, y: 492 },
+    end: { x: 515, y: 492 },
+    color: rgb(0.86, 0.99, 0.91),
+    thickness: 1,
+  });
+
+  // Bottom Row: Seller GSTIN
+  page.drawText('SELLER GSTIN (NISARGSHALA)', { x: 80, y: 476, size: 7.5, font: fontBold, color: rgb(0.08, 0.64, 0.29) });
+  page.drawText('27ARHPV2783R1ZN', { x: 80, y: 461, size: 9.5, font: fontMono, color: rgb(0.01, 0.17, 0.13) });
+
+  // 6. Assigned Recipient (if applicable)
+  let currentY = 415;
+  if (data.assignedEmployee) {
+    page.drawRectangle({
+      x: 64,
+      y: 410,
+      width: 467,
+      height: 24,
+      color: rgb(0.86, 0.99, 0.91), // #DCFCE7
+    });
+    page.drawText(`Assigned Recipient: ${data.assignedEmployee}`, {
+      x: 74,
+      y: 418,
+      size: 9.5,
+      font: fontBold,
+      color: rgb(0.01, 0.17, 0.13),
+    });
+    currentY -= 35;
+  }
+
+  // 7. Eligible Experiences Section
+  page.drawText('ELIGIBLE EXPERIENCE MODULES', {
+    x: 64,
+    y: currentY,
+    size: 9,
+    font: fontBold,
+    color: rgb(0.01, 0.17, 0.13),
+  });
+
+  currentY -= 16;
+  for (const exp of data.eligibleExperiences) {
+    page.drawText(`•  ${exp}`, {
+      x: 72,
+      y: currentY,
+      size: 9,
+      font: fontRegular,
+      color: rgb(0.02, 0.35, 0.19),
+    });
+    currentY -= 14;
+  }
+
+  // 8. Terms & Conditions Section
+  currentY -= 8;
+  page.drawText('TERMS & CONDITIONS', {
+    x: 64,
+    y: currentY,
+    size: 9,
+    font: fontBold,
+    color: rgb(0.01, 0.17, 0.13),
+  });
+
+  currentY -= 16;
+  for (const t of data.terms) {
+    page.drawText(`•  ${t}`, {
+      x: 72,
+      y: currentY,
+      size: 8.5,
+      font: fontRegular,
+      color: rgb(0.02, 0.35, 0.19),
+    });
+    currentY -= 14;
+  }
+
+  // 9. Footer Section
+  page.drawRectangle({
+    x: 40,
+    y: 50,
+    width: 515,
+    height: 75,
+    color: rgb(0.95, 0.97, 0.95), // #F4F7F3
+    borderColor: rgb(0.86, 0.99, 0.91),
+    borderWidth: 1,
+  });
+
+  page.drawText('How to Redeem:', {
+    x: 64,
+    y: 104,
+    size: 9.5,
+    font: fontBold,
+    color: rgb(0.02, 0.35, 0.19),
+  });
+
+  page.drawText('Visit the official Nisargshala retail website at ', {
+    x: 64,
+    y: 88,
+    size: 8.5,
+    font: fontRegular,
+    color: rgb(0.02, 0.35, 0.19),
+  });
+
+  const part1Width = fontRegular.widthOfTextAtSize('Visit the official Nisargshala retail website at ', 8.5);
+  page.drawText('https://nisargshala.in/redeem', {
+    x: 64 + part1Width,
+    y: 88,
+    size: 8.5,
+    font: fontBold,
+    color: rgb(0.85, 0.46, 0.02),
+  });
+
+  const part2Width = fontBold.widthOfTextAtSize('https://nisargshala.in/redeem', 8.5);
+  page.drawText(', select your', {
+    x: 64 + part1Width + part2Width,
+    y: 88,
+    size: 8.5,
+    font: fontRegular,
+    color: rgb(0.02, 0.35, 0.19),
+  });
+
+  page.drawText('desired experience dates, and enter your secret code during checkout.', {
+    x: 64,
+    y: 74,
+    size: 8.5,
+    font: fontRegular,
+    color: rgb(0.02, 0.35, 0.19),
+  });
+
+  // QR Code Image on Right
+  page.drawImage(qrImage, {
+    x: 470,
+    y: 55,
+    width: 64,
+    height: 64,
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
 }
 
 /**
