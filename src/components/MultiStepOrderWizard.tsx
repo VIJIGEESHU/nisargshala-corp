@@ -187,10 +187,10 @@ export default function MultiStepOrderWizard() {
   const company = session?.company;
 
   return (
-    <div id="order-wizard" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div id="order-wizard" className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6">
       {/* STEP INDICATOR HEADER */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
           {[
             { num: 1, title: 'Choose Vouchers' },
             { num: 2, title: 'Company Details' },
@@ -200,19 +200,19 @@ export default function MultiStepOrderWizard() {
             <div key={s.num} className="flex items-center">
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                  className={`w-9 h-9 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
                     step === s.num
-                      ? 'bg-amber-600 text-white ring-4 ring-amber-100 shadow-md'
+                      ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-100 shadow-md font-bold'
                       : step > s.num
-                      ? 'bg-forest-800 text-white'
-                      : 'bg-sand-200 text-forest-600'
+                      ? 'bg-[#052219] text-amber-400'
+                      : 'bg-slate-200 text-slate-500'
                   }`}
                 >
-                  {step > s.num ? <CheckCircle2 className="w-5 h-5" /> : `0${s.num}`}
+                  {step > s.num ? <CheckCircle2 className="w-4 h-4" /> : `0${s.num}`}
                 </div>
                 <span
-                  className={`text-[11px] font-semibold mt-2 hidden sm:block ${
-                    step === s.num ? 'text-forest-900 font-bold' : 'text-forest-500'
+                  className={`text-[10px] font-bold mt-1.5 hidden sm:block ${
+                    step === s.num ? 'text-[#052219]' : 'text-slate-500'
                   }`}
                 >
                   {s.title}
@@ -220,8 +220,8 @@ export default function MultiStepOrderWizard() {
               </div>
               {idx < 3 && (
                 <div
-                  className={`h-0.5 w-12 sm:w-24 mx-2 sm:mx-4 transition-all ${
-                    step > s.num ? 'bg-forest-800' : 'bg-sand-300'
+                  className={`h-0.5 w-10 sm:w-16 mx-2 sm:mx-3 transition-all ${
+                    step > s.num ? 'bg-[#052219]' : 'bg-slate-300'
                   }`}
                 />
               )}
@@ -248,10 +248,10 @@ export default function MultiStepOrderWizard() {
             transition={{ duration: 0.3 }}
           >
             <div className="text-center max-w-2xl mx-auto mb-6">
-              <h2 className="font-serif text-3xl font-bold text-forest-900">
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#052219]">
                 01. Choose Your Corporate Experience Products
               </h2>
-              <p className="text-xs text-forest-600 mt-2">
+              <p className="text-xs text-slate-500 mt-1">
                 Select quantities for your team members. Vouchers carry 12 months validity from payment date.
               </p>
             </div>
@@ -261,20 +261,27 @@ export default function MultiStepOrderWizard() {
               onQuantityChange={handleQuantityChange}
             />
 
-            {/* STICKY BOTTOM ORDER SUMMARY */}
-            <div className="sticky bottom-4 z-40 bg-forest-900/95 backdrop-blur-md text-white p-5 rounded-2xl shadow-2xl border border-forest-700 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-4xl mx-auto mt-8">
-              <div className="flex items-center space-x-6">
+            {/* INTEGRATED CLEAN ORDER SUMMARY CARD */}
+            <div className="bg-[#052219] text-white p-6 sm:p-7 rounded-2xl shadow-xl border border-emerald-800/70 max-w-4xl mx-auto mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-wrap items-center gap-6 sm:gap-8 w-full md:w-auto justify-between md:justify-start">
                 <div>
-                  <span className="text-[10px] text-forest-300 uppercase tracking-widest block font-semibold">Total Selected Vouchers</span>
-                  <span className="font-serif text-2xl font-bold text-amber-400">
+                  <span className="text-[10px] text-emerald-300 uppercase tracking-widest block font-bold">Total Vouchers</span>
+                  <span className="font-serif text-xl sm:text-2xl font-bold text-amber-400">
                     {totals.breakdown.reduce((acc, curr) => acc + curr.count, 0)} Units
                   </span>
                 </div>
-                <div className="h-8 w-px bg-forest-700 hidden sm:block" />
+                <div className="h-8 w-px bg-emerald-800 hidden sm:block" />
                 <div>
-                  <span className="text-[10px] text-forest-300 uppercase tracking-widest block font-semibold">Order Subtotal</span>
-                  <span className="font-serif text-2xl font-bold text-sand-50">
+                  <span className="text-[10px] text-emerald-300 uppercase tracking-widest block font-bold">Base Subtotal</span>
+                  <span className="font-serif text-xl sm:text-2xl font-bold text-white">
                     ₹{totals.subtotal.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-emerald-800 hidden sm:block" />
+                <div>
+                  <span className="text-[10px] text-emerald-300 uppercase tracking-widest block font-bold">Est. Total (incl 18% GST)</span>
+                  <span className="font-serif text-xl sm:text-2xl font-bold text-amber-300">
+                    ₹{totals.total.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -282,7 +289,7 @@ export default function MultiStepOrderWizard() {
               <button
                 onClick={handleProceedToStep2}
                 disabled={totals.total <= 0}
-                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white px-8 py-3.5 rounded-xl font-semibold text-xs shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full md:w-auto bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 px-8 py-3.5 rounded-full font-bold text-xs shadow-lg hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0 transform hover:-translate-y-0.5"
               >
                 Proceed to Company Details
                 <ArrowRight className="w-4 h-4" />

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Outfit, Libre_Caslon_Text, Hanken_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 
@@ -12,6 +12,19 @@ const inter = Inter({
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
+  display: 'swap',
+});
+
+const caslon = Libre_Caslon_Text({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-caslon',
+  display: 'swap',
+});
+
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-hanken',
   display: 'swap',
 });
 
@@ -53,13 +66,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${inter.variable} ${outfit.variable} ${caslon.variable} ${hanken.variable}`}>
       <head>
         <link rel="icon" href="/images/nisargshala-logo.png?v=2" type="image/png" sizes="any" />
         <link rel="shortcut icon" href="/images/nisargshala-logo.png?v=2" type="image/png" />
         <link rel="apple-touch-icon" href="/images/nisargshala-logo.png?v=2" />
       </head>
-      <body className="bg-sand-50 text-forest-900 antialiased selection:bg-amber-100 selection:text-amber-700">
+      <body className="bg-[#F9FAF7] text-[#1A1C1B] antialiased selection:bg-amber-100 selection:text-amber-800">
         {/* Google tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-QF48HQHMRG"
