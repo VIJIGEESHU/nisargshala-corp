@@ -28,116 +28,115 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
 
+  const logoUrl = 'https://corp.nisargshala.in/images/nisargshala-logo.png';
+
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Tax Invoice - ${data.invoiceNumber}</title>
+  <title>Invoice - ${data.invoiceNumber}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body {
-      font-family: 'Inter', Arial, sans-serif;
-      color: #1c1c19;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #000000;
       background: #ffffff;
       margin: 0;
-      padding: 40px;
+      padding: 50px 45px;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.45;
     }
     .invoice-container {
-      max-w: 800px;
+      max-width: 760px;
       margin: 0 auto;
     }
     .header-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     .logo-box img {
-      height: 70px;
+      height: 90px;
       width: auto;
       object-fit: contain;
     }
     .invoice-title {
-      font-size: 32px;
+      font-size: 38px;
       font-weight: 700;
       color: #000000;
       margin: 0;
       text-align: right;
-    }
-    .invoice-num {
-      font-size: 14px;
-      color: #555555;
-      margin-top: 4px;
-      text-align: right;
+      letter-spacing: -0.5px;
     }
     .address-section {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     .address-block {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.45;
     }
     .address-block strong {
-      font-size: 15px;
-      color: #000000;
+      font-weight: 600;
     }
     .address-line {
-      margin-top: 2px;
-      color: #333333;
+      margin-top: 1px;
+      color: #000000;
     }
     .table-container {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      border: 1px solid #cccccc;
+      border: 1px solid #d1d5db;
     }
     th {
-      background-color: #f9f9f9;
-      border: 1px solid #cccccc;
-      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      padding: 8px 12px;
       text-align: left;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      color: #333333;
+      color: #000000;
+      background-color: #ffffff;
     }
     td {
-      border: 1px solid #cccccc;
-      padding: 12px;
-      color: #333333;
+      border: 1px solid #d1d5db;
+      padding: 10px 12px;
+      color: #000000;
+      font-size: 13px;
     }
     .summary-section {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      line-height: 1.5;
     }
     .summary-line {
-      font-size: 15px;
-      margin-bottom: 4px;
-    }
-    .summary-line strong {
+      font-weight: 600;
+      margin-bottom: 3px;
       color: #000000;
     }
     .total-due {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
-      margin-top: 8px;
+      margin-top: 5px;
       color: #000000;
     }
     .payment-box {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eeeeee;
+      margin-top: 25px;
+      font-size: 14px;
+      line-height: 1.45;
     }
     .payment-box strong {
-      font-size: 15px;
+      font-weight: 700;
       color: #000000;
     }
     .footer-note {
-      margin-top: 40px;
-      font-weight: 600;
-      color: #333333;
+      margin-top: 45px;
+      font-weight: 700;
+      color: #000000;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -146,32 +145,31 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
     <!-- Header -->
     <div class="header-row">
       <div class="logo-box">
-        <img src="https://lh3.googleusercontent.com/aida/AEtjO1Wo5cE3j5ldDaBxn7DbRwf_3dx_qN03Uhtod9ib84Bqqa7jj-hRdQn-iKqgO19CwqxF0GD9_ZaVNpgSPnBijEAW5xXpvwmyGt6T211W9GB8Xx4mPb-FKpew9BpU4ryU-fQNY-Aqklf7RWKruJldUpEhlKwjOT0HQKvUo3xTyFtavOxCg9SxnardMxlI5VEYGoU1d_Rajw-N9Fp6I9FnjYO96HoITrd6I6I-cWf_YN-aYWaxznqXsUTnoEA" alt="Nisargshala Logo" />
+        <img src="${logoUrl}" alt="Nisargshala Logo" />
       </div>
       <div>
         <h1 class="invoice-title">Invoice</h1>
-        <div class="invoice-num">No: ${data.invoiceNumber}</div>
       </div>
     </div>
 
-    <!-- Seller & Buyer Address -->
+    <!-- From & To Section -->
     <div class="address-section">
       <div class="address-block">
-        <strong>From:</strong><br/>
+        <div><strong>From:</strong></div>
         <div class="address-line">Nisargshala</div>
         <div class="address-line">89, Babuji Bungalow,</div>
         <div class="address-line">Pune - 412115</div>
         <div class="address-line">Email: hemantvavale@gmail.com</div>
-        <div class="address-line">Gst No. <strong>27ARHPV2783R1ZN</strong></div>
+        <div class="address-line">Gst No. 27ARHPV2783R1ZN</div>
       </div>
 
       <div class="address-block">
-        <strong>To:</strong><br/>
-        <div class="address-line"><strong>${data.companyName}</strong> (GST no : <strong>${data.buyerGstin}</strong>)</div>
-        <div class="address-line">Attn: ${data.contactPerson}</div>
-        <div class="address-line">${data.billingAddress || 'Corporate Headquarters'}</div>
-        <div class="address-line"><strong>Date Issued:</strong> ${data.invoiceDate}</div>
-        <div class="address-line"><strong>Due Date:</strong> ${data.dueDate}</div>
+        <div><strong>To:</strong></div>
+        <div class="address-line">${data.companyName} (GST no : ${data.buyerGstin || 'Unregistered'})</div>
+        <div class="address-line">Attn: ${data.contactPerson || 'Finance / HR'}</div>
+        <div class="address-line">${data.billingAddress || 'Maharashtra, India'}</div>
+        <div class="address-line">Date Issued: ${data.invoiceDate}</div>
+        <div class="address-line">Due Date: ${data.dueDate}</div>
       </div>
     </div>
 
@@ -180,19 +178,19 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
       <table>
         <thead>
           <tr>
-            <th style="width: 50%;">Description</th>
-            <th style="width: 15%; text-align: center;">Quantity</th>
-            <th style="width: 17.5%; text-align: right;">Unit Price (INR)</th>
-            <th style="width: 17.5%; text-align: right;">Total (INR)</th>
+            <th style="width: 52%;">Description</th>
+            <th style="width: 14%;">Quantity</th>
+            <th style="width: 17%;">Unit Price (INR)</th>
+            <th style="width: 17%;">Total (INR)</th>
           </tr>
         </thead>
         <tbody>
           ${data.items.map(item => `
             <tr>
               <td>${item.description}</td>
-              <td style="text-align: center;">${item.quantity}</td>
-              <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
-              <td style="text-align: right;">${formatCurrency(item.totalPrice)}</td>
+              <td>${item.quantity}</td>
+              <td>${formatCurrency(item.unitPrice)}</td>
+              <td>${formatCurrency(item.totalPrice)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -201,20 +199,20 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
 
     <!-- Totals Summary -->
     <div class="summary-section">
-      <div class="summary-line"><strong>Subtotal:</strong> ${formatCurrency(data.subtotal)}</div>
-      <div class="summary-line"><strong>Tax (${data.gstRate}%):</strong> ${formatCurrency(data.gstAmount)}</div>
-      <div class="summary-line"><strong>Total:</strong> ${formatCurrency(data.totalAmount)}</div>
-      ${data.advanceReceived > 0 ? `<div class="summary-line"><strong>Less: Advance Payment Received:</strong> ${formatCurrency(data.advanceReceived)}</div>` : ''}
-      <div class="total-due"><strong>Total Due:</strong> ${formatCurrency(data.totalDue)}/-</div>
+      <div class="summary-line">Subtotal:${formatCurrency(data.subtotal)}</div>
+      <div class="summary-line">Tax (${data.gstRate}%): ${formatCurrency(data.gstAmount)}</div>
+      <div class="summary-line">Total: ${formatCurrency(data.totalAmount)}</div>
+      ${data.advanceReceived > 0 ? `<div class="summary-line">Less: Advance Payment Received: ${formatCurrency(data.advanceReceived)}</div>` : ''}
+      <div class="total-due">Total Due: ${formatCurrency(data.totalDue)}/-</div>
     </div>
 
     <!-- Payment Instructions -->
     <div class="payment-box">
-      <strong>Payment Instructions:</strong><br/>
+      <div><strong>Payment Instructions:</strong></div>
       <div class="address-line">Bank Name: HDFC Bank</div>
       <div class="address-line">Account Name: NISARGSHALA</div>
       <div class="address-line">IFSC: HDFC0002493</div>
-      <div class="address-line">Account Number: 5020097103825</div>
+      <div class="address-line">Account Number: 50200097103825</div>
       <div class="address-line">Reference: ${data.referenceNumber}</div>
     </div>
 

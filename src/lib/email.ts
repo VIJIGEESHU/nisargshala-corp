@@ -37,9 +37,14 @@ export async function sendOTPEmail(params: { to: string; otp: string }) {
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e1e8e3; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
         <!-- Header -->
         <tr>
-          <td style="background-color: #05A658; padding: 30px; text-align: center;">
-            <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Nisargshala</h1>
-            <p style="color: #e0f5ea; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Corporate Experience Vouchers</p>
+          <td style="padding: 20px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e1e8e3;">
+            <img src="https://corp.nisargshala.in/images/nisargshala-logo.png" alt="Nisargshala Logo" style="height: 60px; width: auto; object-fit: contain;" />
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #062018; padding: 24px; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 20px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Corporate Gateway Security</h1>
+            <p style="color: #a5f4bc; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Verification Code</p>
           </td>
         </tr>
         <!-- Content -->
@@ -172,9 +177,14 @@ export async function sendVouchersConfirmationEmail(params: {
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e1e8e3; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
         <!-- Header -->
         <tr>
-          <td style="background-color: #05A658; padding: 30px; text-align: center;">
-            <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Nisargshala</h1>
-            <p style="color: #e0f5ea; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Corporate Experience Vouchers</p>
+          <td style="padding: 20px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #e1e8e3;">
+            <img src="https://corp.nisargshala.in/images/nisargshala-logo.png" alt="Nisargshala Logo" style="height: 60px; width: auto; object-fit: contain;" />
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #062018; padding: 24px; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 20px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">Corporate Vouchers Activated</h1>
+            <p style="color: #a5f4bc; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">Order Reference: ${orderNumber}</p>
           </td>
         </tr>
         <!-- Content -->
@@ -354,15 +364,15 @@ export async function sendTeamOutingConfirmationEmail(params: {
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #ebe7e4; box-shadow: 0 16px 36px rgba(10,43,27,0.06);">
       <!-- Header Logo -->
       <tr>
-        <td style="padding: 24px; text-align: center; border-bottom: 1px solid #f1ede9;">
-          <img src="https://lh3.googleusercontent.com/aida/AEtjO1Wo5cE3j5ldDaBxn7DbRwf_3dx_qN03Uhtod9ib84Bqqa7jj-hRdQn-iKqgO19CwqxF0GD9_ZaVNpgSPnBijEAW5xXpvwmyGt6T211W9GB8Xx4mPb-FKpew9BpU4ryU-fQNY-Aqklf7RWKruJldUpEhlKwjOT0HQKvUo3xTyFtavOxCg9SxnardMxlI5VEYGoU1d_Rajw-N9Fp6I9FnjYO96HoITrd6I6I-cWf_YN-aYWaxznqXsUTnoEA" alt="Nisargshala Logo" style="height: 48px; width: auto; object-fit: contain;" />
+        <td style="padding: 24px; text-align: center; border-bottom: 1px solid #f1ede9; background-color: #ffffff;">
+          <img src="https://corp.nisargshala.in/images/nisargshala-logo.png" alt="Nisargshala Logo" style="height: 64px; width: auto; object-fit: contain;" />
         </td>
       </tr>
       
       <!-- Hero Banner -->
       <tr>
-        <td style="background-color: #062018; position: relative; padding: 40px 30px; text-align: center; color: #ffffff;">
-          <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #ffffff; letter-spacing: -0.5px;">Your Corporate Retreat is Confirmed</h1>
+        <td style="background-color: #062018; position: relative; padding: 36px 30px; text-align: center; color: #ffffff;">
+          <h1 style="font-size: 26px; font-weight: 700; margin: 0; color: #ffffff; letter-spacing: -0.5px;">Your Corporate Retreat is Confirmed</h1>
           <p style="color: #a5f4bc; font-size: 14px; margin-top: 8px;">Experience: <strong>${packageTitle}</strong></p>
         </td>
       </tr>
