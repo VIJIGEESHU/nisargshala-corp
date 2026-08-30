@@ -49,6 +49,48 @@ export async function POST(req: NextRequest) {
           sbBooking = data;
         }
 
+        if (!sbBooking) {
+          let ordQuery = supabaseAdmin.from('orders').select('*, company:companies(*)');
+          if (isValidUUID(booking_id)) {
+            ordQuery = ordQuery.or(`id.eq.${booking_id},order_number.eq.${booking_id}`);
+          } else {
+            ordQuery = ordQuery.eq('order_number', booking_id);
+          }
+          const { data: ordData } = await ordQuery.maybeSingle();
+          if (ordData) {
+            let notesData: any = {};
+            try {
+              if (ordData.notes && typeof ordData.notes === 'string' && ordData.notes.startsWith('{')) {
+                notesData = JSON.parse(ordData.notes);
+              }
+            } catch (e) {}
+            sbBooking = {
+              id: ordData.id,
+              booking_number: ordData.order_number,
+              company_id: ordData.company_id,
+              company: ordData.company,
+              package_code: notesData.package_code || 'WILDERNESS_BONDING',
+              package_title: notesData.package_title || 'Wilderness Adventure & Tent Stay Camp',
+              location: notesData.location || 'Nisargshala',
+              event_date: notesData.event_date || (ordData.created_at ? ordData.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+              attendees_count: notesData.attendees_count || 15,
+              unit_price: notesData.unit_price || 3200,
+              subtotal_amount: ordData.subtotal_amount,
+              gst_rate: 18,
+              gst_amount: ordData.gst_amount,
+              total_amount: ordData.total_amount,
+              buyer_gstin: notesData.buyer_gstin || ordData.company?.gst_number || '',
+              payment_status: ordData.payment_status,
+              booking_status: ordData.payment_status === 'PAID' ? 'CONFIRMED' : 'REQUESTED',
+              utr_reference: ordData.utr_reference,
+              payment_date: ordData.payment_date,
+              special_requirements: notesData.special_requirements || '',
+              created_at: ordData.created_at,
+              updated_at: ordData.updated_at,
+            };
+          }
+        }
+
         if (sbBooking) booking = sbBooking;
       } catch (e) {}
     }

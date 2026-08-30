@@ -90,12 +90,63 @@ export async function GET(req: NextRequest) {
     const localOutings = db.team_outing_bookings || [];
     const localEnquiries = db.custom_enquiries || [];
 
-    // Merge orders without duplicates
+    // Merge outings without duplicates & seamlessly reconstruct from orders if needed
+    const mergedOutingsMap = new Map<string, any>();
+    [...supabaseOutings, ...localOutings].forEach((out) => {
+      const key = out.id || out.booking_number;
+      if (!mergedOutingsMap.has(key)) {
+        mergedOutingsMap.set(key, out);
+      }
+    });
+
+    // Merge orders without duplicates and extract any outings stored in orders table
     const mergedOrdersMap = new Map<string, any>();
     [...supabaseOrders, ...localOrders].forEach((ord) => {
-      const key = ord.id || ord.order_number;
-      if (!mergedOrdersMap.has(key)) {
-        mergedOrdersMap.set(key, ord);
+      const orderNum = ord.order_number || '';
+      const isOutingOrder = orderNum.startsWith('OUTING-') || (typeof ord.notes === 'string' && ord.notes.includes('is_outing'));
+
+      if (isOutingOrder) {
+        // Reconstruct outing booking record from order
+        const key = ord.id || orderNum;
+        if (!mergedOutingsMap.has(key)) {
+          let notesData: any = {};
+          try {
+            if (ord.notes && typeof ord.notes === 'string' && ord.notes.startsWith('{')) {
+              notesData = JSON.parse(ord.notes);
+            }
+          } catch (e) {}
+
+          const reconstructed: any = {
+            id: ord.id,
+            booking_number: orderNum,
+            company_id: ord.company_id,
+            company: ord.company,
+            package_code: notesData.package_code || 'WILDERNESS_BONDING',
+            package_title: notesData.package_title || 'Wilderness Adventure & Tent Stay Camp',
+            location: notesData.location || 'Nisargshala',
+            event_date: notesData.event_date || (ord.created_at ? ord.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+            attendees_count: notesData.attendees_count || 15,
+            unit_price: notesData.unit_price || 3200,
+            subtotal_amount: ord.subtotal_amount,
+            gst_rate: 18,
+            gst_amount: ord.gst_amount,
+            total_amount: ord.total_amount,
+            buyer_gstin: notesData.buyer_gstin || ord.company?.gst_number || '',
+            payment_status: ord.payment_status,
+            booking_status: ord.payment_status === 'PAID' ? 'CONFIRMED' : 'REQUESTED',
+            utr_reference: ord.utr_reference,
+            payment_date: ord.payment_date,
+            special_requirements: notesData.special_requirements || '',
+            created_at: ord.created_at,
+            updated_at: ord.updated_at,
+          };
+          mergedOutingsMap.set(key, reconstructed);
+        }
+      } else {
+        const key = ord.id || ord.order_number;
+        if (!mergedOrdersMap.has(key)) {
+          mergedOrdersMap.set(key, ord);
+        }
       }
     });
 
@@ -105,15 +156,6 @@ export async function GET(req: NextRequest) {
       const key = vch.id || vch.redemption_code;
       if (!mergedVouchersMap.has(key)) {
         mergedVouchersMap.set(key, vch);
-      }
-    });
-
-    // Merge outings without duplicates
-    const mergedOutingsMap = new Map<string, any>();
-    [...supabaseOutings, ...localOutings].forEach((out) => {
-      const key = out.id || out.booking_number;
-      if (!mergedOutingsMap.has(key)) {
-        mergedOutingsMap.set(key, out);
       }
     });
 

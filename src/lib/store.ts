@@ -1824,6 +1824,7 @@ export async function createTeamOutingBookingInDB(params: {
   if (isSupabaseConfigured()) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
+      // 1. Insert into team_outing_bookings
       await supabaseAdmin.from('team_outing_bookings').insert({
         id: bookingId,
         booking_number: bookingNumber,
@@ -1843,8 +1844,35 @@ export async function createTeamOutingBookingInDB(params: {
         booking_status: 'REQUESTED',
         special_requirements: params.special_requirements,
       });
+
+      // 2. Dual Backup Insert into standard 'orders' table
+      // Guarantees persistence in Supabase even if team_outing_bookings is not migrated
+      const outingNotes = JSON.stringify({
+        is_outing: true,
+        package_code: pkg.package_code,
+        package_title: pkg.package_title,
+        location: pkg.location,
+        event_date: params.event_date,
+        attendees_count: params.attendees_count,
+        unit_price: unitPrice,
+        special_requirements: params.special_requirements,
+        buyer_gstin: company.gst_number,
+      });
+
+      await supabaseAdmin.from('orders').insert({
+        id: bookingId,
+        order_number: bookingNumber,
+        company_id: isValidUUID(company.id) ? company.id : null,
+        subtotal_amount: subtotalAmount,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+        payment_status: 'PENDING_PAYMENT',
+        order_status: 'SUBMITTED',
+        payment_method: 'RTGS_NEFT',
+        notes: outingNotes,
+      });
     } catch (e) {
-      console.warn('Supabase insert team_outing_bookings warning:', e);
+      console.warn('Supabase insert outing warning:', e);
     }
   }
 
@@ -1925,6 +1953,20 @@ export async function submitOutingPaymentUtrInDB(params: {
         await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('id', booking.id);
       } else {
         await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('booking_number', booking.booking_number);
+      }
+
+      // Also update backup in orders table
+      const orderUpdatePayload: any = {
+        utr_reference: booking.utr_reference,
+        payment_date: booking.payment_date,
+        payment_status: 'AWAITING_VERIFICATION',
+        order_status: 'VERIFYING_PAYMENT',
+        updated_at: booking.updated_at,
+      };
+      if (isValidUUID(booking.id)) {
+        await supabaseAdmin.from('orders').update(orderUpdatePayload).eq('id', booking.id);
+      } else {
+        await supabaseAdmin.from('orders').update(orderUpdatePayload).eq('order_number', booking.booking_number);
       }
     } catch (e) {
       console.warn('Supabase update team_outing_bookings warning:', e);
