@@ -23,8 +23,10 @@ export default function TeamOutingsPage() {
 
   const packageImages: Record<string, string> = {
     WILDERNESS_BONDING: '/images/hero_nature_camping.jpg',
-    LEADERSHIP_RETREAT: '/images/individual_experience.jpg',
+    EXECUTIVE_RETREAT: '/images/individual_experience.jpg',
+    FAMILY_DAY_OUTING: '/images/family_camping_retreat.jpg',
     CORPORATE_FAMILY_DAY: '/images/family_camping_retreat.jpg',
+    LEADERSHIP_RETREAT: '/images/individual_experience.jpg',
   };
 
   return (

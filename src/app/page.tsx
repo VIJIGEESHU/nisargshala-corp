@@ -155,7 +155,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <Trees className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Curated locations in Western Ghats &amp; Lakefronts</span>
+              <span>Curated campus &amp; nature experiences at Nisargshala</span>
             </div>
           </motion.div>
         </div>
@@ -469,7 +469,7 @@ export default function HomePage() {
             </div>
 
             <div className="relative z-10 pt-4 mt-4 border-t border-emerald-800/80 flex items-center justify-between text-[11px] text-emerald-200/80">
-              <span>Western Ghats • Pawna Lake • Panchgani</span>
+              <span>Nisargshala Campus • Tailored Team Outings</span>
               <span className="font-bold text-amber-400">100% Verified Outcomes</span>
             </div>
           </div>

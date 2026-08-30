@@ -20,7 +20,7 @@ export default function CustomExperienceModal({ isOpen, onClose }: CustomExperie
     gst_number: '',
     team_size: '25',
     preferred_date: '',
-    preferred_location: 'Western Ghats',
+    preferred_location: 'Nisargshala',
     experience_type: 'Team Outing & Camping',
     budget_range: '₹50,000 - ₹1,00,000',
     special_requirements: '',
@@ -179,6 +179,7 @@ export default function CustomExperienceModal({ isOpen, onClose }: CustomExperie
                     onChange={(e) => setFormData({ ...formData, preferred_location: e.target.value })}
                     className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#062018] border border-slate-300 dark:border-emerald-800/60 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
+                    <option value="Nisargshala">Nisargshala</option>
                     <option value="Western Ghats">Western Ghats</option>
                     <option value="Panchgani">Panchgani</option>
                     <option value="Pawna Lake">Pawna Lake</option>
