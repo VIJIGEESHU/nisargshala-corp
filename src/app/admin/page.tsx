@@ -521,10 +521,12 @@ export default function AdminDashboardPage() {
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : o.payment_status === 'AWAITING_VERIFICATION'
                                 ? 'bg-amber-100 text-amber-800'
+                                : o.payment_status === 'CANCELLED'
+                                ? 'bg-red-100 text-red-800'
                                 : 'bg-slate-100 text-slate-700'
                             }`}
                           >
-                            {o.payment_status}
+                            {o.payment_status === 'PENDING_PAYMENT' ? 'Awaiting Payment' : o.payment_status}
                           </span>
                         </td>
                         <td className="p-4 text-right space-x-2">
@@ -536,7 +538,7 @@ export default function AdminDashboardPage() {
                             >
                               Verify Payment & Issue Vouchers
                             </button>
-                          ) : (
+                          ) : o.payment_status === 'PAID' ? (
                             <button
                               disabled={actionLoading}
                               onClick={() => handleResendVoucherEmail(o.id)}
@@ -544,6 +546,8 @@ export default function AdminDashboardPage() {
                             >
                               Resend Vouchers Email
                             </button>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">No Action</span>
                           )}
                         </td>
                       </tr>

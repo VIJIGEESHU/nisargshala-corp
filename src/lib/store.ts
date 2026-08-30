@@ -565,7 +565,14 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
       }
 
       if (order) {
-        if (order.payment_status === 'PAID') throw new Error('Order is already PAID.');
+        if (order.payment_status === 'PAID') {
+          // Idempotency: retrieve already generated vouchers for this order
+          const { data: existingVouchers } = await supabaseAdmin
+            .from('vouchers')
+            .select('*')
+            .eq('order_id', order.id);
+          return { vouchersCount: existingVouchers?.length || 0, vouchers: existingVouchers || [], alreadyPaid: true };
+        }
 
         const { count } = await supabaseAdmin.from('vouchers').select('*', { count: 'exact', head: true });
         let sequenceCounter = (count || 0) + 1;
@@ -574,7 +581,7 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
         const existingCodes = new Set<string>();
 
         for (const item of order.items || []) {
-          const productDef = LOCKED_VOUCHER_PRODUCTS[item.product_code];
+          const productDef = LOCKED_VOUCHER_PRODUCTS[item.product_code as keyof typeof LOCKED_VOUCHER_PRODUCTS];
           const eligibleExperiences = productDef ? productDef.eligibleExperiences : [];
 
           // CRITICAL: Generate item.quantity SEPARATE VOUCHER RECORDS!
@@ -621,12 +628,21 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
           })
           .eq('id', order.id);
 
-        return { vouchersCount: vouchersToInsert.length, vouchers: insertedVouchers };
+        // Update payment_records to VERIFIED
+        try {
+          await supabaseAdmin
+            .from('payment_records')
+            .update({
+              status: 'VERIFIED',
+              verified_by: adminId || null,
+              verified_at: now.toISOString(),
+            })
+            .eq('order_id', order.id);
+        } catch (e) {}
+
+        return { vouchersCount: vouchersToInsert.length, vouchers: insertedVouchers || [] };
       }
     } catch (err: any) {
-      if (err.message && err.message.includes('already PAID')) {
-        throw err;
-      }
       console.warn('Supabase confirm payment warning (falling back to local store):', err.message || err);
     }
   }
@@ -636,7 +652,10 @@ export async function confirmPaymentAndGenerateVouchersInDB(orderId: string, adm
   const order = db.orders.find((o) => o.id === orderId || o.order_number === orderId);
 
   if (!order) throw new Error('Order not found.');
-  if (order.payment_status === 'PAID') throw new Error('Order is already PAID.');
+  if (order.payment_status === 'PAID') {
+    const existingVouchers = db.vouchers.filter((v) => v.order_id === order.id);
+    return { vouchersCount: existingVouchers.length, vouchers: existingVouchers, alreadyPaid: true };
+  }
 
   let sequenceCounter = db.vouchers.length + 1;
   const createdVouchers: DBVoucher[] = [];
@@ -701,39 +720,68 @@ export async function submitOrderPaymentInDB(params: {
     try {
       const supabaseAdmin = getSupabaseAdmin();
 
-      const { data: order, error: fetchErr } = await supabaseAdmin
+      let ordQuery = supabaseAdmin
         .from('orders')
-        .select('id, order_number, payment_status, total_amount')
-        .eq('id', params.order_id)
-        .single();
+        .select('id, order_number, payment_status, total_amount, company_id');
+      
+      if (isValidUUID(params.order_id)) {
+        ordQuery = ordQuery.or(`id.eq.${params.order_id},order_number.eq.${params.order_id}`);
+      } else {
+        ordQuery = ordQuery.eq('order_number', params.order_id);
+      }
+
+      const { data: order, error: fetchErr } = await ordQuery.maybeSingle();
 
       if (!fetchErr && order) {
         if (order.payment_status === 'PAID') {
           throw new Error('This order has already been verified and paid.');
         }
 
-        await supabaseAdmin
+        const utr = params.utr_reference.trim().toUpperCase();
+        const paymentDate = params.payment_date || new Date().toISOString().slice(0, 10);
+        const paymentMethod = params.payment_method || 'RTGS_NEFT';
+
+        const { error: updateErr } = await supabaseAdmin
           .from('orders')
           .update({
             payment_status: 'AWAITING_VERIFICATION',
             order_status: 'VERIFYING_PAYMENT',
-            utr_reference: params.utr_reference.trim().toUpperCase(),
-            payment_date: params.payment_date,
-            payment_method: params.payment_method || 'RTGS_NEFT',
+            utr_reference: utr,
+            payment_date: paymentDate,
+            payment_method: paymentMethod,
             notes: params.notes || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', order.id);
 
-        await supabaseAdmin.from('payment_records').insert({
-          order_id: order.id,
-          amount: order.total_amount,
-          method: params.payment_method || 'RTGS_NEFT',
-          utr_reference: params.utr_reference.trim().toUpperCase(),
-          payment_date: params.payment_date,
-          status: 'PENDING',
-          notes: params.notes || null,
-        });
+        if (updateErr) {
+          console.warn('Supabase update order payment warning:', updateErr);
+        }
+
+        // Insert / link into payment_records table
+        try {
+          // Check if payment_record with same UTR already logged to avoid duplicates
+          const { data: existingPay } = await supabaseAdmin
+            .from('payment_records')
+            .select('id')
+            .eq('order_id', order.id)
+            .eq('utr_reference', utr)
+            .maybeSingle();
+
+          if (!existingPay) {
+            await supabaseAdmin.from('payment_records').insert({
+              order_id: order.id,
+              amount: order.total_amount,
+              method: paymentMethod,
+              utr_reference: utr,
+              payment_date: paymentDate,
+              status: 'PENDING',
+              notes: params.notes || null,
+            });
+          }
+        } catch (payErr) {
+          console.warn('Supabase insert payment_records warning:', payErr);
+        }
 
         return { success: true, payment_status: 'AWAITING_VERIFICATION' };
       }

@@ -21,10 +21,56 @@ export async function GET(req: NextRequest) {
     if (isSupabaseConfigured()) {
       const supabaseAdmin = getSupabaseAdmin();
 
-      // Fetch Orders
+      // Pre-fetch Companies Map for resilient fallback linkage
+      const compMap = new Map<string, any>();
       try {
-        const { data: o } = await supabaseAdmin.from('orders').select('*, company:companies(*)').order('created_at', { ascending: false });
-        if (o) supabaseOrders = o;
+        const { data: comps } = await supabaseAdmin.from('companies').select('*');
+        if (comps) {
+          comps.forEach((c: any) => compMap.set(c.id, c));
+        }
+      } catch (e) {}
+
+      // Pre-fetch Payment Records Map for authoritative UTR linkage
+      const paymentMap = new Map<string, any>();
+      try {
+        const { data: pays } = await supabaseAdmin.from('payment_records').select('*').order('created_at', { ascending: false });
+        if (pays) {
+          pays.forEach((p: any) => {
+            if (p.order_id && !paymentMap.has(p.order_id)) {
+              paymentMap.set(p.order_id, p);
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Fetch Orders with relational join & flat fallback
+      try {
+        const { data: o, error: oErr } = await supabaseAdmin
+          .from('orders')
+          .select('*, company:companies(*)')
+          .order('created_at', { ascending: false });
+
+        if (o && !oErr && o.length > 0) {
+          supabaseOrders = o.map((ord: any) => ({
+            ...ord,
+            company: ord.company || compMap.get(ord.company_id) || null,
+            utr_reference: ord.utr_reference || paymentMap.get(ord.id)?.utr_reference || null,
+          }));
+        } else {
+          // Fallback flat query if join fails or schema cache missing
+          const { data: flatOrders } = await supabaseAdmin
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (flatOrders && flatOrders.length > 0) {
+            supabaseOrders = flatOrders.map((ord: any) => ({
+              ...ord,
+              company: compMap.get(ord.company_id) || null,
+              utr_reference: ord.utr_reference || paymentMap.get(ord.id)?.utr_reference || null,
+            }));
+          }
+        }
       } catch (e) {
         console.warn('Admin fetch orders warning:', e);
       }
@@ -52,8 +98,11 @@ export async function GET(req: NextRequest) {
           .select('*, company:companies(*)')
           .order('created_at', { ascending: false });
 
-        if (out && !outErr) {
-          supabaseOutings = out;
+        if (out && !outErr && out.length > 0) {
+          supabaseOutings = out.map((b: any) => ({
+            ...b,
+            company: b.company || compMap.get(b.company_id) || null,
+          }));
         } else {
           // Fallback if relation join is unavailable
           const { data: flatOut } = await supabaseAdmin
@@ -62,11 +111,9 @@ export async function GET(req: NextRequest) {
             .order('created_at', { ascending: false });
 
           if (flatOut && flatOut.length > 0) {
-            const { data: comps } = await supabaseAdmin.from('companies').select('*');
-            const compMap = new Map((comps || []).map((c: any) => [c.id, c]));
             supabaseOutings = flatOut.map((b: any) => ({
               ...b,
-              company: b.company || compMap.get(b.company_id) || null,
+              company: compMap.get(b.company_id) || null,
             }));
           }
         }

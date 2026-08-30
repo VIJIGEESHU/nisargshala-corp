@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { submitOrderPaymentInDB, resolveCompanyForUser, readDB } from '@/lib/store';
-import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseAdmin, isSupabaseConfigured, isValidUUID } from '@/lib/supabase';
 import { logAuditEvent } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
@@ -41,22 +41,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'MISSING_FIELDS', message: 'Order ID, UTR reference, and payment date are required.' }, { status: 400 });
     }
 
-    // 2. Verify Order Ownership Server-Side
+    // 2. Verify Order Ownership Server-Side (UUID-safe)
     let orderOwnedByCompany = false;
 
     if (isSupabaseConfigured()) {
       try {
         const supabaseAdmin = getSupabaseAdmin();
-        const { data: dbOrd } = await supabaseAdmin
-          .from('orders')
-          .select('id, company_id')
-          .or(`id.eq.${order_id},order_number.eq.${order_id}`)
-          .maybeSingle();
+        let ordQuery = supabaseAdmin.from('orders').select('id, company_id, order_number');
+        if (isValidUUID(order_id)) {
+          ordQuery = ordQuery.or(`id.eq.${order_id},order_number.eq.${order_id}`);
+        } else {
+          ordQuery = ordQuery.eq('order_number', order_id);
+        }
+        const { data: dbOrd } = await ordQuery.maybeSingle();
 
         if (dbOrd && (dbOrd.company_id === resolved.company.id || dbOrd.company_id === session.companyId)) {
           orderOwnedByCompany = true;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Supabase verify order ownership warning:', e);
+      }
     }
 
     if (!orderOwnedByCompany) {
