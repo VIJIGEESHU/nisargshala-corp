@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     };
 
     const invoiceHtml = generateTaxInvoiceHtml(invoicePayload);
-    const invoicePdfBuffer = generateTaxInvoicePdfBuffer(invoicePayload);
+    const invoicePdfBuffer = await generateTaxInvoicePdfBuffer(invoicePayload);
 
     const emailResult = await sendTeamOutingConfirmationEmail({
       to: company.email,

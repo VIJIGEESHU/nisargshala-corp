@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
     };
 
     const invoiceHtml = generateTaxInvoiceHtml(invoicePayload);
-    const invoicePdfBuffer = generateTaxInvoicePdfBuffer(invoicePayload);
+    const invoicePdfBuffer = await generateTaxInvoicePdfBuffer(invoicePayload);
 
     // Send Confirmation Email with Tax Invoice PDF Attached
     let emailResult: any = { success: false, reason: 'NOT_ATTEMPTED' };

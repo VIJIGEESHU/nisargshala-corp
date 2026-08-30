@@ -1,3 +1,7 @@
+import fs from 'fs';
+import path from 'path';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+
 export interface InvoiceData {
   invoiceNumber: string; // NS/26-27/000123
   invoiceDate: string; // e.g. December 8, 2025
@@ -227,76 +231,195 @@ export function generateTaxInvoiceHtml(data: InvoiceData): string {
 }
 
 /**
- * Generates a clean PDF binary buffer for the Tax Invoice document.
+ * Generates an official visual PDF binary buffer for the Tax Invoice document identical to the design template.
  */
-export function generateTaxInvoicePdfBuffer(data: InvoiceData): Buffer {
+export async function generateTaxInvoicePdfBuffer(data: InvoiceData): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4 dimensions
+  const { width, height } = page.getSize();
+
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
 
-  const itemLines = data.items
-    .map(
-      (item) =>
-        `0 -15 Td (${item.description.replace(/[()]/g, '')} | Qty: ${item.quantity} | Unit: INR ${formatCurrency(item.unitPrice)} | Total: INR ${formatCurrency(item.totalPrice)}) Tj`
-    )
-    .join('\n');
+  // 1. Embed Nisargshala Official Logo
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'images', 'nisargshala-logo.png');
+    if (fs.existsSync(logoPath)) {
+      const logoBytes = fs.readFileSync(logoPath);
+      const logoImage = await pdfDoc.embedPng(logoBytes);
+      page.drawImage(logoImage, {
+        x: 50,
+        y: height - 120,
+        width: 75,
+        height: 75,
+      });
+    }
+  } catch (e) {
+    console.warn('Could not embed logo in PDF:', e);
+  }
 
-  const pdfText = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 595 842] /Contents 6 0 R >>
-endobj
-4 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
-endobj
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-6 0 obj
-<< /Length 850 >>
-stream
-BT
-/F1 22 Tf 50 790 Td (TAX INVOICE) Tj
-/F2 12 Tf 350 0 Td (No: ${data.invoiceNumber}) Tj
-/F2 10 Tf -350 -30 Td (FROM: Nisargshala | 89, Babuji Bungalow, Pune - 412115 | Email: hemantvavale@gmail.com) Tj
-/F1 10 Tf 0 -15 Td (Seller GSTIN: 27ARHPV2783R1ZN) Tj
-/F2 10 Tf 0 -25 Td (TO: ${data.companyName.replace(/[()]/g, '')} | Attn: ${data.contactPerson.replace(/[()]/g, '')}) Tj
-/F1 10 Tf 0 -15 Td (Buyer GSTIN: ${data.buyerGstin}) Tj
-/F2 10 Tf 0 -15 Td (Address: ${data.billingAddress.replace(/[()]/g, '')}) Tj
-/F2 10 Tf 0 -15 Td (Date Issued: ${data.invoiceDate}   |   Due Date: ${data.dueDate}) Tj
-/F1 12 Tf 0 -30 Td (INVOICE ITEMS) Tj
-/F2 10 Tf
-${itemLines}
-/F1 11 Tf 0 -30 Td (Subtotal: INR ${formatCurrency(data.subtotal)}) Tj
-/F1 11 Tf 0 -15 Td (GST Tax (${data.gstRate}%): INR ${formatCurrency(data.gstAmount)}) Tj
-/F1 13 Tf 0 -18 Td (Total Amount: INR ${formatCurrency(data.totalAmount)}) Tj
-/F2 10 Tf 0 -15 Td (Less: Advance Received: INR ${formatCurrency(data.advanceReceived)}) Tj
-/F1 14 Tf 0 -20 Td (TOTAL DUE: INR ${formatCurrency(data.totalDue)}/-) Tj
-/F1 11 Tf 0 -35 Td (PAYMENT INSTRUCTIONS) Tj
-/F2 10 Tf 0 -15 Td (Bank Name: HDFC Bank   |   Account Name: NISARGSHALA) Tj
-/F2 10 Tf 0 -15 Td (Account Number: 5020097103825   |   IFSC: HDFC0002493) Tj
-/F2 10 Tf 0 -15 Td (Payment Reference: ${data.referenceNumber}) Tj
-ET
-endstream
-endobj
-xref
-0 7
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000245 00000 n 
-0000000320 00000 n 
-0000000390 00000 n 
-trailer
-<< /Size 7 /Root 1 0 R >>
-startxref
-1290
-%%EOF`;
+  // 2. Large Bold Title "Invoice"
+  page.drawText('Invoice', {
+    x: width - 150,
+    y: height - 80,
+    size: 32,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
 
-  return Buffer.from(pdfText);
+  // 3. "From:" section
+  let currentY = height - 155;
+  page.drawText('From:', { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 13;
+  page.drawText('Nisargshala', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('89, Babuji Bungalow,', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('Pune - 412115', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('Email: hemantvavale@gmail.com', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('Gst No. 27ARHPV2783R1ZN', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+
+  // 4. "To:" section
+  currentY -= 20;
+  page.drawText('To:', { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 13;
+  const companyGstText = `${data.companyName} (GST no : ${data.buyerGstin || 'Unregistered'})`;
+  page.drawText(companyGstText.slice(0, 75), { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText(`Attn: ${data.contactPerson || 'Management'}`.slice(0, 75), { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText((data.billingAddress || 'Maharashtra, India').slice(0, 75), { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText(`Date Issued: ${data.invoiceDate}`, { x: 50, y: currentY, size: 9, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText(`Due Date: ${data.dueDate}`, { x: 50, y: currentY, size: 9, font: fontBold, color: rgb(0, 0, 0) });
+
+  // 5. Table Section
+  currentY -= 24;
+  const tableX = 50;
+  const tableWidth = width - 100; // 495.28 pt
+  const col1W = 235;
+  const col2W = 60;
+  const col3W = 100;
+  const col4W = 100.28;
+
+  const headerHeight = 22;
+  const tableTopY = currentY;
+
+  // Header Box & Lines
+  page.drawRectangle({
+    x: tableX,
+    y: tableTopY - headerHeight,
+    width: tableWidth,
+    height: headerHeight,
+    borderColor: rgb(0.8, 0.8, 0.8),
+    borderWidth: 1,
+    color: rgb(1, 1, 1),
+  });
+
+  page.drawLine({
+    start: { x: tableX + col1W, y: tableTopY },
+    end: { x: tableX + col1W, y: tableTopY - headerHeight },
+    thickness: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+  page.drawLine({
+    start: { x: tableX + col1W + col2W, y: tableTopY },
+    end: { x: tableX + col1W + col2W, y: tableTopY - headerHeight },
+    thickness: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+  page.drawLine({
+    start: { x: tableX + col1W + col2W + col3W, y: tableTopY },
+    end: { x: tableX + col1W + col2W + col3W, y: tableTopY - headerHeight },
+    thickness: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  // Header Titles
+  page.drawText('Description', { x: tableX + 8, y: tableTopY - 15, size: 8, font: fontBold, color: rgb(0, 0, 0) });
+  page.drawText('Quantity', { x: tableX + col1W + 8, y: tableTopY - 15, size: 8, font: fontBold, color: rgb(0, 0, 0) });
+  page.drawText('Unit Price (INR)', { x: tableX + col1W + col2W + 8, y: tableTopY - 15, size: 8, font: fontBold, color: rgb(0, 0, 0) });
+  page.drawText('Total (INR)', { x: tableX + col1W + col2W + col3W + 8, y: tableTopY - 15, size: 8, font: fontBold, color: rgb(0, 0, 0) });
+
+  let rowTopY = tableTopY - headerHeight;
+
+  for (const item of data.items) {
+    const rowHeight = 32;
+    page.drawRectangle({
+      x: tableX,
+      y: rowTopY - rowHeight,
+      width: tableWidth,
+      height: rowHeight,
+      borderColor: rgb(0.8, 0.8, 0.8),
+      borderWidth: 1,
+      color: rgb(1, 1, 1),
+    });
+
+    page.drawLine({
+      start: { x: tableX + col1W, y: rowTopY },
+      end: { x: tableX + col1W, y: rowTopY - rowHeight },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    page.drawLine({
+      start: { x: tableX + col1W + col2W, y: rowTopY },
+      end: { x: tableX + col1W + col2W, y: rowTopY - rowHeight },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    page.drawLine({
+      start: { x: tableX + col1W + col2W + col3W, y: rowTopY },
+      end: { x: tableX + col1W + col2W + col3W, y: rowTopY - rowHeight },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+
+    page.drawText(item.description.slice(0, 48), { x: tableX + 8, y: rowTopY - 18, size: 8, font: fontRegular, color: rgb(0, 0, 0) });
+    page.drawText(String(item.quantity), { x: tableX + col1W + 8, y: rowTopY - 18, size: 8, font: fontRegular, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(item.unitPrice), { x: tableX + col1W + col2W + 8, y: rowTopY - 18, size: 8, font: fontRegular, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(item.totalPrice), { x: tableX + col1W + col2W + col3W + 8, y: rowTopY - 18, size: 8, font: fontRegular, color: rgb(0, 0, 0) });
+
+    rowTopY -= rowHeight;
+  }
+
+  // 6. Totals Section
+  currentY = rowTopY - 24;
+  page.drawText(`Subtotal:${formatCurrency(data.subtotal)}`, { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 14;
+  page.drawText(`Tax (${data.gstRate}%): ${formatCurrency(data.gstAmount)}`, { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 14;
+  page.drawText(`Total: ${formatCurrency(data.totalAmount)}`, { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 14;
+  if (data.advanceReceived > 0) {
+    page.drawText(`Less: Advance Payment Received: ${formatCurrency(data.advanceReceived)}`, { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+    currentY -= 14;
+  }
+  page.drawText(`Total Due: ${formatCurrency(data.totalDue)}/-`, { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+
+  // 7. Payment Instructions
+  currentY -= 22;
+  page.drawText('Payment Instructions:', { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+  currentY -= 13;
+  page.drawText('Bank Name: HDFC Bank', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('Account Name: NISARGSHALA', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('IFSC: HDFC0002493', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText('Account Number: 50200097103825', { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+  currentY -= 12;
+  page.drawText(`Reference: ${data.referenceNumber}`, { x: 50, y: currentY, size: 9, font: fontRegular, color: rgb(0, 0, 0) });
+
+  // 8. Footer Note
+  currentY -= 32;
+  page.drawText('We look forward to more such ventures...', { x: 50, y: currentY, size: 9.5, font: fontBold, color: rgb(0, 0, 0) });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
 }
