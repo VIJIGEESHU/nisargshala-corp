@@ -26,13 +26,29 @@ export async function POST(req: NextRequest) {
     if (!booking && isSupabaseConfigured()) {
       try {
         const supabaseAdmin = getSupabaseAdmin();
-        let query = supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)');
-        if (isValidUUID(booking_id)) {
-          query = query.or(`id.eq.${booking_id},booking_number.eq.${booking_id}`);
-        } else {
-          query = query.eq('booking_number', booking_id);
+        let sbBooking = null;
+        try {
+          let query = supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)');
+          if (isValidUUID(booking_id)) {
+            query = query.or(`id.eq.${booking_id},booking_number.eq.${booking_id}`);
+          } else {
+            query = query.eq('booking_number', booking_id);
+          }
+          const { data } = await query.maybeSingle();
+          sbBooking = data;
+        } catch (e) {}
+
+        if (!sbBooking) {
+          let flatQuery = supabaseAdmin.from('team_outing_bookings').select('*');
+          if (isValidUUID(booking_id)) {
+            flatQuery = flatQuery.or(`id.eq.${booking_id},booking_number.eq.${booking_id}`);
+          } else {
+            flatQuery = flatQuery.eq('booking_number', booking_id);
+          }
+          const { data } = await flatQuery.maybeSingle();
+          sbBooking = data;
         }
-        const { data: sbBooking } = await query.maybeSingle();
+
         if (sbBooking) booking = sbBooking;
       } catch (e) {}
     }
@@ -68,15 +84,23 @@ export async function POST(req: NextRequest) {
     booking.invoice_number = invoiceRecord.invoice_number;
     writeDB(db);
 
-    if (isSupabaseConfigured() && isValidUUID(booking.id)) {
+    if (isSupabaseConfigured()) {
       try {
         const supabaseAdmin = getSupabaseAdmin();
-        await supabaseAdmin.from('team_outing_bookings').update({
+        const updatePayload = {
           payment_status: 'PAID',
           booking_status: 'CONFIRMED',
           invoice_number: invoiceRecord.invoice_number,
-        }).eq('id', booking.id);
-      } catch (e) {}
+          updated_at: booking.updated_at,
+        };
+        if (isValidUUID(booking.id)) {
+          await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('id', booking.id);
+        } else {
+          await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('booking_number', booking.booking_number);
+        }
+      } catch (e) {
+        console.warn('Supabase confirm outing payment update warning:', e);
+      }
     }
 
     // Render Tax Invoice HTML

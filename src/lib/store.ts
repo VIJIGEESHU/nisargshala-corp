@@ -1868,13 +1868,29 @@ export async function submitOutingPaymentUtrInDB(params: {
   if (!booking && isSupabaseConfigured()) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      let query = supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)');
-      if (isValidUUID(params.booking_id)) {
-        query = query.or(`id.eq.${params.booking_id},booking_number.eq.${params.booking_id}`);
-      } else {
-        query = query.eq('booking_number', params.booking_id);
+      let sbBooking = null;
+      try {
+        let query = supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)');
+        if (isValidUUID(params.booking_id)) {
+          query = query.or(`id.eq.${params.booking_id},booking_number.eq.${params.booking_id}`);
+        } else {
+          query = query.eq('booking_number', params.booking_id);
+        }
+        const { data } = await query.maybeSingle();
+        sbBooking = data;
+      } catch (e) {}
+
+      if (!sbBooking) {
+        let flatQuery = supabaseAdmin.from('team_outing_bookings').select('*');
+        if (isValidUUID(params.booking_id)) {
+          flatQuery = flatQuery.or(`id.eq.${params.booking_id},booking_number.eq.${params.booking_id}`);
+        } else {
+          flatQuery = flatQuery.eq('booking_number', params.booking_id);
+        }
+        const { data } = await flatQuery.maybeSingle();
+        sbBooking = data;
       }
-      const { data: sbBooking } = await query.maybeSingle();
+
       if (sbBooking) booking = sbBooking;
     } catch (e) {}
   }
@@ -1883,7 +1899,7 @@ export async function submitOutingPaymentUtrInDB(params: {
     throw new Error('Team Outing booking not found.');
   }
 
-  if (booking.company_id !== params.company_id) {
+  if (booking.company_id && isValidUUID(booking.company_id) && booking.company_id !== params.company_id) {
     throw new Error('FORBIDDEN: You do not have permission to submit payments for this booking.');
   }
 
@@ -1895,15 +1911,21 @@ export async function submitOutingPaymentUtrInDB(params: {
 
   writeDB(db);
 
-  if (isSupabaseConfigured() && isValidUUID(booking.id)) {
+  if (isSupabaseConfigured()) {
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      await supabaseAdmin.from('team_outing_bookings').update({
+      const updatePayload = {
         utr_reference: booking.utr_reference,
         payment_date: booking.payment_date,
         payment_status: 'AWAITING_VERIFICATION',
         booking_status: 'PENDING_PAYMENT',
-      }).eq('id', booking.id);
+        updated_at: booking.updated_at,
+      };
+      if (isValidUUID(booking.id)) {
+        await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('id', booking.id);
+      } else {
+        await supabaseAdmin.from('team_outing_bookings').update(updatePayload).eq('booking_number', booking.booking_number);
+      }
     } catch (e) {
       console.warn('Supabase update team_outing_bookings warning:', e);
     }

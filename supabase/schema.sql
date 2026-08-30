@@ -344,6 +344,84 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role, postgres;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role, postgres;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role, postgres;
 
+-- 13. TEAM OUTING BOOKINGS
+CREATE TABLE IF NOT EXISTS public.team_outing_bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_number VARCHAR(50) UNIQUE NOT NULL,
+  company_id UUID REFERENCES public.companies(id) ON DELETE SET NULL,
+  package_code VARCHAR(50) NOT NULL,
+  package_title TEXT NOT NULL,
+  location TEXT NOT NULL,
+  event_date DATE NOT NULL,
+  attendees_count INT NOT NULL CHECK (attendees_count > 0),
+  unit_price NUMERIC(10,2) NOT NULL CHECK (unit_price > 0),
+  subtotal_amount NUMERIC(10,2) NOT NULL CHECK (subtotal_amount >= 0),
+  gst_rate NUMERIC(5,2) DEFAULT 18.00,
+  gst_amount NUMERIC(10,2) DEFAULT 0,
+  total_amount NUMERIC(10,2) NOT NULL CHECK (total_amount >= 0),
+  buyer_gstin TEXT,
+  payment_status VARCHAR(30) DEFAULT 'PENDING_PAYMENT' CHECK (payment_status IN ('PENDING_PAYMENT', 'AWAITING_VERIFICATION', 'PAID', 'FAILED', 'CANCELLED')),
+  booking_status VARCHAR(30) DEFAULT 'REQUESTED' CHECK (booking_status IN ('REQUESTED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED')),
+  utr_reference TEXT,
+  payment_date DATE,
+  special_requirements TEXT,
+  invoice_number VARCHAR(50),
+  email_status VARCHAR(20) DEFAULT 'PENDING',
+  email_sent_at TIMESTAMPTZ,
+  email_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_outings_booking_num ON public.team_outing_bookings(booking_number);
+CREATE INDEX IF NOT EXISTS idx_team_outings_company_id ON public.team_outing_bookings(company_id);
+CREATE INDEX IF NOT EXISTS idx_team_outings_payment_status ON public.team_outing_bookings(payment_status);
+
+-- 14. CUSTOM CORPORATE ENQUIRIES
+CREATE TABLE IF NOT EXISTS public.custom_enquiries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  enquiry_number VARCHAR(50) UNIQUE NOT NULL,
+  company_name TEXT NOT NULL,
+  contact_person TEXT NOT NULL,
+  email TEXT NOT NULL,
+  mobile TEXT NOT NULL,
+  gst_number TEXT,
+  team_size INT NOT NULL DEFAULT 10,
+  preferred_date TEXT,
+  preferred_location TEXT,
+  experience_type TEXT,
+  budget_range TEXT,
+  special_requirements TEXT,
+  status VARCHAR(20) DEFAULT 'NEW',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_custom_enquiries_enquiry_num ON public.custom_enquiries(enquiry_number);
+
+-- 15. TAX INVOICES
+CREATE TABLE IF NOT EXISTS public.tax_invoices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_number VARCHAR(50) UNIQUE NOT NULL,
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  booking_id UUID REFERENCES public.team_outing_bookings(id) ON DELETE SET NULL,
+  company_id UUID REFERENCES public.companies(id) ON DELETE SET NULL,
+  invoice_date DATE NOT NULL,
+  due_date DATE NOT NULL,
+  seller_gstin TEXT NOT NULL DEFAULT '27ARHPV2783R1ZN',
+  buyer_gstin TEXT NOT NULL,
+  subtotal_amount NUMERIC(10,2) NOT NULL CHECK (subtotal_amount >= 0),
+  gst_rate NUMERIC(5,2) DEFAULT 18.00,
+  gst_amount NUMERIC(10,2) DEFAULT 0,
+  total_amount NUMERIC(10,2) NOT NULL CHECK (total_amount >= 0),
+  advance_received NUMERIC(10,2) DEFAULT 0,
+  balance_due NUMERIC(10,2) DEFAULT 0,
+  pdf_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tax_invoices_invoice_num ON public.tax_invoices(invoice_number);
+
 -- Enable RLS and create explicit service_role policies on all tables
 ALTER TABLE IF EXISTS companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS corporate_users ENABLE ROW LEVEL SECURITY;
@@ -351,6 +429,9 @@ ALTER TABLE IF EXISTS orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS vouchers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS payment_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS team_outing_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS custom_enquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS tax_invoices ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Service role full access on companies" ON companies;
 CREATE POLICY "Service role full access on companies" ON companies FOR ALL TO service_role USING (true) WITH CHECK (true);
@@ -369,5 +450,14 @@ CREATE POLICY "Service role full access on vouchers" ON vouchers FOR ALL TO serv
 
 DROP POLICY IF EXISTS "Service role full access on payment_records" ON payment_records;
 CREATE POLICY "Service role full access on payment_records" ON payment_records FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on team_outing_bookings" ON team_outing_bookings;
+CREATE POLICY "Service role full access on team_outing_bookings" ON team_outing_bookings FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on custom_enquiries" ON custom_enquiries;
+CREATE POLICY "Service role full access on custom_enquiries" ON custom_enquiries FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role full access on tax_invoices" ON tax_invoices;
+CREATE POLICY "Service role full access on tax_invoices" ON tax_invoices FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 

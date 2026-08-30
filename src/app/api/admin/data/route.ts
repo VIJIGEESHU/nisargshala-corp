@@ -19,21 +19,67 @@ export async function GET(req: NextRequest) {
     let supabaseEnquiries: any[] = [];
 
     if (isSupabaseConfigured()) {
-      try {
-        const supabaseAdmin = getSupabaseAdmin();
-        const { data: o } = await supabaseAdmin.from('orders').select('*, company:companies(*)').order('created_at', { ascending: false });
-        const { data: v } = await supabaseAdmin.from('vouchers').select('*').order('created_at', { ascending: false });
-        const { data: a } = await supabaseAdmin.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(50);
-        const { data: out } = await supabaseAdmin.from('team_outing_bookings').select('*, company:companies(*)').order('created_at', { ascending: false });
-        const { data: enq } = await supabaseAdmin.from('custom_enquiries').select('*').order('created_at', { ascending: false });
+      const supabaseAdmin = getSupabaseAdmin();
 
+      // Fetch Orders
+      try {
+        const { data: o } = await supabaseAdmin.from('orders').select('*, company:companies(*)').order('created_at', { ascending: false });
         if (o) supabaseOrders = o;
+      } catch (e) {
+        console.warn('Admin fetch orders warning:', e);
+      }
+
+      // Fetch Vouchers
+      try {
+        const { data: v } = await supabaseAdmin.from('vouchers').select('*').order('created_at', { ascending: false });
         if (v) supabaseVouchers = v;
+      } catch (e) {
+        console.warn('Admin fetch vouchers warning:', e);
+      }
+
+      // Fetch Audit Logs
+      try {
+        const { data: a } = await supabaseAdmin.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50);
         if (a) supabaseAuditLogs = a;
-        if (out) supabaseOutings = out;
+      } catch (e) {
+        console.warn('Admin fetch audit logs warning:', e);
+      }
+
+      // Fetch Team Outing Bookings with company join & fallback
+      try {
+        const { data: out, error: outErr } = await supabaseAdmin
+          .from('team_outing_bookings')
+          .select('*, company:companies(*)')
+          .order('created_at', { ascending: false });
+
+        if (out && !outErr) {
+          supabaseOutings = out;
+        } else {
+          // Fallback if relation join is unavailable
+          const { data: flatOut } = await supabaseAdmin
+            .from('team_outing_bookings')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (flatOut && flatOut.length > 0) {
+            const { data: comps } = await supabaseAdmin.from('companies').select('*');
+            const compMap = new Map((comps || []).map((c: any) => [c.id, c]));
+            supabaseOutings = flatOut.map((b: any) => ({
+              ...b,
+              company: b.company || compMap.get(b.company_id) || null,
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn('Admin fetch outings warning:', e);
+      }
+
+      // Fetch Custom Enquiries
+      try {
+        const { data: enq } = await supabaseAdmin.from('custom_enquiries').select('*').order('created_at', { ascending: false });
         if (enq) supabaseEnquiries = enq;
       } catch (e) {
-        console.warn('Supabase admin fetch warning (merging with local DB):', e);
+        console.warn('Admin fetch enquiries warning:', e);
       }
     }
 
